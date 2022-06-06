@@ -6,8 +6,7 @@ use super::{chromosomes::Instruction, registers::RegisterValue};
 
 pub type FitnessScore = RegisterValue;
 
-// TODO: Use Linked List
-pub type Instructions = LinkedList<Instruction>;
+pub type Instructions = Vec<Instruction>;
 
 pub trait Fitness: Show {
     fn eval_fitness(&self) -> FitnessScore;
@@ -16,7 +15,7 @@ pub trait Fitness: Show {
 }
 
 pub trait Breed: Clone {
-    fn uniform_crossover(&self, mate: &Self) -> [Self; 2];
+    fn two_point_crossover(&self, mate: &Self) -> [Self; 2];
 }
 
 pub trait Mutate: Show {

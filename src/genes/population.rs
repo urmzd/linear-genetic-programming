@@ -19,11 +19,11 @@ where
         Population(collection, population_size)
     }
 
-    pub fn get_mut_pop(&mut self) -> &mut InnerPopulation<T> {
+    pub fn get_mut_inner(&mut self) -> &mut InnerPopulation<T> {
         &mut self.0
     }
 
-    pub fn get_pop(&self) -> &InnerPopulation<T> {
+    pub fn get_inner(&self) -> &InnerPopulation<T> {
         &self.0
     }
 
@@ -48,15 +48,15 @@ where
             .get(math::round::floor(self.0.len() as f64 / 2f64, 1) as usize)
     }
 
-    pub fn f_push(&mut self, value: T) -> () {
+    pub fn push_front(&mut self, value: T) -> () {
         self.0.push_front(value)
     }
 
-    pub fn f_pop(&mut self) -> () {
+    pub fn pop_front(&mut self) -> () {
         self.0.pop_front();
     }
 
-    pub fn push(&mut self, value: T) -> () {
+    pub fn push_back(&mut self, value: T) -> () {
         self.0.push_back(value)
     }
 

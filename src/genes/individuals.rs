@@ -7,7 +7,10 @@ use crate::{
         random::generator,
     },
 };
-use rand::distributions::uniform::{UniformInt, UniformSampler};
+use rand::{
+    distributions::uniform::{UniformInt, UniformSampler},
+    Rng,
+};
 use serde::Serialize;
 
 use crate::{
@@ -165,17 +168,33 @@ impl<'a, InputType> Breed for Program<'a, InputType>
 where
     InputType: ValidInput,
 {
-    fn uniform_crossover(&self, mate: &Self) -> [Self; 2] {
+    fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =
-            self.instructions.uniform_crossover(&mate.instructions);
-        todo!()
+            self.instructions.two_point_crossover(&mate.instructions);
+        let program_a = Program {
+            inputs: &self.inputs,
+            instructions: child_a_instructions,
+            fitness: None,
+            registers: self.registers.clone(),
+        };
+        let program_b = Program {
+            inputs: &self.inputs,
+            instructions: child_b_instructions,
+            fitness: None,
+            registers: self.registers.clone(),
+        };
+        [program_a, program_b]
     }
 }
 
 impl<'a> Breed for Instructions {
-    fn uniform_crossover(&self, mate: &Self) -> [Self; 2] {
+    fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let mut instructions_a = self.clone();
         let mut instructions_b = mate.clone();
+
+        // Pick a subset of instructions from a
+        // Pick a subset of instrutions from b
+        // Swap the two (in-place)
 
         let [shortest_set, longest_set] = if instructions_a.len() > instructions_b.len() {
             [instructions_b, instructions_a]
@@ -184,10 +203,15 @@ impl<'a> Breed for Instructions {
         };
 
         for index in 0..longest_set.len() {
-            if index < shortest_set.len() {
-                todo!("swap")
-            } else {
-                todo!("add long to short if True")
+            let swap = Rng::gen_bool(&mut generator(), 0.5);
+            if swap {
+                let a = longest_set.remove(index);
+                let b = shortest_set.remove(index);
+                // switch a_i and a_b
+                if index < shortest_set.len() {
+                } else {
+                    todo!("add long to short if True")
+                }
             }
         }
 

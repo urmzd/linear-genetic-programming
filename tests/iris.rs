@@ -216,7 +216,7 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
 
     self::assert_eq!(population.len(), hyper_params.population_size);
 
-    for individual in population.get_pop() {
+    for individual in population.get_inner() {
         assert_le!(
             individual.instructions.len(),
             hyper_params.program_params.max_instructions

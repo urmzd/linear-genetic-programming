@@ -62,14 +62,14 @@ where
 
         for _ in 0..hyper_params.population_size {
             let program = Self::O::generate(&hyper_params.program_params);
-            population.push(program)
+            population.push_back(program)
         }
 
         population
     }
 
     fn evaluate(population: &mut Population<Self::O>) -> () {
-        for individual in population.get_mut_pop() {
+        for individual in population.get_mut_inner() {
             individual.eval_set_fitness();
         }
     }
@@ -91,7 +91,7 @@ where
         let lowest_index = ((1f32 - gap) * (pop_len as f32)).floor() as i32 as usize;
 
         for _ in 0..lowest_index {
-            population.f_pop();
+            population.pop_front();
         }
     }
 
@@ -101,13 +101,13 @@ where
         let remaining_size = pop_cap - pop_len;
 
         let selected_individuals = population
-            .get_pop()
+            .get_inner()
             .iter()
             .cloned()
             .choose_multiple(&mut rand::thread_rng(), remaining_size);
 
         for individual in selected_individuals {
-            population.push(individual)
+            population.push_back(individual)
         }
     }
 
