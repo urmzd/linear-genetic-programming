@@ -12,8 +12,23 @@ enum Node<'a, T> {
 }
 
 impl<'a, T> Node<'a, T> {
-    pub fn new() -> Self {
-        Node::Nil
+    pub fn new(data: T) -> Self {
+        Self::Cons(data, &Self::Nil)
+    }
+
+    pub fn none() -> Self {
+        Self::Nil
+    }
+
+    pub fn point_to(&mut self, pointer: &'a Node<'a, T>) -> () {
+        match &self {
+            Self::Cons(_) => self.1 = pointers,
+            Self::Nil => return
+        };
+    }
+
+    pub fn next(&self) -> &Self {
+        &self.1
     }
 }
 
@@ -42,10 +57,12 @@ where
     pub fn append(&'a mut self, data: T) {
         // Current List: (Nil, Nil)
         if self.head == Node::Nil {
-            let new_head = Node::Cons(data, &mut self.tail);
+            let new_head = Node::new(data);
             self.head = new_head
             // After: (Cons T &Nil)
         } else {
+            let new_tail = Node::new(data);
+
             // Current List: (... Cons(... Cons(T, Nil)))
         }
         /*
@@ -63,15 +80,37 @@ where
         todo!()
     }
 
-    pub fn head(&mut self) -> &mut Self {
+    pub fn head(&mut self) -> &mut Node<T> {
         todo!()
     }
 
-    pub fn tail(&mut self) -> &mut Self {
+    pub fn tail(&mut self) -> &mut Node<T> {
         todo!("")
     }
 
     pub fn len(&self) -> usize {
         self.length
     }
+}
+
+#[cfg(test)]
+mod test {
+
+    #[test]
+    fn given_a_list_of_elems_when_appended_to_linked_list_then_linked_list_contains_item() {
+        let items = [1, 2, 3, 4, 5];
+        let linked_list = LinkedList::new();
+
+        for item in items {
+            linked_list.append(item)
+        }
+
+        assert_eq!(linked_list.len(), items.len());
+
+        let head = linked_list.head();
+        
+        while head
+        assert_eq!()
+    }
+
 }
