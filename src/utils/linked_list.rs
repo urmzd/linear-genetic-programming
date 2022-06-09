@@ -6,7 +6,7 @@ struct LinkedList<T> {
     length: usize,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Node<T> {
     data: T,
     next: Option<Pointer<T>>,
@@ -25,24 +25,6 @@ struct IterMut<'a, T> {
 }
 
 pub struct IntoIter<T>(LinkedList<T>);
-
-impl<T> Default for LinkedList<T>
-where
-    T: PartialEq,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T> Clone for LinkedList<T>
-where
-    T: Clone,
-{
-    fn clone(&self) -> Self {
-        todo!("Create a new list and clone each node.")
-    }
-}
 
 type Pointer<T> = NonNull<Node<T>>;
 
@@ -84,6 +66,34 @@ impl<T> Node<T> {
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
         self.clear();
+    }
+}
+
+impl<T> Default for LinkedList<T>
+where
+    T: PartialEq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> Clone for LinkedList<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        let mut cloned_list = Self::new();
+        cloned_list.extend(self.iter().map(|node| node.data.clone()));
+        cloned_list
+    }
+}
+
+impl<E> Extend<E> for LinkedList<E> {
+    fn extend<T: IntoIterator<Item = E>>(&mut self, iter: T) {
+        for element in iter {
+            self.append(element)
+        }
     }
 }
 
@@ -236,7 +246,7 @@ impl<T> LinkedList<T> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::{LinkedList, Node};
 
     #[test]
