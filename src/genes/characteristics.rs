@@ -1,5 +1,3 @@
-use std::collections::LinkedList;
-
 use crate::utils::common_traits::{Compare, Show};
 
 use super::{chromosomes::Instruction, registers::RegisterValue};

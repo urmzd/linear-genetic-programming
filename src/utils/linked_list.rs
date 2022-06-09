@@ -1,34 +1,71 @@
-// Single-linked list.
-struct LinkedList<'a, T> {
+use std::{mem, ptr::NonNull};
+
+struct LinkedList<T> {
+    head: Option<Pointer<T>>,
+    tail: Option<Pointer<T>>,
     length: usize,
-    head: Node<'a, T>,
-    tail: Node<'a, T>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Node<'a, T> {
-    Cons(T, &'a Node<'a, T>),
-    Nil,
+struct Node<T> {
+    data: T,
+    next: Option<Pointer<T>>,
+    length: usize,
 }
 
-impl<'a, T> Node<'a, T> {
-    pub fn new(data: T) -> Self {
-        Self::Cons(data, &Self::Nil)
+type Pointer<T> = NonNull<Node<T>>;
+
+impl<T> Node<T>
+where
+    T: PartialEq,
+{
+    fn new(data: T) -> Self {
+        Node {
+            data,
+            next: None,
+            length: 1,
+        }
     }
 
-    pub fn none() -> Self {
-        Self::Nil
+    fn new_dyn(data: T) -> Box<Node<T>> {
+        Box::new(Self::new(data))
     }
 
-    pub fn point_to(&mut self, pointer: &'a Node<'a, T>) -> () {
-        match &self {
-            Self::Cons(_) => self.1 = pointers,
-            Self::Nil => return
-        };
+    fn as_ptr(self: Box<Node<T>>) -> Option<NonNull<Node<T>>> {
+        unsafe {
+            let static_node = Box::leak(self).into();
+            let some_static_node = Some(static_node);
+            some_static_node
+        }
     }
 
-    pub fn next(&self) -> &Self {
-        &self.1
+    // What should this return?
+    // The unwrapped node
+    fn point_next_to(&mut self, mut node: Option<NonNull<Node<T>>>) -> &Node<T> {
+        unsafe {
+            match node {
+                None => panic!("Ensure you're using as_ptr to construct the raw pointer."),
+                Some(ref mut inner_node) => {
+                    self.next = Some(*inner_node);
+                    self.length += mem::replace(&mut inner_node.as_mut().length, 1);
+                    inner_node.as_ref()
+                }
+            }
+        }
+    }
+
+    fn next(&self) -> Option<&Node<T>> {
+        unsafe {
+            if let Some(inside) = &self.next {
+                return Some(inside.as_ref());
+            }
+        }
+
+        return None;
+    }
+
+    pub fn len(&self) -> usize {
+        self.length
     }
 }
 
@@ -41,42 +78,40 @@ impl<'a, T> Node<'a, T> {
 // make a -> z -> f
 // make e -> w
 
-impl<'a, T> LinkedList<'a, T>
+impl<T> LinkedList<T>
 where
     T: PartialEq,
 {
     pub fn new() -> Self {
         LinkedList {
             length: 0,
-            head: Node::Nil,
-            tail: Node::Nil,
+            head: None,
+            tail: None,
         }
     }
 
     /// Adds a new element to the end of the linked list.
-    pub fn append(&'a mut self, data: T) {
-        // Current List: (Nil, Nil)
-        if self.head == Node::Nil {
-            let new_head = Node::new(data);
-            self.head = new_head
-            // After: (Cons T &Nil)
-        } else {
-            let new_tail = Node::new(data);
+    pub fn append(&mut self, data: T) {
+        unsafe {
+            let node = Node::new_dyn(data);
+            let some_leaked_node = node.as_ptr();
+            match &mut self.head {
+                None => {
+                    self.head = some_leaked_node;
+                }
+                Some(_) => {
+                    if let Some(ref mut tail_ptr) = self.tail {
+                        tail_ptr.as_mut().point_next_to(some_leaked_node);
+                        self.tail = some_leaked_node;
+                    }
+                }
+            }
 
-            // Current List: (... Cons(... Cons(T, Nil)))
+            self.length += 1
         }
-        /*
-         *if self.head == List::Nil {
-         *    let new_head = List::Cons(data, &List::Nil);
-         *    self.head = new_head
-         *} else {
-         *    self.tail.append(data)
-         *}
-         */
-        todo!("fix")
     }
 
-    pub fn extract_between(&mut self, start_index: usize, end_index: usize) -> Self {
+    pub fn split_between(&mut self, start_index: usize, end_index: usize) -> Self {
         todo!()
     }
 
@@ -95,22 +130,40 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::ptr;
+
+    use super::{LinkedList, Node};
 
     #[test]
     fn given_a_list_of_elems_when_appended_to_linked_list_then_linked_list_contains_item() {
-        let items = [1, 2, 3, 4, 5];
-        let linked_list = LinkedList::new();
+        let mut linked_list = LinkedList::new();
+        linked_list.append(1);
+        linked_list.append(2);
+        linked_list.append(3);
 
-        for item in items {
-            linked_list.append(item)
-        }
+        assert_eq!(linked_list.len(), 3);
 
-        assert_eq!(linked_list.len(), items.len());
-
-        let head = linked_list.head();
-        
-        while head
-        assert_eq!()
+        /*
+         *        let items = [1, 2, 3, 4, 5];
+         *        let linked_list = LinkedList::new();
+         *
+         *        for item in items {
+         *            linked_list.append(item)
+         *        }
+         *
+         *        assert_eq!(linked_list.len(), items.len());
+         *
+         *        let head = linked_list.head();
+         */
     }
 
+    #[test]
+    fn node_works() {
+        let mut first_node = Node::new_dyn(1);
+        let mut second_node = Node::new_dyn(2);
+
+        let second_node_ptr = first_node.point_next_to(second_node.as_ptr());
+
+        assert!(ptr::eq(second_node_ptr, first_node.next().unwrap()))
+    }
 }

@@ -99,7 +99,7 @@ where
             executables,
         );
 
-        let instructions: LinkedList<Instruction> = (0..n_instructions)
+        let instructions: Instructions = (0..n_instructions)
             .map(|_| Instruction::generate(&instruction_params))
             .collect();
 
@@ -189,31 +189,33 @@ where
 
 impl<'a> Breed for Instructions {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
-        let mut instructions_a = self.clone();
-        let mut instructions_b = mate.clone();
-
-        // Pick a subset of instructions from a
-        // Pick a subset of instrutions from b
-        // Swap the two (in-place)
-
-        let [shortest_set, longest_set] = if instructions_a.len() > instructions_b.len() {
-            [instructions_b, instructions_a]
-        } else {
-            [instructions_a, instructions_b]
-        };
-
-        for index in 0..longest_set.len() {
-            let swap = Rng::gen_bool(&mut generator(), 0.5);
-            if swap {
-                let a = longest_set.remove(index);
-                let b = shortest_set.remove(index);
-                // switch a_i and a_b
-                if index < shortest_set.len() {
-                } else {
-                    todo!("add long to short if True")
-                }
-            }
-        }
+        /*
+         *        let mut instructions_a = self.clone();
+         *        let mut instructions_b = mate.clone();
+         *
+         *        // Pick a subset of instructions from a
+         *        // Pick a subset of instrutions from b
+         *        // Swap the two (in-place)
+         *
+         *        let [shortest_set, longest_set] = if instructions_a.len() > instructions_b.len() {
+         *            [instructions_b, instructions_a]
+         *        } else {
+         *            [instructions_a, instructions_b]
+         *        };
+         *
+         *        for index in 0..longest_set.len() {
+         *            let swap = Rng::gen_bool(&mut generator(), 0.5);
+         *            if swap {
+         *                let a = longest_set.remove(index);
+         *                let b = shortest_set.remove(index);
+         *                // switch a_i and a_b
+         *                if index < shortest_set.len() {
+         *                } else {
+         *                    todo!("add long to short if True")
+         *                }
+         *            }
+         *        }
+         */
 
         todo!()
     }
