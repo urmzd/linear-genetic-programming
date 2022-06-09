@@ -1,4 +1,4 @@
-use std::{mem, ptr::NonNull};
+use std::ptr::NonNull;
 
 struct LinkedList<T> {
     head: Option<Pointer<T>>,
@@ -12,12 +12,37 @@ struct Node<T> {
     next: Option<Pointer<T>>,
 }
 
-type Pointer<T> = NonNull<Node<T>>;
+struct Iter<'a, T> {
+    next: Option<&'a Node<T>>,
+}
 
-impl<T> Node<T>
+struct IterMut<'a, T> {
+    next: Option<&'a mut Node<T>>,
+}
+
+pub struct IntoIter<T>(LinkedList<T>);
+
+impl<T> Default for LinkedList<T>
 where
     T: PartialEq,
 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> Clone for LinkedList<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        todo!("Create a new list and clone each node.")
+    }
+}
+
+type Pointer<T> = NonNull<Node<T>>;
+
+impl<T> Node<T> {
     fn new(data: T) -> Self {
         Node { data, next: None }
     }
@@ -30,14 +55,16 @@ where
         unsafe { Box::leak(self).into() }
     }
 
-    // What should this return?
-    // The unwrapped node
-    fn point_next_to(&mut self, mut node: Pointer<T>) {
+    fn point_to(&mut self, mut node: Pointer<T>) {
         self.next = Some(node);
     }
 
     fn next(&self) -> Option<&Node<T>> {
         unsafe { self.next.map(|node| node.as_ref()) }
+    }
+
+    fn next_mut(&mut self) -> Option<&mut Node<T>> {
+        unsafe { self.next.map(|mut node| node.as_mut()) }
     }
 }
 
@@ -50,10 +77,7 @@ where
 // make a -> z -> f
 // make e -> w
 
-impl<T> LinkedList<T>
-where
-    T: PartialEq,
-{
+impl<T> LinkedList<T> {
     pub fn new() -> Self {
         LinkedList {
             length: 0,
@@ -73,10 +97,10 @@ where
                 Some(head_ptr) => {
                     match self.tail {
                         None => {
-                            (*head_ptr.as_ptr()).point_next_to(some_leaked_node);
+                            (*head_ptr.as_ptr()).point_to(some_leaked_node);
                         }
                         Some(tail_ptr) => {
-                            (*tail_ptr.as_ptr()).point_next_to(some_leaked_node);
+                            (*tail_ptr.as_ptr()).point_to(some_leaked_node);
                         }
                     }
                     self.tail = Some(some_leaked_node);
@@ -87,7 +111,7 @@ where
         }
     }
 
-    pub fn pop_head(&mut self) -> Option<Box<Node<T>>> {
+    pub fn dequeue(&mut self) -> Option<Box<Node<T>>> {
         self.head.map(|node| unsafe {
             let contained_node = Box::from_raw(node.as_ptr());
 
@@ -128,9 +152,9 @@ mod test {
 
         assert_eq!(linked_list.len(), 3);
 
-        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(1));
-        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(2));
-        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(3));
+        assert_eq!(linked_list.dequeue().map(|node| node.data), Some(1));
+        assert_eq!(linked_list.dequeue().map(|node| node.data), Some(2));
+        assert_eq!(linked_list.dequeue().map(|node| node.data), Some(3));
     }
 
     #[test]
@@ -138,7 +162,7 @@ mod test {
         let mut first_node = Node::new_dyn(1);
         let second_node = Node::new_dyn(2);
 
-        first_node.point_next_to(second_node.as_ptr());
+        first_node.point_to(second_node.as_ptr());
 
         assert_eq!(first_node.next().map(|node| node.data), Some(2));
         assert_eq!(first_node.next().and_then(|node| node.next()), None)
