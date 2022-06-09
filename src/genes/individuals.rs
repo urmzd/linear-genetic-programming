@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, fmt::Display};
+use std::fmt::Display;
 
 use crate::{
     metrics::definitions::Metric,
@@ -7,10 +7,7 @@ use crate::{
         random::generator,
     },
 };
-use rand::{
-    distributions::uniform::{UniformInt, UniformSampler},
-    Rng,
-};
+use rand::distributions::uniform::{UniformInt, UniformSampler};
 use serde::Serialize;
 
 use crate::{

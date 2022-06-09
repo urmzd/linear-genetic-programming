@@ -1,4 +1,4 @@
-use std::ptr::NonNull;
+use std::{marker::PhantomData, ptr::NonNull};
 
 struct LinkedList<T> {
     head: Option<Pointer<T>>,
@@ -13,11 +13,15 @@ struct Node<T> {
 }
 
 struct Iter<'a, T> {
-    next: Option<&'a Node<T>>,
+    next: Option<Pointer<T>>,
+    length: usize,
+    _marker: PhantomData<&'a T>,
 }
 
 struct IterMut<'a, T> {
-    next: Option<&'a mut Node<T>>,
+    next: Option<Pointer<T>>,
+    length: usize,
+    _marker: PhantomData<&'a mut T>,
 }
 
 pub struct IntoIter<T>(LinkedList<T>);
@@ -77,12 +81,88 @@ impl<T> Node<T> {
 // make a -> z -> f
 // make e -> w
 
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        self.clear();
+    }
+}
+
+// Reference Iterator
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a Node<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.and_then(|node| unsafe {
+            self.next = (*node.as_ptr()).next;
+            Some(node.as_ref())
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.length, Some(self.length))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.length
+    }
+}
+
+impl<'a, T> IntoIterator for &'a LinkedList<T> {
+    type Item = &'a Node<T>;
+
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+// Mutable Iterator
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut Node<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.and_then(|mut node| unsafe {
+            self.next = (*node.as_ptr()).next;
+            Some(node.as_mut())
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.length, Some(self.length))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
+    fn len(&self) -> usize {
+        self.length
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
+    type Item = &'a mut Node<T>;
+
+    type IntoIter = IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 impl<T> LinkedList<T> {
     pub fn new() -> Self {
         LinkedList {
             length: 0,
             head: None,
             tail: None,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        while self.head.is_some() {
+            self.dequeue();
         }
     }
 
@@ -132,6 +212,22 @@ impl<T> LinkedList<T> {
 
     pub fn tail(&mut self) -> Option<&Node<T>> {
         unsafe { self.tail.map(|node| node.as_ref()) }
+    }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head,
+            length: self.length,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            next: self.head,
+            length: self.length,
+            _marker: PhantomData,
+        }
     }
 
     pub fn len(&self) -> usize {
