@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn given_nodes_when_point_next_to_called_node_1_points_to_node_2() {
+    fn given_two_nodes_when_point_to_is_called_then_node_one_points_to_node_two() {
         let mut first_node = Node::new_dyn(1);
         let second_node = Node::new_dyn(2);
 
