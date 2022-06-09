@@ -31,7 +31,7 @@ where
         Box::new(Self::new(data))
     }
 
-    fn as_ptr(self: Box<Node<T>>) -> Option<NonNull<Node<T>>> {
+    fn as_ptr(self: Box<Node<T>>) -> Option<Pointer<T>> {
         unsafe {
             let static_node = Box::leak(self).into();
             let some_static_node = Some(static_node);
@@ -41,7 +41,7 @@ where
 
     // What should this return?
     // The unwrapped node
-    fn point_next_to(&mut self, mut node: Option<NonNull<Node<T>>>) -> &Node<T> {
+    fn point_next_to(&mut self, mut node: Option<Pointer<T>>) -> &Node<T> {
         unsafe {
             match node {
                 None => panic!("Ensure you're using as_ptr to construct the raw pointer."),
@@ -91,36 +91,61 @@ where
     }
 
     /// Adds a new element to the end of the linked list.
+    ///
+    /// Cases:
+    ///     Case 1: Empty LinkedList
+    ///     Case 2: Head Only LinkedList
+    ///     Case 3: Full LinkedList
     pub fn append(&mut self, data: T) {
         unsafe {
             let node = Node::new_dyn(data);
             let some_leaked_node = node.as_ptr();
-            match &mut self.head {
+            match self.head {
+                // Case 1:
                 None => {
                     self.head = some_leaked_node;
                 }
-                Some(_) => {
-                    if let Some(ref mut tail_ptr) = self.tail {
-                        tail_ptr.as_mut().point_next_to(some_leaked_node);
-                        self.tail = some_leaked_node;
+                Some(head_ptr) => {
+                    match self.tail {
+                        // Case 2:
+                        None => {
+                            (*head_ptr.as_ptr()).point_next_to(some_leaked_node);
+                        }
+
+                        // Case 3:
+                        Some(tail_ptr) => {
+                            (*tail_ptr.as_ptr()).point_next_to(some_leaked_node);
+                        }
                     }
+                    self.tail = some_leaked_node;
                 }
             }
 
-            self.length += 1
+            self.length += 1;
         }
     }
 
-    pub fn split_between(&mut self, start_index: usize, end_index: usize) -> Self {
-        todo!()
+    pub fn pop_head(&mut self) -> Option<Box<Node<T>>> {
+        self.head.map(|node| unsafe {
+            let contained_node = Box::from_raw(node.as_ptr());
+
+            // DEBUG: why is this none?
+            self.head = contained_node.next;
+
+            if self.head.is_none() {
+                self.tail = None
+            }
+
+            contained_node
+        })
     }
 
-    pub fn head(&mut self) -> &mut Node<T> {
-        todo!()
+    pub fn head(&mut self) -> Option<&Node<T>> {
+        unsafe { self.head.map(|node| node.as_ref()) }
     }
 
-    pub fn tail(&mut self) -> &mut Node<T> {
-        todo!("")
+    pub fn tail(&mut self) -> Option<&Node<T>> {
+        unsafe { self.tail.map(|node| node.as_ref()) }
     }
 
     pub fn len(&self) -> usize {
@@ -143,6 +168,10 @@ mod test {
 
         assert_eq!(linked_list.len(), 3);
 
+        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(1));
+        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(2));
+        assert_eq!(linked_list.pop_head().map(|node| node.data), Some(3));
+
         /*
          *        let items = [1, 2, 3, 4, 5];
          *        let linked_list = LinkedList::new();
@@ -158,12 +187,13 @@ mod test {
     }
 
     #[test]
-    fn node_works() {
+    fn given_nodes_when_point_next_to_called_node_1_points_to_node_2() {
         let mut first_node = Node::new_dyn(1);
-        let mut second_node = Node::new_dyn(2);
+        let second_node = Node::new_dyn(2);
 
         let second_node_ptr = first_node.point_next_to(second_node.as_ptr());
 
-        assert!(ptr::eq(second_node_ptr, first_node.next().unwrap()))
+        assert!(ptr::eq(second_node_ptr, first_node.next().unwrap()));
+        assert_eq!(first_node.len(), 2);
     }
 }
