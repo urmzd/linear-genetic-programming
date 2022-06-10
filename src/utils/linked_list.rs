@@ -34,6 +34,53 @@ struct IterMut<'a, T> {
 
 pub struct IntoIter<T>(LinkedList<T>);
 
+struct CursorMut<'a, T> {
+    list: &'a mut LinkedList<T>,
+    current: Option<Pointer<T>>,
+    index: Option<usize>,
+}
+
+impl<'a, T> CursorMut<'a, T> {
+    pub fn current(&mut self) -> Option<&mut T> {
+        self.current.map(|node| unsafe {
+            let element = &mut (*node.as_ptr());
+            &mut element.data
+        })
+    }
+
+    pub fn next(&mut self) {
+        // We're somewhere in the "middle"
+        if let Some(node) = self.current {
+            self.current = unsafe { (*node.as_ptr()).next };
+            self.index.map(|idx| idx + 1);
+        } else {
+            // We've reached the end, loop to ghost front
+            if self.index > Some(self.list.length) {
+                self.current = None;
+                self.index = None;
+            } else {
+                // we're at the front, go to head
+                self.current = self.list.head;
+                // If head is empty, index is still 0
+                match self.current {
+                    Some(_) => self.index = Some(0),
+                    None => return,
+                }
+            }
+        }
+    }
+
+    fn split_before(&mut self) -> LinkedList<T> {
+        // go from head -> self.element
+
+        todo!("")
+    }
+
+    fn split_after(&mut self) -> LinkedList<T> {
+        todo!("")
+    }
+}
+
 type Pointer<T> = NonNull<Node<T>>;
 
 impl<T> Node<T> {
@@ -59,6 +106,102 @@ impl<T> Node<T> {
 
     fn next_mut(&mut self) -> Option<&mut Node<T>> {
         unsafe { self.next.map(|mut node| node.as_mut()) }
+    }
+}
+
+impl<T> LinkedList<T> {
+    pub fn new() -> Self {
+        LinkedList {
+            length: 0,
+            head: None,
+            tail: None,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        while self.head.is_some() {
+            self.dequeue();
+        }
+    }
+
+    pub fn append(&mut self, data: T) {
+        unsafe {
+            let node = Node::new_dyn(data);
+            let some_leaked_node = node.as_ptr();
+            match self.head {
+                None => {
+                    self.head = Some(some_leaked_node);
+                }
+                Some(head_ptr) => {
+                    match self.tail {
+                        None => {
+                            (*head_ptr.as_ptr()).point_to(some_leaked_node);
+                        }
+                        Some(tail_ptr) => {
+                            (*tail_ptr.as_ptr()).point_to(some_leaked_node);
+                        }
+                    }
+                    self.tail = Some(some_leaked_node);
+                }
+            }
+
+            self.length += 1;
+        }
+    }
+
+    pub fn dequeue(&mut self) -> Option<Box<Node<T>>> {
+        self.head.map(|node| unsafe {
+            let contained_node = Box::from_raw(node.as_ptr());
+
+            // DEBUG: why is this none?
+            self.head = contained_node.next;
+
+            if self.head.is_none() {
+                self.tail = None
+            }
+
+            contained_node
+        })
+    }
+
+    pub fn head(&self) -> Option<&Node<T>> {
+        unsafe { self.head.map(|node| node.as_ref()) }
+    }
+
+    pub fn tail(&self) -> Option<&Node<T>> {
+        unsafe { self.tail.map(|node| node.as_ref()) }
+    }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head,
+            length: self.length,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            next: self.head,
+            length: self.length,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+
+    pub fn cursor_mut(&mut self) -> CursorMut<T> {
+        CursorMut {
+            list: self,
+            current: None,
+            index: None,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.length
     }
 }
 
@@ -99,7 +242,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.map(|mut node| unsafe {
+        self.next.map(|node| unsafe {
             self.next = (*node.as_ptr()).next;
             &mut (*node.as_ptr()).data
         })
@@ -239,94 +382,6 @@ where
     }
 }
 
-impl<T> LinkedList<T> {
-    pub fn new() -> Self {
-        LinkedList {
-            length: 0,
-            head: None,
-            tail: None,
-        }
-    }
-
-    pub fn clear(&mut self) {
-        while self.head.is_some() {
-            self.dequeue();
-        }
-    }
-
-    pub fn append(&mut self, data: T) {
-        unsafe {
-            let node = Node::new_dyn(data);
-            let some_leaked_node = node.as_ptr();
-            match self.head {
-                None => {
-                    self.head = Some(some_leaked_node);
-                }
-                Some(head_ptr) => {
-                    match self.tail {
-                        None => {
-                            (*head_ptr.as_ptr()).point_to(some_leaked_node);
-                        }
-                        Some(tail_ptr) => {
-                            (*tail_ptr.as_ptr()).point_to(some_leaked_node);
-                        }
-                    }
-                    self.tail = Some(some_leaked_node);
-                }
-            }
-
-            self.length += 1;
-        }
-    }
-
-    pub fn dequeue(&mut self) -> Option<Box<Node<T>>> {
-        self.head.map(|node| unsafe {
-            let contained_node = Box::from_raw(node.as_ptr());
-
-            // DEBUG: why is this none?
-            self.head = contained_node.next;
-
-            if self.head.is_none() {
-                self.tail = None
-            }
-
-            contained_node
-        })
-    }
-
-    pub fn head(&mut self) -> Option<&Node<T>> {
-        unsafe { self.head.map(|node| node.as_ref()) }
-    }
-
-    pub fn tail(&mut self) -> Option<&Node<T>> {
-        unsafe { self.tail.map(|node| node.as_ref()) }
-    }
-
-    pub fn iter(&self) -> Iter<T> {
-        Iter {
-            next: self.head,
-            length: self.length,
-            _marker: PhantomData,
-        }
-    }
-
-    pub fn iter_mut(&mut self) -> IterMut<T> {
-        IterMut {
-            next: self.head,
-            length: self.length,
-            _marker: PhantomData,
-        }
-    }
-
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-
-    pub fn len(&self) -> usize {
-        self.length
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{LinkedList, Node};
@@ -372,5 +427,36 @@ mod tests {
 
         assert_eq!(first_node.next().map(|node| node.data), Some(2));
         assert_eq!(first_node.next().and_then(|node| node.next()), None)
+    }
+
+    #[test]
+    fn given_linked_list_when_accessors_called_then_nodes_are_returned() {
+        let elems = [1, 2, 3, 4];
+        let mut linked_list = LinkedList::new();
+        linked_list.extend(elems);
+
+        assert_eq!(linked_list.head().map(|node| node.data), Some(1));
+        assert_eq!(linked_list.tail().map(|node| node.data), Some(4));
+    }
+
+    #[test]
+    fn given_linked_list_cursor_when_next_is_called_then_nodes_are_cycled() {
+        let elems = [1, 2, 3, 4];
+        let mut linked_list_one = LinkedList::new();
+        linked_list_one.extend(elems);
+        let mut cursor_one = linked_list_one.cursor_mut();
+        assert_eq!(cursor_one.current(), None);
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), Some(&mut 1));
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), Some(&mut 2));
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), Some(&mut 3));
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), Some(&mut 4));
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), None);
+        cursor_one.next();
+        assert_eq!(cursor_one.current(), Some(&mut 1));
     }
 }
