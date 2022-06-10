@@ -189,7 +189,6 @@ impl<'a, T> CursorMut<'a, T> {
 }
 
 type Pointer<T> = NonNull<Node<T>>;
-type BoundedPointer<T> = Box<Node<T>>;
 
 impl<T> Node<T> {
     fn new(data: T) -> Self {
