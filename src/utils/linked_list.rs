@@ -6,7 +6,7 @@
 // We want to swap <b,.., e> with <z,..x>
 // make a -> z -> f
 // make e -> w
-use std::{fmt, marker::PhantomData, ptr::NonNull};
+use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
 struct LinkedList<T> {
     head: Option<Pointer<T>>,
@@ -74,20 +74,31 @@ impl<'a, T> CursorMut<'a, T> {
     pub fn seek(&mut self, idx: usize) {}
 
     fn split_after(&mut self) -> LinkedList<T> {
+        // We're somewhere between the head and the tail
         if let Some(current) = self.current {
+            let n_nodes_used = self.index.unwrap() + 1;
             let new_linked_list = LinkedList {
                 head: unsafe { (*current.as_ptr()).next },
                 tail: self.list.tail,
-                length: self.list.length - self.index.unwrap(),
+                length: self.list.length - n_nodes_used,
             };
 
             unsafe {
-                (*current.as_ptr()).next = None;
+                // Break the list
+                // Before: a -> b -> c -> d -> e (c -> current)
+                // After: a -> b > c && d -> e
+                (*current.as_ptr()).remove_next();
+                assert_eq!((*current.as_ptr()).next, None);
+                self.list.length = n_nodes_used;
+                // We become the new tail.
+                self.list.tail = self.current;
             }
-        } else {
-        }
 
-        todo!("")
+            new_linked_list
+        } else {
+            // We're at the spot before the the head
+            mem::replace(self.list, LinkedList::new())
+        }
     }
 
     fn extract_between(&mut self) {}
@@ -169,7 +180,6 @@ impl<T> LinkedList<T> {
         self.head.map(|node| unsafe {
             let contained_node = Box::from_raw(node.as_ptr());
 
-            // DEBUG: why is this none?
             self.head = contained_node.next;
 
             if self.head.is_none() {
@@ -458,9 +468,12 @@ mod tests {
     #[test]
     fn given_linked_list_cursor_when_next_is_called_then_nodes_are_cycled() {
         let elems = [1, 2, 3, 4];
+
         let mut list = LinkedList::new();
         list.extend(elems);
+
         let mut cursor = list.cursor_mut();
+
         assert_eq!(cursor.current(), None);
         cursor.next();
         assert_eq!(cursor.current(), Some(&mut 1));
@@ -477,8 +490,38 @@ mod tests {
 
         let mut null_list = LinkedList::<i32>::new();
         let mut cursor_null = null_list.cursor_mut();
+
         assert_eq!(cursor_null.current(), None);
         cursor_null.next();
         assert_eq!(cursor_null.current(), None);
+    }
+
+    #[test]
+    fn given_linked_lists_when_split_after_is_called_then_a_new_list_is_returned() {
+        let elems = [1, 2, 3, 4, 5];
+        let mut list = LinkedList::new();
+        list.extend(elems);
+
+        let mut cursor = list.cursor_mut();
+
+        cursor.next();
+
+        assert_eq!(cursor.current(), Some(&mut 1));
+
+        let mut split_list = cursor.split_after();
+
+        cursor.next();
+
+        assert_eq!(cursor.current(), None);
+
+        cursor.next();
+
+        assert_eq!(cursor.current(), Some(&mut 1));
+
+        let mut split_cursor = split_list.cursor_mut();
+
+        split_cursor.next();
+
+        assert_eq!(split_cursor.current(), Some(&mut 2));
     }
 }
