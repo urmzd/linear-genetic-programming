@@ -158,6 +158,9 @@ impl<'a, T> CursorMut<'a, T> {
         assert_lt!(other_start_idx, other.list.len());
         assert_lt!(end_idx, Some(self.list.len()));
         assert_lt!(other_end_idx, Some(self.list.len()));
+        assert_eq!(end_idx.is_none(), other_end_idx.is_none());
+
+        let no_end = end_idx.is_none();
 
         // Start at the beginning;
         // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
@@ -167,8 +170,15 @@ impl<'a, T> CursorMut<'a, T> {
         self.seek_before(start_idx);
         other.seek_before(other_start_idx);
 
-        let self_before = self.current;
-        let other_before = other.current;
+        let self_before = self.current.unwrap();
+        let other_before = other.current.unwrap();
+
+        if no_end {
+            unsafe {
+                let self_before_next = (*self_before.as_ptr()).next();
+                let other_before_next = (*other_before.as_ptr()).next();
+            }
+        }
 
         // self.seek_before(end_idx);
         // other.seek_before(other_end_idx);
@@ -179,6 +189,7 @@ impl<'a, T> CursorMut<'a, T> {
 }
 
 type Pointer<T> = NonNull<Node<T>>;
+type BoundedPointer<T> = Box<Node<T>>;
 
 impl<T> Node<T> {
     fn new(data: T) -> Self {
@@ -193,12 +204,15 @@ impl<T> Node<T> {
         Box::leak(self).into()
     }
 
-    fn point_to(&mut self, node: Pointer<T>) {
-        self.next = Some(node);
+    // Ensure you clear the allocated space once done.
+    fn point_to(&mut self, node: Option<Pointer<T>>) -> Option<Pointer<T>> {
+        let current_next = self.next;
+        self.next = node;
+        current_next
     }
 
-    fn remove_next(&mut self) {
-        self.next = None
+    fn remove_next(&mut self) -> Option<Pointer<T>> {
+        self.point_to(None)
     }
 
     fn next(&self) -> Option<&Node<T>> {
@@ -240,12 +254,14 @@ impl<T> LinkedList<T> {
                 Some(head_ptr) => {
                     match self.tail {
                         None => {
-                            (*head_ptr.as_ptr()).point_to(some_leaked_node);
+                            (*head_ptr.as_ptr()).point_to(Some(some_leaked_node));
                         }
                         Some(tail_ptr) => {
-                            (*tail_ptr.as_ptr()).point_to(some_leaked_node);
+                            // Debug: Double free -- be careful
+                            (*tail_ptr.as_ptr()).point_to(Some(some_leaked_node));
                         }
                     }
+
                     self.tail = Some(some_leaked_node);
                 }
             }
@@ -499,13 +515,16 @@ mod tests {
         linked_list.extend(elements);
         assert_eq!(linked_list.len(), elements.len());
 
-        // test iter
-
-        let mut index = 0;
-        for element in linked_list {
-            assert_eq!(element, elements[index]);
-            index += 1
-        }
+        let mut current = linked_list.head();
+        assert_eq!(current.map(|node| node.data), Some(elements[0]));
+        current = current.and_then(|node| node.next());
+        assert_eq!(current.map(|node| node.data), Some(elements[1]));
+        current = current.and_then(|node| node.next());
+        assert_eq!(current.map(|node| node.data), Some(elements[2]));
+        current = current.and_then(|node| node.next());
+        assert_eq!(current.map(|node| node.data), Some(elements[3]));
+        current = current.and_then(|node| node.next());
+        assert_eq!(current.map(|node| node.data), Some(elements[4]));
     }
 
     #[test]
@@ -527,7 +546,8 @@ mod tests {
         let mut first_node = Node::new_dyn(1);
         let second_node = Node::new_dyn(2);
 
-        first_node.point_to(second_node.as_ptr());
+        let previous_next = first_node.point_to(Some(second_node.as_ptr()));
+        assert_eq!(previous_next, None);
 
         assert_eq!(first_node.next().map(|node| node.data), Some(2));
         assert_eq!(first_node.next().and_then(|node| node.next()), None)
