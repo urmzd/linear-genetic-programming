@@ -63,40 +63,6 @@ impl<T> Node<T> {
 // make a -> z -> f
 // make e -> w
 
-impl<T> Drop for LinkedList<T> {
-    fn drop(&mut self) {
-        self.clear();
-    }
-}
-
-impl<T> Default for LinkedList<T>
-where
-    T: PartialEq,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T> Clone for LinkedList<T>
-where
-    T: Clone,
-{
-    fn clone(&self) -> Self {
-        let mut cloned_list = Self::new();
-        cloned_list.extend(self.iter().map(|node| node.data.clone()));
-        cloned_list
-    }
-}
-
-impl<E> Extend<E> for LinkedList<E> {
-    fn extend<T: IntoIterator<Item = E>>(&mut self, iter: T) {
-        for element in iter {
-            self.append(element)
-        }
-    }
-}
-
 // Reference Iterator
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a Node<T>;
@@ -158,6 +124,74 @@ impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
+    }
+}
+
+// Base
+
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        self.clear();
+    }
+}
+
+impl<T> Default for LinkedList<T>
+where
+    T: PartialEq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> Clone for LinkedList<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        let mut cloned_list = Self::new();
+        cloned_list.extend(self.iter().map(|node| node.data.clone()));
+        cloned_list
+    }
+}
+
+impl<E> Extend<E> for LinkedList<E> {
+    fn extend<T: IntoIterator<Item = E>>(&mut self, iter: T) {
+        for element in iter {
+            self.append(element)
+        }
+    }
+}
+
+impl<'a, E> FromIterator<E> for LinkedList<E> {
+    fn from_iter<T: IntoIterator<Item = E>>(iter: T) -> Self {
+        let mut list = Self::new();
+        list.extend(iter);
+        list
+    }
+}
+
+impl<'a, E> IntoIterator for LinkedList<E> {
+    type Item = E;
+
+    type IntoIter = IntoIter<E>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<E> Iterator for IntoIter<E> {
+    type Item = E;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.dequeue().map(|node| node.data)
+    }
+}
+
+impl<E> ExactSizeIterator for IntoIter<E> {
+    fn len(&self) -> usize {
+        self.0.len()
     }
 }
 
@@ -240,6 +274,10 @@ impl<T> LinkedList<T> {
         }
     }
 
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+
     pub fn len(&self) -> usize {
         self.length
     }
@@ -248,6 +286,24 @@ impl<T> LinkedList<T> {
 #[cfg(test)]
 mod tests {
     use super::{LinkedList, Node};
+
+    #[test]
+    fn given_a_list_of_elems_when_extended_then_linked_list_is_fill_with_elements() {
+        let elements = [1, 2, 3, 4, 5];
+        let mut linked_list = LinkedList::new();
+
+        assert_eq!(linked_list.len(), 0);
+        linked_list.extend(elements);
+        assert_eq!(linked_list.len(), elements.len());
+
+        // test iter
+
+        let mut index = 0;
+        for element in linked_list {
+            assert_eq!(element, elements[index]);
+            index += 1
+        }
+    }
 
     #[test]
     fn given_a_list_of_elems_when_appended_to_linked_list_then_linked_list_contains_item() {
