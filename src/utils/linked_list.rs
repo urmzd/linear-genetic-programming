@@ -11,36 +11,36 @@ use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 use log::debug;
 use more_asserts::assert_lt;
 
-struct LinkedList<T> {
-    head: Option<Pointer<T>>,
-    tail: Option<Pointer<T>>,
-    length: usize,
+pub struct LinkedList<T> {
+    pub head: Option<Pointer<T>>,
+    pub tail: Option<Pointer<T>>,
+    pub length: usize,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct Node<T> {
-    data: T,
-    next: Option<Pointer<T>>,
+pub struct Node<T> {
+    pub data: T,
+    pub next: Option<Pointer<T>>,
 }
 
-struct Iter<'a, T> {
-    next: Option<Pointer<T>>,
-    length: usize,
+pub struct Iter<'a, T> {
+    pub next: Option<Pointer<T>>,
+    pub length: usize,
     _marker: PhantomData<&'a T>,
 }
 
-struct IterMut<'a, T> {
-    next: Option<Pointer<T>>,
-    length: usize,
+pub struct IterMut<'a, T> {
+    pub next: Option<Pointer<T>>,
+    pub length: usize,
     _marker: PhantomData<&'a mut T>,
 }
 
-pub struct IntoIter<T>(LinkedList<T>);
+pub struct IntoIter<T>(pub LinkedList<T>);
 
-struct CursorMut<'a, T> {
-    list: &'a mut LinkedList<T>,
-    current: Option<Pointer<T>>,
-    index: Option<usize>,
+pub struct CursorMut<'a, T> {
+    pub list: &'a mut LinkedList<T>,
+    pub current: Option<Pointer<T>>,
+    pub index: Option<usize>,
 }
 
 impl<'a, T> CursorMut<'a, T> {
@@ -97,7 +97,7 @@ impl<'a, T> CursorMut<'a, T> {
             self.reset();
             true
         } else {
-            self.seek(idx)
+            self.seek(idx - 1)
         }
     }
 
@@ -175,8 +175,10 @@ impl<'a, T> CursorMut<'a, T> {
 
         if no_end {
             unsafe {
-                let self_before_next = (*self_before.as_ptr()).next();
-                let other_before_next = (*other_before.as_ptr()).next();
+                let self_before_next = (*self_before.as_ptr()).next;
+                let other_before_next = (*other_before.as_ptr()).next;
+                (*self_before.as_ptr()).point_to(other_before_next);
+                (*other_before.as_ptr()).point_to(self_before_next);
             }
         }
 
@@ -510,7 +512,7 @@ mod tests {
         let elements = [1, 2, 3, 4, 5];
         let mut linked_list = LinkedList::new();
 
-        assert_eq!(linked_list.len(), 0);
+        assert!(linked_list.is_empty());
         linked_list.extend(elements);
         assert_eq!(linked_list.len(), elements.len());
 
@@ -634,5 +636,26 @@ mod tests {
         // We stay in the same place;
         assert_eq!(cursor.seek(55), false);
         assert_eq!(cursor.current(), Some(&mut 4));
+    }
+
+    #[test]
+    fn given_linked_list_cursors_when_swap_then_pointers_are_swapped() {
+        let e1 = [1, 2, 3, 4, 5];
+        let e2 = [6, 7, 8, 9, 10];
+        let mut l1 = LinkedList::new();
+        let mut l2 = LinkedList::new();
+        l1.extend(e1);
+        l2.extend(e2);
+
+        let mut c1 = l1.cursor_mut();
+        let mut c2 = l2.cursor_mut();
+
+        c1.swap(&mut c2, 2, 2, None, None);
+
+        let e12 = [1, 2, 8, 9, 10];
+        let e21 = [6, 7, 3, 4, 5];
+
+        assert!(l1.iter().eq(e12.iter()));
+        assert!(l2.iter().eq(e21.iter()));
     }
 }
