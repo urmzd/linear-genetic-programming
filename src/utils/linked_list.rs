@@ -70,15 +70,27 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
-    fn split_before(&mut self) -> LinkedList<T> {
-        // go from head -> self.element
-
-        todo!("")
-    }
+    // TODO: Implement
+    pub fn seek(&mut self, idx: usize) {}
 
     fn split_after(&mut self) -> LinkedList<T> {
+        if let Some(current) = self.current {
+            let new_linked_list = LinkedList {
+                head: unsafe { (*current.as_ptr()).next },
+                tail: self.list.tail,
+                length: self.list.length - self.index.unwrap(),
+            };
+
+            unsafe {
+                (*current.as_ptr()).next = None;
+            }
+        } else {
+        }
+
         todo!("")
     }
+
+    fn extract_between(&mut self) {}
 }
 
 type Pointer<T> = NonNull<Node<T>>;
@@ -98,6 +110,10 @@ impl<T> Node<T> {
 
     fn point_to(&mut self, node: Pointer<T>) {
         self.next = Some(node);
+    }
+
+    fn remove_next(&mut self) {
+        self.next = None
     }
 
     fn next(&self) -> Option<&Node<T>> {
@@ -442,21 +458,27 @@ mod tests {
     #[test]
     fn given_linked_list_cursor_when_next_is_called_then_nodes_are_cycled() {
         let elems = [1, 2, 3, 4];
-        let mut linked_list_one = LinkedList::new();
-        linked_list_one.extend(elems);
-        let mut cursor_one = linked_list_one.cursor_mut();
-        assert_eq!(cursor_one.current(), None);
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), Some(&mut 1));
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), Some(&mut 2));
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), Some(&mut 3));
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), Some(&mut 4));
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), None);
-        cursor_one.next();
-        assert_eq!(cursor_one.current(), Some(&mut 1));
+        let mut list = LinkedList::new();
+        list.extend(elems);
+        let mut cursor = list.cursor_mut();
+        assert_eq!(cursor.current(), None);
+        cursor.next();
+        assert_eq!(cursor.current(), Some(&mut 1));
+        cursor.next();
+        assert_eq!(cursor.current(), Some(&mut 2));
+        cursor.next();
+        assert_eq!(cursor.current(), Some(&mut 3));
+        cursor.next();
+        assert_eq!(cursor.current(), Some(&mut 4));
+        cursor.next();
+        assert_eq!(cursor.current(), None);
+        cursor.next();
+        assert_eq!(cursor.current(), Some(&mut 1));
+
+        let mut null_list = LinkedList::<i32>::new();
+        let mut cursor_null = null_list.cursor_mut();
+        assert_eq!(cursor_null.current(), None);
+        cursor_null.next();
+        assert_eq!(cursor_null.current(), None);
     }
 }
