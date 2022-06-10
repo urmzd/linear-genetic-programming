@@ -1,4 +1,12 @@
-use std::{marker::PhantomData, ptr::NonNull};
+// Why are we using this data structure?
+//
+// Chromosomes A: a b c d e f g h
+// Chromosomes B: z y x w v u t s
+//
+// We want to swap <b,.., e> with <z,..x>
+// make a -> z -> f
+// make e -> w
+use std::{fmt, marker::PhantomData, ptr::NonNull};
 
 struct LinkedList<T> {
     head: Option<Pointer<T>>,
@@ -38,10 +46,10 @@ impl<T> Node<T> {
     }
 
     fn as_ptr(self: Box<Node<T>>) -> Pointer<T> {
-        unsafe { Box::leak(self).into() }
+        Box::leak(self).into()
     }
 
-    fn point_to(&mut self, mut node: Pointer<T>) {
+    fn point_to(&mut self, node: Pointer<T>) {
         self.next = Some(node);
     }
 
@@ -54,23 +62,14 @@ impl<T> Node<T> {
     }
 }
 
-// Why are we using this data structure?
-//
-// Chromosomes A: a b c d e f g h
-// Chromosomes B: z y x w v u t s
-//
-// We want to swap <b,.., e> with <z,..x>
-// make a -> z -> f
-// make e -> w
-
 // Reference Iterator
 impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a Node<T>;
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.and_then(|node| unsafe {
+        self.next.map(|node| unsafe {
             self.next = (*node.as_ptr()).next;
-            Some(node.as_ref())
+            &(*node.as_ptr()).data
         })
     }
 
@@ -86,7 +85,7 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {
 }
 
 impl<'a, T> IntoIterator for &'a LinkedList<T> {
-    type Item = &'a Node<T>;
+    type Item = &'a T;
 
     type IntoIter = Iter<'a, T>;
 
@@ -97,12 +96,12 @@ impl<'a, T> IntoIterator for &'a LinkedList<T> {
 
 // Mutable Iterator
 impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = &'a mut Node<T>;
+    type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.and_then(|mut node| unsafe {
+        self.next.map(|mut node| unsafe {
             self.next = (*node.as_ptr()).next;
-            Some(node.as_mut())
+            &mut (*node.as_ptr()).data
         })
     }
 
@@ -118,7 +117,7 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
-    type Item = &'a mut Node<T>;
+    type Item = &'a mut T;
 
     type IntoIter = IterMut<'a, T>;
 
@@ -127,8 +126,7 @@ impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
     }
 }
 
-// Base
-
+// Owned
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
         self.clear();
@@ -150,7 +148,7 @@ where
 {
     fn clone(&self) -> Self {
         let mut cloned_list = Self::new();
-        cloned_list.extend(self.iter().map(|node| node.data.clone()));
+        cloned_list.extend(self.iter().cloned());
         cloned_list
     }
 }
@@ -192,6 +190,52 @@ impl<E> Iterator for IntoIter<E> {
 impl<E> ExactSizeIterator for IntoIter<E> {
     fn len(&self) -> usize {
         self.0.len()
+    }
+}
+
+impl<E> fmt::Debug for LinkedList<E>
+where
+    E: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LinkedList")
+            .field("head", &self.head)
+            .field("tail", &self.tail)
+            .field("length", &self.length)
+            .finish()
+    }
+}
+
+impl<E> PartialEq for LinkedList<E>
+where
+    E: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.iter().eq(other)
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        self.len() != other.len() && self.iter().ne(other)
+    }
+}
+
+impl<E> Eq for LinkedList<E> where E: PartialEq {}
+
+impl<E> PartialOrd for LinkedList<E>
+where
+    E: PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.iter().partial_cmp(other)
+    }
+}
+
+impl<E> Ord for LinkedList<E>
+where
+    E: Ord,
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.iter().cmp(other)
     }
 }
 
