@@ -8,6 +8,9 @@
 // make e -> w
 use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
+use log::debug;
+use more_asserts::assert_lt;
+
 struct LinkedList<T> {
     head: Option<Pointer<T>>,
     tail: Option<Pointer<T>>,
@@ -52,7 +55,7 @@ impl<'a, T> CursorMut<'a, T> {
         // We're somewhere in the "middle"
         if let Some(node) = self.current {
             self.current = unsafe { (*node.as_ptr()).next };
-            self.index.map(|idx| idx + 1);
+            self.index = self.index.map(|idx| idx + 1);
         } else {
             // We've reached the end, loop to ghost front
             if self.index > Some(self.list.length) {
@@ -70,8 +73,37 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
-    // TODO: Implement
-    pub fn seek(&mut self, idx: usize) {}
+    // TODO: Determine how to handle looping when seeking?
+    // If we go all the way around multiple times, performance would suffer.
+    // We might want to reset and use modulo?
+    pub fn seek(&mut self, idx: usize) -> bool {
+        if idx >= self.list.len() {
+            debug!(
+                "Index out of range. Expected index provided to be between 0 and {}",
+                self.list.len()
+            );
+            false
+        } else {
+            while self.index < Some(idx) {
+                self.next();
+            }
+            true
+        }
+    }
+
+    pub fn seek_before(&mut self, idx: usize) -> bool {
+        // We need to reset
+        if idx == 0 {
+            self.reset();
+            true
+        } else {
+            self.seek(idx)
+        }
+    }
+
+    pub fn seek_after(&mut self, idx: usize) -> bool {
+        self.seek(idx + 1)
+    }
 
     fn split_after(&mut self) -> LinkedList<T> {
         // We're somewhere between the head and the tail
@@ -101,7 +133,49 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
-    fn extract_between(&mut self) {}
+    fn reset(&mut self) {
+        self.current = None;
+        self.index = None
+    }
+
+    fn swap(
+        &mut self,
+        other: &mut CursorMut<'a, T>,
+        start_idx: usize,
+        other_start_idx: usize,
+        end_idx: Option<usize>,
+        other_end_idx: Option<usize>,
+    ) {
+        // We don't want to deal with edge-cases at the moment.
+        // TODO: deal with edge cases.
+        // Let X => a -> b -> c -> d -> e
+        // Let Y => 1 -> 2 - > 3 -> 4 -> 5
+        // We want to point 2 -> c, d -> 4, b -> 3, 4 -> e
+
+        assert_ne!(self.list.len(), 0);
+        assert_ne!(other.list.len(), 0);
+        assert_lt!(start_idx, self.list.len());
+        assert_lt!(other_start_idx, other.list.len());
+        assert_lt!(end_idx, Some(self.list.len()));
+        assert_lt!(other_end_idx, Some(self.list.len()));
+
+        // Start at the beginning;
+        // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
+        self.reset();
+        other.reset();
+
+        self.seek_before(start_idx);
+        other.seek_before(other_start_idx);
+
+        let self_before = self.current;
+        let other_before = other.current;
+
+        // self.seek_before(end_idx);
+        // other.seek_before(other_end_idx);
+
+        // let self_after = self.current;
+        // let other_after = self.
+    }
 }
 
 type Pointer<T> = NonNull<Node<T>>;
@@ -149,6 +223,10 @@ impl<T> LinkedList<T> {
         while self.head.is_some() {
             self.dequeue();
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn append(&mut self, data: T) {
@@ -523,5 +601,19 @@ mod tests {
         split_cursor.next();
 
         assert_eq!(split_cursor.current(), Some(&mut 2));
+    }
+
+    #[test]
+    fn given_linked_list_cursor_when_seek_then_element_at_index_is_reached() {
+        let elems = [1, 2, 3, 4, 5];
+        let mut list = LinkedList::new();
+        list.extend(elems);
+
+        let mut cursor = list.cursor_mut();
+        assert_eq!(cursor.seek(3), true);
+        assert_eq!(cursor.current(), Some(&mut 4));
+        // We stay in the same place;
+        assert_eq!(cursor.seek(55), false);
+        assert_eq!(cursor.current(), Some(&mut 4));
     }
 }
