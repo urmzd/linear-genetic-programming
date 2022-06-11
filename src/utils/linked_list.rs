@@ -9,7 +9,7 @@
 use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
 use log::debug;
-use more_asserts::assert_lt;
+use more_asserts::{assert_le, assert_lt};
 
 pub struct LinkedList<T> {
     pub head: Option<Pointer<T>>,
@@ -138,6 +138,12 @@ impl<'a, T> CursorMut<'a, T> {
         self.index = None
     }
 
+    /// Cases:
+    ///
+    /// 1. Self_Start, Other_Start
+    /// 2. ..., + Self End
+    /// 3. ..., + Other End
+    /// 4. ..., + Self End + Other End
     fn swap(
         &mut self,
         other: &mut CursorMut<'a, T>,
@@ -159,8 +165,8 @@ impl<'a, T> CursorMut<'a, T> {
         assert_lt!(end_idx, Some(self.list.len()));
         assert_lt!(other_end_idx, Some(self.list.len()));
         assert_eq!(end_idx.is_none(), other_end_idx.is_none());
-
-        let no_end = end_idx.is_none();
+        assert_le!(Some(start_idx), end_idx);
+        assert_le!(Some(other_start_idx), other_end_idx);
 
         // Start at the beginning;
         // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
@@ -170,15 +176,25 @@ impl<'a, T> CursorMut<'a, T> {
         self.seek_before(start_idx);
         other.seek_before(other_start_idx);
 
-        let self_before = self.current.unwrap();
-        let other_before = other.current.unwrap();
+        let self_start = self.current.unwrap();
+        let other_start = other.current.unwrap();
 
-        if no_end {
+        let self_start_next = unsafe { (*self_start.as_ptr()).next };
+        let other_start_next = unsafe { (*other_start.as_ptr()).next };
+
+        if let [Some(internal_end_idx), Some(internal_other_end_idx)] = [end_idx, other_end_idx] {
+            self.seek_before(internal_end_idx);
+            other.seek_before(internal_other_end_idx);
+
+            let self_end = self.current.unwrap();
+            let other_end = other.current.unwrap();
+
+            let self_end_next = unsafe { (*self_end.as_ptr()).next };
+            let other_end_next = unsafe { (*other_end.as_ptr()).next };
+        } else {
             unsafe {
-                let self_before_next = (*self_before.as_ptr()).next;
-                let other_before_next = (*other_before.as_ptr()).next;
-                (*self_before.as_ptr()).point_to(other_before_next);
-                (*other_before.as_ptr()).point_to(self_before_next);
+                (*self_start.as_ptr()).point_to(other_start_next);
+                (*other_start.as_ptr()).point_to(self_start_next);
             }
         }
 
@@ -639,7 +655,7 @@ mod tests {
     }
 
     #[test]
-    fn given_linked_list_cursors_when_swap_then_pointers_are_swapped() {
+    fn given_linked_list_cursors_when_swap_with_no_end_then_pointers_are_swapped() {
         let e1 = [1, 2, 3, 4, 5];
         let e2 = [6, 7, 8, 9, 10];
         let mut l1 = LinkedList::new();
