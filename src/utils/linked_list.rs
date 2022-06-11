@@ -165,8 +165,11 @@ impl<'a, T> CursorMut<'a, T> {
         assert_lt!(end_idx, Some(self.list.len()));
         assert_lt!(other_end_idx, Some(self.list.len()));
         assert_eq!(end_idx.is_none(), other_end_idx.is_none());
-        assert_le!(Some(start_idx), end_idx);
-        assert_le!(Some(other_start_idx), other_end_idx);
+        assert_le!(Some(start_idx), end_idx.or(Some(self.list.len())));
+        assert_le!(
+            Some(other_start_idx),
+            other_end_idx.or(Some(self.list.len()))
+        );
 
         // Start at the beginning;
         // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
