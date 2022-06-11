@@ -144,6 +144,40 @@ impl<'a, T> CursorMut<'a, T> {
     /// 2. ..., + Self End
     /// 3. ..., + Other End
     /// 4. ..., + Self End + Other End
+    ///
+    /// TODO: Ensure nodes are cleared if abandoned or prevent people from pointing to None.
+    /// For instance, other_end points to None. Maybe not? Thinking of the two linked lists like a rope, if one gets bigger, the other gets smaller
+    ///
+    /// Actually, that is the case, but only if the same start index and end index are used for one pair and not the other, thats exactly what happens. Look below.
+    ///
+    /// Ex (happening):
+    ///
+    /// A: 1 -> 2 -> 3 -> 4 -> 5
+    /// B: 6 -> 7 -> 8 -> 9 -> 10
+    ///
+    /// swap(A, B, 2, 3, 4, 3) --> meaning (3->4) should be swapped with ()
+    ///
+    /// After:
+    ///
+    /// A: 1 -> 2
+    /// B: 6 -> 7 -> 3 -> 4
+    ///
+    /// As seen above, we have 4 -> None (losing 5) and 7 -> 3 -> 4 (losing 9 -> 10);
+    ///
+    /// Just assert that we never have the same start and end index.
+    ///
+    /// Ex (not happening):
+    ///
+    /// A: 1 -> 2 -> 3 -> 4 -> 5
+    /// B: 6 -> 7 -> 8 -> 9 -> 10
+    ///
+    /// swap(A, B, 2, 3, 4, 4) --> meaning (3->4) should be swapped with (9)
+    ///
+    /// After:
+    ///
+    /// A: 1 -> 2 -> 9 -> 5
+    /// B: 6 -> 7 -> 8 -> 3 -> 4 -> 10
+    ///
     fn swap(
         &mut self,
         other: &mut CursorMut<'a, T>,
@@ -160,6 +194,8 @@ impl<'a, T> CursorMut<'a, T> {
 
         assert_ne!(self.list.len(), 0);
         assert_ne!(other.list.len(), 0);
+        assert_ne!(Some(start_idx), end_idx);
+        assert_ne!(Some(other_start_idx), other_end_idx);
         assert_lt!(start_idx, self.list.len());
         assert_lt!(other_start_idx, other.list.len());
         assert_lt!(end_idx, Some(self.list.len()));
@@ -194,11 +230,16 @@ impl<'a, T> CursorMut<'a, T> {
 
             let self_end_next = unsafe { (*self_end.as_ptr()).next };
             let other_end_next = unsafe { (*other_end.as_ptr()).next };
-        } else {
+
             unsafe {
-                (*self_start.as_ptr()).point_to(other_start_next);
-                (*other_start.as_ptr()).point_to(self_start_next);
+                (*self_end.as_ptr()).point_to(other_end_next);
+                (*other_end.as_ptr()).point_to(self_end_next);
             }
+        }
+
+        unsafe {
+            (*self_start.as_ptr()).point_to(other_start_next);
+            (*other_start.as_ptr()).point_to(self_start_next);
         }
 
         // self.seek_before(end_idx);
@@ -481,11 +522,7 @@ where
     E: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("LinkedList")
-            .field("head", &self.head)
-            .field("tail", &self.tail)
-            .field("length", &self.length)
-            .finish()
+        f.debug_list().entries(self.iter()).finish()
     }
 }
 
@@ -674,7 +711,31 @@ mod tests {
         let e12 = [1, 2, 8, 9, 10];
         let e21 = [6, 7, 3, 4, 5];
 
-        assert!(l1.iter().eq(e12.iter()));
-        assert!(l2.iter().eq(e21.iter()));
+        itertools::assert_equal(l1, e12);
+        itertools::assert_equal(l2, e21);
+    }
+
+    #[test]
+    fn given_linked_list_cursor_when_swap_with_ends_then_pointers_are_swapped() {
+        let e1 = [1, 2, 3, 4, 5];
+        let e2 = [6, 7, 8, 9, 10];
+        let mut l1 = LinkedList::new();
+        let mut l2 = LinkedList::new();
+        l1.extend(e1);
+        l2.extend(e2);
+
+        let mut c1 = l1.cursor_mut();
+        let mut c2 = l2.cursor_mut();
+
+        c1.swap(&mut c2, 2, 2, Some(4), Some(4));
+
+        let e12 = [1, 2, 8, 9, 5];
+        let e21 = [6, 7, 3, 4, 10];
+
+        println!("{:?}", &l1);
+        println!("{:?}", &l2);
+
+        itertools::assert_equal(l1, e12);
+        itertools::assert_equal(l2, e21);
     }
 }
