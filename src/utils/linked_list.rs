@@ -105,7 +105,7 @@ impl<'a, T> CursorMut<'a, T> {
         self.seek(idx + 1)
     }
 
-    fn split_after(&mut self) -> LinkedList<T> {
+    pub fn split_after(&mut self) -> LinkedList<T> {
         // We're somewhere between the head and the tail
         if let Some(current) = self.current {
             let n_nodes_used = self.index.unwrap() + 1;
@@ -180,7 +180,7 @@ impl<'a, T> CursorMut<'a, T> {
     ///
     ///
     /// Notes: Start is inclusive, end is exclusive.
-    fn swap(
+    pub fn swap(
         &mut self,
         other: &mut CursorMut<'a, T>,
         start_idx: usize,

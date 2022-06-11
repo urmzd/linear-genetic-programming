@@ -7,7 +7,14 @@ use crate::{
         random::generator,
     },
 };
-use rand::distributions::uniform::{UniformInt, UniformSampler};
+use rand::{
+    distributions::{
+        uniform::{UniformInt, UniformSampler},
+        Uniform,
+    },
+    prelude::{Distribution, SliceRandom},
+    Rng,
+};
 use serde::Serialize;
 
 use crate::{
@@ -89,7 +96,7 @@ where
 
         let registers = Registers::new(InputType::N_CLASSES + 1);
 
-        let n_instructions = UniformInt::<usize>::new(0, max_instructions).sample(&mut generator());
+        let n_instructions = generator().gen_range(0..max_instructions);
 
         let instruction_params = InstructionGenerateParams::new(
             InputType::N_CLASSES,
@@ -187,34 +194,32 @@ where
 
 impl<'a> Breed for Instructions {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
-        /*
-         *        let mut instructions_a = self.clone();
-         *        let mut instructions_b = mate.clone();
-         *
-         *        // Pick a subset of instructions from a
-         *        // Pick a subset of instrutions from b
-         *        // Swap the two (in-place)
-         *
-         *        let [shortest_set, longest_set] = if instructions_a.len() > instructions_b.len() {
-         *            [instructions_b, instructions_a]
-         *        } else {
-         *            [instructions_a, instructions_b]
-         *        };
-         *
-         *        for index in 0..longest_set.len() {
-         *            let swap = Rng::gen_bool(&mut generator(), 0.5);
-         *            if swap {
-         *                let a = longest_set.remove(index);
-         *                let b = shortest_set.remove(index);
-         *                // switch a_i and a_b
-         *                if index < shortest_set.len() {
-         *                } else {
-         *                    todo!("add long to short if True")
-         *                }
-         *            }
-         *        }
-         */
+        let mut instructions_a = self.clone();
+        let mut instructions_b = mate.clone();
 
-        todo!()
+        let a_start = generator().gen_range(0..instructions_a.len());
+        let a_end = Some(generator().gen_range(a_start..=instructions_a.len())).and_then(|index| {
+            if index == instructions_a.len() || a_start == index {
+                None
+            } else {
+                Some(index)
+            }
+        });
+
+        let b_start = generator().gen_range(0..instructions_a.len());
+        let b_end = Some(generator().gen_range(b_start..=instructions_b.len())).and_then(|index| {
+            if index == instructions_b.len() || b_start == index {
+                None
+            } else {
+                Some(index)
+            }
+        });
+
+        let mut cursor_a = instructions_a.cursor_mut();
+        let mut cursor_b = instructions_b.cursor_mut();
+
+        cursor_a.swap(&mut cursor_b, a_start, b_start, a_end, b_end);
+
+        [instructions_a, instructions_b]
     }
 }

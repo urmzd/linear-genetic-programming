@@ -1,3 +1,4 @@
+use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::prelude::{SliceRandom, StdRng};
@@ -23,13 +24,8 @@ pub enum Modes {
 
 impl Distribution<Modes> for Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Modes {
-        let should_read_from_input: bool = rng.gen();
-
-        if should_read_from_input {
-            return Modes::Input;
-        } else {
-            return Modes::Registers;
-        }
+        let mode: usize = rng.gen_range(0..=1);
+        FromPrimitive::from_usize(mode).unwrap()
     }
 }
 
