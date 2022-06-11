@@ -1,10 +1,13 @@
-use crate::utils::common_traits::{Compare, Show};
+use crate::utils::{
+    common_traits::{Compare, Show},
+    linked_list::LinkedList,
+};
 
 use super::{chromosomes::Instruction, registers::RegisterValue};
 
 pub type FitnessScore = RegisterValue;
 
-pub type Instructions = Vec<Instruction>;
+pub type Instructions = LinkedList<Instruction>;
 
 pub trait Fitness: Show {
     fn eval_fitness(&self) -> FitnessScore;

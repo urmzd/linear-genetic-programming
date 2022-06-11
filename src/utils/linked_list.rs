@@ -178,6 +178,8 @@ impl<'a, T> CursorMut<'a, T> {
     /// A: 1 -> 2 -> 9 -> 5
     /// B: 6 -> 7 -> 8 -> 3 -> 4 -> 10
     ///
+    ///
+    /// Notes: Start is inclusive, end is exclusive.
     fn swap(
         &mut self,
         other: &mut CursorMut<'a, T>,

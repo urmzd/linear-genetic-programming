@@ -26,6 +26,7 @@ pub struct Program<'a, InputType>
 where
     InputType: ValidInput,
 {
+    #[serde(skip_serializing)]
     pub instructions: Instructions,
     pub inputs: &'a Inputs<InputType>,
     pub registers: Registers,
