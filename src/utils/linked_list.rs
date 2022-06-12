@@ -180,11 +180,11 @@ impl<'a, T> CursorMut<'a, T> {
         // Let Y => 1 -> 2 - > 3 -> 4 -> 5
         // We want to point 2 -> c, d -> 4, b -> 3, 4 -> e
 
-        // Assumption 1: Non Empty Lists
-        assert_ne!(self.list.len(), 0);
-        assert_ne!(other.list.len(), 0);
+        if self.list.len() == 0 || other.list.len() == 0 {
+            return;
+        }
 
-        // Assumption 2: Start < End
+        // Assumption 1: Start < End
         assert_lt!(Some(start_idx), end_idx.or(Some(self.list.len())));
         assert_lt!(
             Some(other_start_idx),
