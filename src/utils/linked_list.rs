@@ -8,7 +8,6 @@
 // make e -> w
 use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
-use log::debug;
 use more_asserts::{assert_le, assert_lt};
 use serde::{ser::SerializeSeq, Serialize};
 
@@ -74,35 +73,20 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
-    // TODO: Determine how to handle looping when seeking?
-    // If we go all the way around multiple times, performance would suffer.
-    // We might want to reset and use modulo?
-    pub fn seek(&mut self, idx: usize) -> bool {
-        if idx >= self.list.len() {
-            debug!(
-                "Index out of range. Expected index provided to be between 0 and {}",
-                self.list.len()
-            );
-            false
-        } else {
-            while self.index < Some(idx) {
-                self.next();
-            }
-            true
+    // We loop using the modulo operator to determine the "desired" index.
+    // TODO: Benchmark to determine performance impact of decision.
+    pub fn seek(&mut self, idx: usize) {
+        let true_idx = idx % self.list.len();
+        while self.index != Some(true_idx) {
+            self.next();
         }
     }
 
-    pub fn seek_before(&mut self, idx: usize) -> bool {
-        // We need to reset
-        if idx == 0 {
-            self.reset();
-            true
-        } else {
-            self.seek(idx - 1)
-        }
+    pub fn seek_before(&mut self, idx: usize) {
+        self.seek(idx - 1)
     }
 
-    pub fn seek_after(&mut self, idx: usize) -> bool {
+    pub fn seek_after(&mut self, idx: usize) {
         self.seek(idx + 1)
     }
 
@@ -140,6 +124,7 @@ impl<'a, T> CursorMut<'a, T> {
     }
 
     /// Cases:
+    /// TODO: TEST TEST TEST
     ///
     /// 1. Self_Start, Other_Start
     /// 2. ..., + Self End
@@ -201,9 +186,8 @@ impl<'a, T> CursorMut<'a, T> {
         assert_ne!(Some(other_start_idx), other_end_idx);
         assert_lt!(start_idx, self.list.len());
         assert_lt!(other_start_idx, other.list.len());
-        assert_lt!(end_idx, Some(self.list.len()));
-        assert_lt!(other_end_idx, Some(self.list.len()));
-        assert_eq!(end_idx.is_none(), other_end_idx.is_none());
+        assert_le!(end_idx, Some(self.list.len()));
+        assert_le!(other_end_idx, Some(self.list.len()));
         assert_le!(Some(start_idx), end_idx.or(Some(self.list.len())));
         assert_le!(
             Some(other_start_idx),
@@ -224,32 +208,26 @@ impl<'a, T> CursorMut<'a, T> {
         let self_start_next = unsafe { (*self_start.as_ptr()).next };
         let other_start_next = unsafe { (*other_start.as_ptr()).next };
 
-        if let [Some(internal_end_idx), Some(internal_other_end_idx)] = [end_idx, other_end_idx] {
-            self.seek_before(internal_end_idx);
-            other.seek_before(internal_other_end_idx);
-
-            let self_end = self.current.unwrap();
-            let other_end = other.current.unwrap();
-
-            let self_end_next = unsafe { (*self_end.as_ptr()).next };
-            let other_end_next = unsafe { (*other_end.as_ptr()).next };
-
-            unsafe {
-                (*self_end.as_ptr()).point_to(other_end_next);
-                (*other_end.as_ptr()).point_to(self_end_next);
-            }
-        }
-
+        // Always happens!
+        // Point to the "starts" of each linked list
         unsafe {
             (*self_start.as_ptr()).point_to(other_start_next);
             (*other_start.as_ptr()).point_to(self_start_next);
         }
 
-        // self.seek_before(end_idx);
-        // other.seek_before(other_end_idx);
+        self.seek_before(end_idx.map_or(self.list.len(), |idx| idx));
+        other.seek_before(other_end_idx.map_or(other.list.len(), |idx| idx));
 
-        // let self_after = self.current;
-        // let other_after = self.
+        let self_end = self.current.unwrap();
+        let other_end = other.current.unwrap();
+
+        let self_end_next = unsafe { (*self_end.as_ptr()).next };
+        let other_end_next = unsafe { (*other_end.as_ptr()).next };
+
+        unsafe {
+            (*self_end.as_ptr()).point_to(other_end_next);
+            (*other_end.as_ptr()).point_to(self_end_next);
+        }
     }
 }
 
@@ -706,11 +684,11 @@ mod tests {
         list.extend(elems);
 
         let mut cursor = list.cursor_mut();
-        assert_eq!(cursor.seek(3), true);
+        cursor.seek(3);
         assert_eq!(cursor.current(), Some(&mut 4));
-        // We stay in the same place;
-        assert_eq!(cursor.seek(55), false);
-        assert_eq!(cursor.current(), Some(&mut 4));
+        // We loop to 55 % 5 == 0
+        cursor.seek(55);
+        assert_eq!(cursor.current(), Some(&mut 1));
     }
 
     #[test]

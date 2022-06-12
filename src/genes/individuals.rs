@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use rand::Rng;
-use serde::{ser::SerializeSeq, Serialize};
+use serde::Serialize;
 
 use crate::{
     metrics::accuracy::Accuracy,
@@ -216,5 +216,30 @@ impl<'a> Breed for Instructions {
         cursor_a.swap(&mut cursor_b, a_start, b_start, a_end, b_end);
 
         [instructions_a, instructions_b]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::data::iris::ops::IRIS_EXECUTABLES;
+
+    use super::*;
+
+    #[test]
+    fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
+        let params_a = InstructionGenerateParams::new(5, 5, IRIS_EXECUTABLES);
+        let params_b = InstructionGenerateParams::new(6, 6, IRIS_EXECUTABLES);
+        let mut instructions_a: Instructions =
+            (0..5).map(|_| Instruction::generate(&params_a)).collect();
+        let mut instructions_b: Instructions =
+            (0..5).map(|_| Instruction::generate(&params_b)).collect();
+
+        let [child_a, child_b] = instructions_a.two_point_crossover(&instructions_b);
+
+        assert_ne!(instructions_a, child_a);
+        assert_ne!(instructions_b, child_a);
+
+        assert_ne!(instructions_a, child_b);
+        assert_ne!(instructions_b, child_b);
     }
 }
