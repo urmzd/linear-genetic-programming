@@ -175,24 +175,25 @@ impl<'a, T> CursorMut<'a, T> {
         other_end_idx: Option<usize>,
     ) {
         // We don't want to deal with edge-cases at the moment.
-        // TODO: deal with edge cases.
+        // TODO: deal with edge cases. Remove assertions.
         // Let X => a -> b -> c -> d -> e
         // Let Y => 1 -> 2 - > 3 -> 4 -> 5
         // We want to point 2 -> c, d -> 4, b -> 3, 4 -> e
 
+        // Assumption 1: Non Empty Lists
         assert_ne!(self.list.len(), 0);
         assert_ne!(other.list.len(), 0);
-        assert_ne!(Some(start_idx), end_idx);
-        assert_ne!(Some(other_start_idx), other_end_idx);
-        assert_lt!(start_idx, self.list.len());
-        assert_lt!(other_start_idx, other.list.len());
-        assert_le!(end_idx, Some(self.list.len()));
-        assert_le!(other_end_idx, Some(self.list.len()));
-        assert_le!(Some(start_idx), end_idx.or(Some(self.list.len())));
-        assert_le!(
+
+        // Assumption 2: Start < End
+        assert_lt!(Some(start_idx), end_idx.or(Some(self.list.len())));
+        assert_lt!(
             Some(other_start_idx),
             other_end_idx.or(Some(self.list.len()))
         );
+
+        // Assumption 2: End < Length
+        assert_le!(end_idx, Some(self.list.len()));
+        assert_le!(other_end_idx, Some(self.list.len()));
 
         // Start at the beginning;
         // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
