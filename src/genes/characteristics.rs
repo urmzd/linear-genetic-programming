@@ -1,6 +1,6 @@
 use crate::utils::common_traits::{Compare, Show};
 
-use super::{individuals::Instructions, registers::RegisterValue};
+use super::{program::Instructions, registers::RegisterValue};
 
 pub type FitnessScore = RegisterValue;
 

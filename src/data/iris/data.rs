@@ -7,7 +7,7 @@ use strum::EnumCount;
 use crate::{
     genes::{
         algorithm::{GeneticAlgorithm, Loader},
-        individuals::Program,
+        program::Program,
         registers::{RegisterValue, Registers, ValidInput},
     },
     utils::common_traits::{Compare, Show},
