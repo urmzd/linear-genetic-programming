@@ -83,6 +83,9 @@ impl<'a, T> CursorMut<'a, T> {
     }
 
     pub fn seek_before(&mut self, idx: usize) {
+        if idx == 0 {
+            self.reset()
+        }
         self.seek(idx - 1)
     }
 
