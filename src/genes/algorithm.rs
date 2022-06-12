@@ -6,12 +6,12 @@ use rand::prelude::IteratorRandom;
 
 use crate::{
     genes::characteristics::{Fitness, Generate},
-    utils::common_traits::Inputs,
+    utils::common_traits::{Inputs, ValidInput},
 };
 
 use log::trace;
 
-use super::{characteristics::Organism, population::Population, registers::ValidInput};
+use super::{characteristics::Organism, population::Population};
 
 #[derive(Clone, Debug)]
 pub struct HyperParameters<OrganismType>

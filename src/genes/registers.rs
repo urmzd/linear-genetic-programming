@@ -5,9 +5,7 @@ use std::{
 
 use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
-use serde::{de::DeserializeOwned, Serialize};
-
-use crate::utils::common_traits::{Compare, Show};
+use serde::Serialize;
 
 pub type RegisterValue = OrderedFloat<f32>;
 
@@ -93,11 +91,4 @@ impl Registers {
 
         None
     }
-}
-
-pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers> {
-    const N_CLASSES: usize;
-    const N_FEATURES: usize;
-
-    fn get_class(&self) -> usize;
 }

@@ -8,9 +8,9 @@ use crate::{
     genes::{
         algorithm::{GeneticAlgorithm, Loader},
         program::Program,
-        registers::{RegisterValue, Registers, ValidInput},
+        registers::{RegisterValue, Registers},
     },
-    utils::common_traits::{Compare, Show},
+    utils::common_traits::{Compare, Show, ValidInput},
 };
 
 pub const IRIS_DATASET_LINK: &'static str =

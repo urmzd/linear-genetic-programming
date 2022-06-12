@@ -11,6 +11,7 @@ impl<'a, InputType> RunningBenchmark<'a, InputType>
 where
     InputType: Compare,
 {
+    // TODO: consider where we can use this.
     fn new() -> Self {
         RunningBenchmark {
             median_heap: MedianHeap::<InputType>::new(),

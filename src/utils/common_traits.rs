@@ -1,8 +1,8 @@
 use core::fmt;
 
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
-use crate::genes::registers::RegisterValue;
+use crate::genes::registers::{RegisterValue, Registers};
 
 #[derive(Clone)]
 pub struct AnyExecutable(pub &'static str, pub InternalFn);
@@ -32,3 +32,10 @@ pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd + Ord {}
 pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
+
+pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers> {
+    const N_CLASSES: usize;
+    const N_FEATURES: usize;
+
+    fn get_class(&self) -> usize;
+}

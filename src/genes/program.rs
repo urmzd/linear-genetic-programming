@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::{
     metrics::definitions::Metric,
     utils::{
-        common_traits::{Compare, Show},
+        common_traits::{Compare, Show, ValidInput},
         linked_list::LinkedList,
         random::generator,
     },
@@ -19,7 +19,7 @@ use crate::{
 use super::{
     characteristics::{Breed, Fitness, FitnessScore, Generate, Organism},
     instruction::{Instruction, InstructionGenerateParams},
-    registers::{Registers, ValidInput},
+    registers::Registers,
 };
 
 pub type Instructions = LinkedList<Instruction>;
@@ -221,7 +221,7 @@ impl<'a> Breed for Instructions {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::iris::{data::IrisInput, ops::IRIS_EXECUTABLES};
+    use crate::data::iris::ops::IRIS_EXECUTABLES;
 
     use super::*;
 

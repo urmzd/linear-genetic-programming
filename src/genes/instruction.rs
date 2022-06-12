@@ -10,11 +10,11 @@ use std::fmt::Debug;
 use std::fmt::Formatter;
 use strum::EnumCount;
 
-use crate::utils::common_traits::{AnyExecutable, Executables, Show};
+use crate::utils::common_traits::{AnyExecutable, Executables, Show, ValidInput};
 use crate::utils::random::generator;
 
 use super::characteristics::Generate;
-use super::registers::{Registers, ValidInput};
+use super::registers::Registers;
 
 #[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]
 pub enum Modes {

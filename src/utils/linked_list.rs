@@ -261,11 +261,11 @@ impl<T> Node<T> {
         self.point_to(None)
     }
 
-    fn next(&self) -> Option<&Node<T>> {
+    pub fn next(&self) -> Option<&Node<T>> {
         unsafe { self.next.map(|node| node.as_ref()) }
     }
 
-    fn next_mut(&mut self) -> Option<&mut Node<T>> {
+    pub fn next_mut(&mut self) -> Option<&mut Node<T>> {
         unsafe { self.next.map(|mut node| node.as_mut()) }
     }
 }
