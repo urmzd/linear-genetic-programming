@@ -1,13 +1,8 @@
-use crate::utils::{
-    common_traits::{Compare, Show},
-    linked_list::LinkedList,
-};
+use crate::utils::common_traits::{Compare, Show};
 
-use super::{chromosomes::Instruction, registers::RegisterValue};
+use super::{individuals::Instructions, registers::RegisterValue};
 
 pub type FitnessScore = RegisterValue;
-
-pub type Instructions = LinkedList<Instruction>;
 
 pub trait Fitness: Show {
     fn eval_fitness(&self) -> FitnessScore;

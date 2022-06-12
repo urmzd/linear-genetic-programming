@@ -10,6 +10,7 @@ use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
 use log::debug;
 use more_asserts::{assert_le, assert_lt};
+use serde::{ser::SerializeSeq, Serialize};
 
 pub struct LinkedList<T> {
     pub head: Option<Pointer<T>>,
@@ -558,6 +559,22 @@ where
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.iter().cmp(other)
+    }
+}
+
+impl<E> Serialize for LinkedList<E>
+where
+    E: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
+        for node in self {
+            seq.serialize_element(node)?;
+        }
+        seq.end()
     }
 }
 

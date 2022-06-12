@@ -4,18 +4,12 @@ use crate::{
     metrics::definitions::Metric,
     utils::{
         common_traits::{Compare, Show},
+        linked_list::LinkedList,
         random::generator,
     },
 };
-use rand::{
-    distributions::{
-        uniform::{UniformInt, UniformSampler},
-        Uniform,
-    },
-    prelude::{Distribution, SliceRandom},
-    Rng,
-};
-use serde::Serialize;
+use rand::Rng;
+use serde::{ser::SerializeSeq, Serialize};
 
 use crate::{
     metrics::accuracy::Accuracy,
@@ -23,17 +17,18 @@ use crate::{
 };
 
 use super::{
-    characteristics::{Breed, Fitness, FitnessScore, Generate, Instructions, Organism},
+    characteristics::{Breed, Fitness, FitnessScore, Generate, Organism},
     chromosomes::{Instruction, InstructionGenerateParams},
     registers::{Registers, ValidInput},
 };
+
+pub type Instructions = LinkedList<Instruction>;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct Program<'a, InputType>
 where
     InputType: ValidInput,
 {
-    #[serde(skip_serializing)]
     pub instructions: Instructions,
     pub inputs: &'a Inputs<InputType>,
     pub registers: Registers,
