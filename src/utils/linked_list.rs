@@ -51,6 +51,13 @@ impl<'a, T> CursorMut<'a, T> {
         })
     }
 
+    pub fn current_node(&mut self) -> Option<&mut Node<T>> {
+        self.current.map(|node| unsafe {
+            let element = &mut (*node.as_ptr());
+            element
+        })
+    }
+
     pub fn next(&mut self) {
         // We're somewhere in the "middle"
         if let Some(node) = self.current {
@@ -83,10 +90,13 @@ impl<'a, T> CursorMut<'a, T> {
     }
 
     pub fn seek_before(&mut self, idx: usize) {
+        // NOTE: If we seek before 0 during swap, it means we're trying to swap everything starting
+        // from the head.
         if idx == 0 {
             self.reset()
+        } else {
+            self.seek(idx - 1)
         }
-        self.seek(idx - 1)
     }
 
     pub fn seek_after(&mut self, idx: usize) {
@@ -206,6 +216,8 @@ impl<'a, T> CursorMut<'a, T> {
         self.seek_before(start_idx);
         other.seek_before(other_start_idx);
 
+        // TODO: Use the cursor method instead of the property to allow the head to be swapped.
+        // NOTE: This is concerning, how do we swap when the head is included?
         let self_start = self.current.unwrap();
         let other_start = other.current.unwrap();
 

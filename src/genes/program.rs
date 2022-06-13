@@ -171,18 +171,21 @@ where
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =
             self.instructions.two_point_crossover(&mate.instructions);
+
         let program_a = Program {
             inputs: &self.inputs,
             instructions: child_a_instructions,
             fitness: None,
             registers: self.registers.clone(),
         };
+
         let program_b = Program {
             inputs: &self.inputs,
             instructions: child_b_instructions,
             fitness: None,
             registers: self.registers.clone(),
         };
+
         [program_a, program_b]
     }
 }
@@ -193,22 +196,30 @@ impl<'a> Breed for Instructions {
         let mut instructions_b = mate.clone();
 
         let a_start = generator().gen_range(0..instructions_a.len());
-        let a_end = Some(generator().gen_range(a_start..=instructions_a.len())).and_then(|index| {
-            if index == instructions_a.len() || a_start == index {
-                None
-            } else {
-                Some(index)
-            }
-        });
+        let a_end = if a_start == instructions_a.len() {
+            None
+        } else {
+            Some(generator().gen_range(a_start..=instructions_a.len())).and_then(|index| {
+                if index == instructions_a.len() || a_start == index {
+                    None
+                } else {
+                    Some(index)
+                }
+            })
+        };
 
-        let b_start = generator().gen_range(0..instructions_a.len());
-        let b_end = Some(generator().gen_range(b_start..=instructions_b.len())).and_then(|index| {
-            if index == instructions_b.len() || b_start == index {
-                None
-            } else {
-                Some(index)
-            }
-        });
+        let b_start = generator().gen_range(0..instructions_b.len());
+        let b_end = if b_start == instructions_b.len() {
+            None
+        } else {
+            Some(generator().gen_range(b_start..=instructions_b.len())).and_then(|index| {
+                if index == instructions_b.len() || b_start == index {
+                    None
+                } else {
+                    Some(index)
+                }
+            })
+        };
 
         let mut cursor_a = instructions_a.cursor_mut();
         let mut cursor_b = instructions_b.cursor_mut();
@@ -221,7 +232,7 @@ impl<'a> Breed for Instructions {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::iris::ops::IRIS_EXECUTABLES;
+    use crate::{data::iris::ops::IRIS_EXECUTABLES, utils::test::TestInput};
 
     use super::*;
 
@@ -241,5 +252,33 @@ mod tests {
 
         assert_ne!(instructions_a, child_b);
         assert_ne!(instructions_b, child_b);
+    }
+
+    #[test]
+    fn given_programs_when_two_point_crossover_then_two_children_are_produced() {
+        let inputs = [
+            TestInput([0; 5]),
+            TestInput([1; 5]),
+            TestInput([0, 0, 0, 1, 0]),
+            TestInput([1, 0, 1, 1, 1]),
+        ]
+        .to_vec();
+
+        let program_params = ProgramGenerateParams {
+            inputs: &inputs,
+            executables: IRIS_EXECUTABLES,
+            max_instructions: 10,
+        };
+
+        let program_a = Program::generate(&program_params);
+        let program_b = Program::generate(&program_params);
+
+        let [child_a, child_b] = program_a.two_point_crossover(&program_b);
+
+        assert_ne!(program_a, child_a);
+        assert_ne!(program_a, child_a);
+
+        assert_ne!(program_b, child_b);
+        assert_ne!(program_b, child_b);
     }
 }
