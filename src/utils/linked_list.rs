@@ -63,19 +63,19 @@ impl<'a, T> CursorMut<'a, T> {
         if let Some(node) = self.current {
             self.current = unsafe { (*node.as_ptr()).next };
             self.index = self.index.map(|idx| idx + 1);
-        } else {
+
             // We've reached the end, loop to ghost front
             if self.index > Some(self.list.length) {
-                self.current = None;
-                self.index = None;
-            } else {
-                // we're at the front, go to head
-                self.current = self.list.head;
-                // If head is empty, index is still 0
-                match self.current {
-                    Some(_) => self.index = Some(0),
-                    None => return,
-                }
+                self.reset()
+            }
+        } else {
+            // we're at the front, go to head
+            self.current = self.list.head;
+            // If head is empty, index is still 0
+            match self.current {
+                Some(_) => self.index = Some(0),
+                // Do nothing if head is empty
+                None => return,
             }
         }
     }
@@ -224,13 +224,6 @@ impl<'a, T> CursorMut<'a, T> {
         let self_start_next = unsafe { (*self_start.as_ptr()).next };
         let other_start_next = unsafe { (*other_start.as_ptr()).next };
 
-        // Always happens!
-        // Point to the "starts" of each linked list
-        unsafe {
-            (*self_start.as_ptr()).point_to(other_start_next);
-            (*other_start.as_ptr()).point_to(self_start_next);
-        }
-
         self.seek_before(end_idx.map_or(self.list.len(), |idx| idx));
         other.seek_before(other_end_idx.map_or(other.list.len(), |idx| idx));
 
@@ -240,7 +233,11 @@ impl<'a, T> CursorMut<'a, T> {
         let self_end_next = unsafe { (*self_end.as_ptr()).next };
         let other_end_next = unsafe { (*other_end.as_ptr()).next };
 
+        // Always happens!
+        // Point to the "starts" of each linked list
         unsafe {
+            (*self_start.as_ptr()).point_to(other_start_next);
+            (*other_start.as_ptr()).point_to(self_start_next);
             (*self_end.as_ptr()).point_to(other_end_next);
             (*other_end.as_ptr()).point_to(self_end_next);
         }
