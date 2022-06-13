@@ -21,7 +21,64 @@ use plotters::{
 };
 use pretty_assertions::{assert_eq, assert_ne};
 
-fn plot<X, Y>(x: X, y: Y, file_name: &str) -> Result<(), Box<dyn error::Error>> {
+fn plot_from_benchmarks(
+    benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>>,
+    plot_path: &str,
+) -> Result<(), Box<dyn error::Error>> {
+    let fitness_benchmarks: Vec<ComplexityBenchmark<f32>> = benchmarks
+        .into_iter()
+        .map(|benchmark| ComplexityBenchmark {
+            best: benchmark.best.unwrap().into_inner(),
+            worst: benchmark.worst.unwrap().into_inner(),
+            median: benchmark.median.unwrap().into_inner(),
+        })
+        .collect();
+    let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption("Fitness Over Generations", ("sans-serif", 50).into_font())
+        .margin(5u32)
+        .x_label_area_size(30u32)
+        .y_label_area_size(30u32)
+        .build_cartesian_2d(0..fitness_benchmarks.len(), 0f32..1f32)?;
+
+    chart.configure_mesh().draw()?;
+
+    chart
+        .draw_series(LineSeries::new(
+            (0..fitness_benchmarks.len())
+                .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().best)),
+            &RED,
+        ))?
+        .label("Best")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+
+    chart
+        .draw_series(LineSeries::new(
+            (0..fitness_benchmarks.len())
+                .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().median)),
+            &GREEN,
+        ))?
+        .label("Median")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
+
+    chart
+        .draw_series(LineSeries::new(
+            (0..fitness_benchmarks.len())
+                .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().worst)),
+            &BLUE,
+        ))?
+        .label("Worst")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
+
+    chart
+        .configure_series_labels()
+        .background_style(&WHITE.mix(0.8))
+        .border_style(&BLACK)
+        .draw()?;
+
+    root.present()?;
     Ok(())
 }
 
@@ -43,6 +100,21 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
     let mut population = IrisLgp::init_population(&hyper_params);
     IrisLgp::evaluate(&mut population);
     IrisLgp::rank(&mut population);
+
+    let mut benchmarks = vec![];
+
+    for _ in 0..100 {
+        let benchmark = population.get_benchmark_individuals();
+        benchmarks.push(benchmark);
+
+        IrisLgp::apply_selection(&mut population, hyper_params.gap);
+        IrisLgp::breed(&mut population, Some(50), None);
+        IrisLgp::evaluate(&mut population);
+        IrisLgp::rank(&mut population);
+    }
+
+    const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
+    plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
     Ok(())
 }
 
@@ -66,7 +138,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     IrisLgp::rank(&mut population);
 
     // TODO: Pull the graph section out into a seperate function.
-    const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/given_lgp_instance_when_sufficient_iterations_have_been_used_then_population_contains_the_same_benchmark_fitness.png";
+    const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
 
     let mut benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>> = vec![];
     let mut generations = 0;
@@ -94,60 +166,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         }
     }
 
-    let root = BitMapBackend::new(PLOT_FILE_NAME, (1280, 720)).into_drawing_area();
-    root.fill(&WHITE)?;
-
-    let mut chart = ChartBuilder::on(&root)
-        .caption("Fitness Over Generations", ("sans-serif", 50).into_font())
-        .margin(5u32)
-        .x_label_area_size(30u32)
-        .y_label_area_size(30u32)
-        .build_cartesian_2d(0..benchmarks.len(), 0f32..1f32)?;
-
-    chart.configure_mesh().draw()?;
-
-    chart
-        .draw_series(LineSeries::new(
-            (0..benchmarks.len())
-                .map(|x_i| (x_i, benchmarks.get(x_i).unwrap().best.unwrap().into_inner())),
-            &RED,
-        ))?
-        .label("Best")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
-
-    chart
-        .draw_series(LineSeries::new(
-            (0..benchmarks.len()).map(|x_i| {
-                (
-                    x_i,
-                    benchmarks.get(x_i).unwrap().median.unwrap().into_inner(),
-                )
-            }),
-            &GREEN,
-        ))?
-        .label("Median")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
-
-    chart
-        .draw_series(LineSeries::new(
-            (0..benchmarks.len()).map(|x_i| {
-                (
-                    x_i,
-                    benchmarks.get(x_i).unwrap().worst.unwrap().into_inner(),
-                )
-            }),
-            &BLUE,
-        ))?
-        .label("Worst")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
-
-    chart
-        .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
-        .draw()?;
-
-    root.present()?;
+    plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
 
     Ok(())
 }
