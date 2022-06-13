@@ -197,6 +197,9 @@ where
         let mutated_instruction = instruction.mutate();
         *instruction = mutated_instruction;
 
+        // Reset fitness to force evaluation.
+        mutated.fitness = None;
+
         mutated
     }
 }

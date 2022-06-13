@@ -30,6 +30,6 @@ where
     fn generate(parameters: &'a Self::GenerateParamsType) -> Self;
 }
 
-pub trait Organism<'a>: Fitness + Generate<'a> + Compare + Show + Sized + Clone {
+pub trait Organism<'a>: Fitness + Generate<'a> + Compare + Show + Sized + Clone + Mutate {
     fn get_instructions(&'a self) -> &'a Instructions<'a>;
 }

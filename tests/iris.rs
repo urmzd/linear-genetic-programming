@@ -52,7 +52,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         let benchmark_ref = benchmarks.last().unwrap();
 
         IrisLgp::apply_selection(&mut population, hyper_params.gap);
-        IrisLgp::breed(&mut population);
+        IrisLgp::breed(&mut population, None, None);
         IrisLgp::evaluate(&mut population);
         IrisLgp::rank(&mut population);
 
@@ -148,7 +148,7 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
 
     assert_lt!(dropped_pop_len, hyper_params.population_size);
 
-    IrisLgp::breed(&mut population);
+    IrisLgp::breed(&mut population, None, None);
 
     assert_eq!(population.len(), hyper_params.population_size);
 
@@ -201,7 +201,7 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
 
     self::assert_eq!(population.len(), hyper_params.population_size);
 
-    for individual in population.get_inner() {
+    for individual in population {
         assert_le!(individual.instructions.len(), 100)
     }
 

@@ -14,7 +14,10 @@ use crate::{
 
 use log::trace;
 
-use super::{characteristics::Organism, population::Population};
+use super::{
+    characteristics::{Mutate, Organism},
+    population::Population,
+};
 
 #[derive(Clone, Debug)]
 pub struct HyperParameters<'a, OrganismType>
@@ -61,7 +64,7 @@ where
     }
 
     fn init_population(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
-        let mut population = Population::new(hyper_params.population_size);
+        let mut population = Population::new_with_capacity(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
             let program = Self::O::generate(&hyper_params.program_params);
@@ -72,7 +75,7 @@ where
     }
 
     fn evaluate(population: &mut Population<Self::O>) -> () {
-        for individual in population.get_mut_inner() {
+        for individual in population.iter_mut() {
             individual.eval_set_fitness();
         }
     }
@@ -98,18 +101,41 @@ where
         }
     }
 
-    fn breed(population: &mut Population<Self::O>) -> () {
+    fn breed(
+        population: &mut Population<Self::O>,
+        n_mutations: Option<usize>,
+        n_crossovers: Option<usize>,
+    ) -> () {
         let pop_cap = population.capacity();
         let pop_len = population.len();
-        let remaining_size = pop_cap - pop_len;
+        let mut remaining_size: usize = pop_cap - pop_len;
 
-        let selected_individuals = population
-            .get_inner()
+        let mut n_mutations_todo = n_mutations.unwrap_or(0);
+        let mut n_crossovers_todo = n_crossovers.unwrap_or(0);
+
+        assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
+
+        // Mutate
+        while n_mutations_todo > 0 {
+            let selected_individual = population.iter().choose(&mut generator());
+            let mutated_child = selected_individual.unwrap().mutate();
+            population.push_back(mutated_child);
+            remaining_size -= 1;
+            n_mutations_todo -= 1;
+        }
+
+        // Crossover
+        while n_crossovers_todo > 0 {
+            remaining_size -= 1;
+            n_crossovers_todo -= 1;
+        }
+
+        // Fill reset with clones
+        for individual in population
             .iter()
             .cloned()
-            .choose_multiple(&mut generator(), remaining_size);
-
-        for individual in selected_individuals {
+            .choose_multiple(&mut generator(), remaining_size)
+        {
             population.push_back(individual)
         }
     }
@@ -126,7 +152,7 @@ where
             Self::apply_selection(&mut population, hyper_params.gap);
             Self::evaluate(&mut population);
             Self::rank(&mut population);
-            Self::breed(&mut population);
+            Self::breed(&mut population, None, None);
         }
 
         population

@@ -1,4 +1,7 @@
-use std::collections::VecDeque;
+use std::collections::{
+    vec_deque::{IntoIter, Iter, IterMut},
+    VecDeque,
+};
 
 use crate::{metrics::benchmarks::Benchmark, utils::common_traits::Compare};
 
@@ -6,66 +9,112 @@ use super::characteristics::{FitnessScore, Organism};
 
 type InnerPopulation<T> = VecDeque<T>;
 #[derive(Debug, Clone)]
-pub struct Population<T>(pub InnerPopulation<T>, usize)
+pub struct Population<T>
 where
-    T: Compare;
+    T: Compare,
+{
+    list: InnerPopulation<T>,
+    capacity: usize,
+}
 
 impl<T> Population<T>
 where
     T: Compare,
 {
-    pub fn new(population_size: usize) -> Self {
-        let collection = VecDeque::with_capacity(population_size);
-        Population(collection, population_size)
+    pub fn new_with_capacity(population_size: usize) -> Self {
+        let list = VecDeque::with_capacity(population_size);
+        Population {
+            list,
+            capacity: population_size,
+        }
     }
 
-    pub fn get_mut_inner(&mut self) -> &mut InnerPopulation<T> {
-        &mut self.0
-    }
-
-    pub fn get_inner(&self) -> &InnerPopulation<T> {
-        &self.0
+    pub fn new() -> Self {
+        let list = VecDeque::with_capacity(10);
+        Population { list, capacity: 10 }
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        self.0.get(index)
+        self.list.get(index)
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.list.get_mut(index)
     }
 
     pub fn sort(&mut self) -> () {
-        self.0.make_contiguous().sort();
+        self.list.make_contiguous().sort();
     }
 
     pub fn first(&self) -> Option<&T> {
-        self.0.get(0)
+        self.list.get(0)
     }
 
     pub fn last(&self) -> Option<&T> {
-        self.0.get(self.0.len() - 1)
+        self.list.get(self.list.len() - 1)
     }
 
     pub fn middle(&self) -> Option<&T> {
-        self.0
-            .get(math::round::floor(self.0.len() as f64 / 2f64, 1) as usize)
+        self.list
+            .get(math::round::floor(self.list.len() as f64 / 2f64, 1) as usize)
     }
 
     pub fn push_front(&mut self, value: T) -> () {
-        self.0.push_front(value)
+        self.list.push_front(value)
     }
 
-    pub fn pop_front(&mut self) -> () {
-        self.0.pop_front();
+    pub fn pop_front(&mut self) -> Option<T> {
+        self.list.pop_front()
     }
 
     pub fn push_back(&mut self, value: T) -> () {
-        self.0.push_back(value)
+        self.list.push_back(value)
     }
 
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.list.len()
     }
 
     pub fn capacity(&self) -> usize {
-        self.1
+        self.capacity
+    }
+
+    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+        self.list.iter()
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        self.list.into_iter()
+    }
+
+    pub fn iter_mut<'a>(&'a mut self) -> IterMut<T> {
+        self.list.iter_mut()
+    }
+}
+
+impl<T> IntoIterator for Population<T>
+where
+    T: Compare,
+{
+    type Item = T;
+
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<E> FromIterator<E> for Population<E>
+where
+    E: Compare,
+{
+    fn from_iter<T: IntoIterator<Item = E>>(iter: T) -> Self {
+        let mut population = Population::new();
+        for elem in iter {
+            population.push_back(elem)
+        }
+        population
     }
 }
 
