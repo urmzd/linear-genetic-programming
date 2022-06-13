@@ -186,6 +186,7 @@ where
 {
     fn mutate(&self) -> Self {
         let mut mutated = self.clone();
+
         // pick instruction to mutate.
         let instruction = mutated
             .instructions
@@ -193,7 +194,10 @@ where
             .choose(&mut generator())
             .unwrap();
 
-        todo!()
+        let mutated_instruction = instruction.mutate();
+        *instruction = mutated_instruction;
+
+        mutated
     }
 }
 

@@ -7,18 +7,6 @@ pub struct RunningBenchmark<'a, InputType> {
     median_heap: MedianHeap<'a, InputType>,
 }
 
-impl<'a, InputType> RunningBenchmark<'a, InputType>
-where
-    InputType: Compare,
-{
-    // TODO: consider where we can use this.
-    fn new() -> Self {
-        RunningBenchmark {
-            median_heap: MedianHeap::<InputType>::new(),
-        }
-    }
-}
-
 impl<'a, InputType> Metric for RunningBenchmark<'a, InputType>
 where
     InputType: Compare,

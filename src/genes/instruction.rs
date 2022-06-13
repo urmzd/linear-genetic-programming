@@ -18,8 +18,8 @@ use super::registers::Registers;
 
 #[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]
 pub enum Modes {
-    Input = 0,
-    Registers = 1,
+    External = 0,
+    Internal = 1,
 }
 
 impl Distribution<Modes> for Standard {
@@ -53,7 +53,7 @@ impl<'a> Generate<'a> for Instruction<'a> {
         let mode = StdRng::from_entropy().sample(Standard);
         let target_index = UniformInt::<usize>::new(
             0,
-            if mode == Modes::Input {
+            if mode == Modes::External {
                 data_len
             } else {
                 registers_len
@@ -114,8 +114,29 @@ impl<'a> Debug for Instruction<'a> {
 
 impl<'a> Mutate for Instruction<'a> {
     fn mutate(&self) -> Self {
-        let mutated = self.clone();
-        todo!("")
+        let mut mutated = Self::generate(&self.params_used);
+
+        let swap_target = generator().gen_bool(0.5);
+        let swap_source = generator().gen_bool(0.5);
+        let swap_exec = generator().gen_bool(0.5);
+
+        // Flip a Coin: Target
+        if swap_target {
+            mutated.mode = self.mode.clone();
+            mutated.target_index = self.target_index;
+        }
+
+        // Flip a Coin: Source
+        if swap_source {
+            mutated.source_index = self.source_index;
+        }
+
+        // Flip a Coin: Executable
+        if swap_exec {
+            mutated.exec = self.exec.clone();
+        }
+
+        mutated
     }
 }
 
@@ -128,8 +149,8 @@ impl<'a> Instruction<'a> {
         InputType: ValidInput,
     {
         let target_data: Registers = match self.mode {
-            Modes::Registers => registers.clone(),
-            Modes::Input => data.clone().into(),
+            Modes::Internal => registers.clone(),
+            Modes::External => data.clone().into(),
         };
 
         target_data
