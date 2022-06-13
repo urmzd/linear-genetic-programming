@@ -60,7 +60,8 @@ where
     type O;
 
     fn init_env() -> () {
-        pretty_env_logger::init();
+        // Prevent errors from being thrown when "multple" initializations occur.
+        pretty_env_logger::try_init().unwrap_or(());
     }
 
     fn init_population(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {

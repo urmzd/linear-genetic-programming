@@ -21,6 +21,31 @@ use plotters::{
 };
 use pretty_assertions::{assert_eq, assert_ne};
 
+fn plot<X, Y>(x: X, y: Y, file_name: &str) -> Result<(), Box<dyn error::Error>> {
+    Ok(())
+}
+
+#[tokio::test]
+async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_have_been_used_then_population_shows_increase_in_median_and_best_fitness(
+) -> Result<(), Box<dyn error::Error>> {
+    IrisLgp::init_env();
+
+    let ContentFilePair(_, tmp_file) = get_iris_content().await?;
+    let inputs = IrisLgp::load_inputs(tmp_file.path());
+
+    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+        population_size: 100,
+        gap: 0.5,
+        max_generations: 100,
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+    };
+
+    let mut population = IrisLgp::init_population(&hyper_params);
+    IrisLgp::evaluate(&mut population);
+    IrisLgp::rank(&mut population);
+    Ok(())
+}
+
 #[tokio::test]
 async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_population_contains_the_same_benchmark_fitness(
 ) -> Result<(), Box<dyn error::Error>> {
@@ -41,7 +66,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     IrisLgp::rank(&mut population);
 
     // TODO: Pull the graph section out into a seperate function.
-    const PLOT_FILE_NAME: &'static str = "/tmp/tests/plots/given_lgp_instance_when_sufficient_iterations_have_been_used_then_population_contains_the_same_benchmark_fitness.png";
+    const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/given_lgp_instance_when_sufficient_iterations_have_been_used_then_population_contains_the_same_benchmark_fitness.png";
 
     let mut benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>> = vec![];
     let mut generations = 0;
@@ -71,6 +96,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
 
     let root = BitMapBackend::new(PLOT_FILE_NAME, (1280, 720)).into_drawing_area();
     root.fill(&WHITE)?;
+
     let mut chart = ChartBuilder::on(&root)
         .caption("Fitness Over Generations", ("sans-serif", 50).into_font())
         .margin(5u32)
@@ -120,6 +146,8 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         .background_style(&WHITE.mix(0.8))
         .border_style(&BLACK)
         .draw()?;
+
+    root.present()?;
 
     Ok(())
 }
