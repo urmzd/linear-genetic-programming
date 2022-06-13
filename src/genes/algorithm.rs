@@ -6,7 +6,10 @@ use rand::prelude::IteratorRandom;
 
 use crate::{
     genes::characteristics::{Fitness, Generate},
-    utils::common_traits::{Inputs, ValidInput},
+    utils::{
+        common_traits::{Inputs, ValidInput},
+        random::generator,
+    },
 };
 
 use log::trace;
@@ -104,7 +107,7 @@ where
             .get_inner()
             .iter()
             .cloned()
-            .choose_multiple(&mut rand::thread_rng(), remaining_size);
+            .choose_multiple(&mut generator(), remaining_size);
 
         for individual in selected_individuals {
             population.push_back(individual)
