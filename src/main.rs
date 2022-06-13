@@ -24,11 +24,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         population_size: 1000,
         gap: 0.5,
         max_generations: 5,
-        program_params: ProgramGenerateParams {
-            inputs: &inputs,
-            max_instructions: 100,
-            executables: IRIS_EXECUTABLES,
-        },
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
     IrisLgp::execute(&hyper_params);

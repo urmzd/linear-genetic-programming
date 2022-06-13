@@ -8,7 +8,7 @@ use crate::{
         random::generator,
     },
 };
-use rand::Rng;
+use rand::{prelude::IteratorRandom, Rng};
 use serde::Serialize;
 
 use crate::{
@@ -22,14 +22,14 @@ use super::{
     registers::Registers,
 };
 
-pub type Instructions = LinkedList<Instruction>;
+pub type Instructions<'a> = LinkedList<Instruction<'a>>;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct Program<'a, InputType>
 where
     InputType: ValidInput,
 {
-    pub instructions: Instructions,
+    pub instructions: Instructions<'a>,
     pub inputs: &'a Inputs<InputType>,
     pub registers: Registers,
     fitness: Option<FitnessScore>,
@@ -40,10 +40,35 @@ pub struct ProgramGenerateParams<'a, InputType>
 where
     InputType: ValidInput,
 {
-    pub inputs: &'a Inputs<InputType>,
-    pub max_instructions: usize,
+    inputs: &'a Inputs<InputType>,
+    max_instructions: usize,
     #[serde(skip_serializing)]
-    pub executables: Executables,
+    instruction_generate_params: InstructionGenerateParams,
+}
+
+impl<'a, InputType> ProgramGenerateParams<'a, InputType>
+where
+    InputType: ValidInput,
+{
+    pub fn new(
+        inputs: &'a Inputs<InputType>,
+        max_instructions: usize,
+        executables: Executables,
+        register_len: Option<usize>,
+    ) -> ProgramGenerateParams<'a, InputType> {
+        let new_registers_len = register_len
+            .or_else(|| Some(InputType::N_CLASSES + 1))
+            .unwrap();
+
+        let instruction_generate_params =
+            InstructionGenerateParams::new(new_registers_len, InputType::N_FEATURES, executables);
+
+        ProgramGenerateParams {
+            inputs,
+            max_instructions,
+            instruction_generate_params,
+        }
+    }
 }
 
 impl<'a, InputType> Show for ProgramGenerateParams<'a, InputType> where InputType: ValidInput {}
@@ -76,31 +101,25 @@ where
     }
 }
 
-impl<'a, InputType> Generate for Program<'a, InputType>
+impl<'a, InputType> Generate<'a> for Program<'a, InputType>
 where
     InputType: ValidInput,
 {
     type GenerateParamsType = ProgramGenerateParams<'a, InputType>;
 
-    fn generate(parameters: &Self::GenerateParamsType) -> Self {
-        let &ProgramGenerateParams {
+    fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
+        let ProgramGenerateParams {
             max_instructions,
             inputs,
-            executables,
-        } = parameters;
+            instruction_generate_params,
+        } = &parameters;
 
         let registers = Registers::new(InputType::N_CLASSES + 1);
 
-        let n_instructions = generator().gen_range(0..max_instructions);
-
-        let instruction_params = InstructionGenerateParams::new(
-            InputType::N_CLASSES,
-            InputType::N_FEATURES,
-            executables,
-        );
+        let n_instructions = generator().gen_range(0..max_instructions.clone());
 
         let instructions: Instructions = (0..n_instructions)
-            .map(|_| Instruction::generate(&instruction_params))
+            .map(|_| Instruction::generate(instruction_generate_params))
             .collect();
 
         Program {
@@ -125,10 +144,7 @@ where
             let mut registers = self.registers.clone();
 
             for instruction in &self.instructions {
-                let data = instruction.get_data(&registers, input);
-                let input_slice = data.get_slice(instruction.target_index, None);
-                let register_slice = registers.get_mut_slice(instruction.source_index, None);
-                (instruction.exec.get_fn())(register_slice, input_slice);
+                instruction.apply(&mut registers, input);
             }
 
             let correct_index = input.get_class();
@@ -155,7 +171,7 @@ impl<'a, InputType> Show for Program<'a, InputType> where InputType: ValidInput 
 
 impl<'a, InputType> Compare for Program<'a, InputType> where InputType: ValidInput {}
 
-impl<'a, InputType> Organism for Program<'a, InputType>
+impl<'a, InputType> Organism<'a> for Program<'a, InputType>
 where
     InputType: ValidInput,
 {
@@ -169,6 +185,14 @@ where
     InputType: ValidInput,
 {
     fn mutate(&self) -> Self {
+        let mut mutated = self.clone();
+        // pick instruction to mutate.
+        let instruction = mutated
+            .instructions
+            .iter_mut()
+            .choose(&mut generator())
+            .unwrap();
+
         todo!()
     }
 }
@@ -199,7 +223,7 @@ where
     }
 }
 
-impl<'a> Breed for Instructions {
+impl<'a> Breed for Instructions<'a> {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let mut instructions_a = self.clone();
         let mut instructions_b = mate.clone();
@@ -273,11 +297,7 @@ mod tests {
         ]
         .to_vec();
 
-        let program_params = ProgramGenerateParams {
-            inputs: &inputs,
-            executables: IRIS_EXECUTABLES,
-            max_instructions: 10,
-        };
+        let program_params = ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);

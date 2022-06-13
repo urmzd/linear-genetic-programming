@@ -13,7 +13,7 @@ use strum::EnumCount;
 use crate::utils::common_traits::{AnyExecutable, Executables, Show, ValidInput};
 use crate::utils::random::generator;
 
-use super::characteristics::Generate;
+use super::characteristics::{Generate, Mutate};
 use super::registers::Registers;
 
 #[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]
@@ -30,21 +30,22 @@ impl Distribution<Modes> for Standard {
 }
 
 #[derive(Clone, Serialize)]
-pub struct Instruction {
-    pub source_index: usize,
-    pub target_index: usize,
+pub struct Instruction<'a> {
+    source_index: usize,
+    target_index: usize,
     mode: Modes,
     #[serde(skip_serializing)]
-    pub exec: AnyExecutable,
+    exec: AnyExecutable,
+    params_used: &'a InstructionGenerateParams,
 }
 
-impl Generate for Instruction {
+impl<'a> Generate<'a> for Instruction<'a> {
     type GenerateParamsType = InstructionGenerateParams;
 
-    fn generate<'a>(parameters: &'a Self::GenerateParamsType) -> Self {
+    fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
         let InstructionGenerateParams {
-            data_len,
-            registers_len,
+            n_features: data_len,
+            n_registers: registers_len,
             executables,
         } = parameters;
 
@@ -67,14 +68,15 @@ impl Generate for Instruction {
             target_index,
             exec,
             mode,
+            params_used: &parameters,
         }
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Copy)]
 pub struct InstructionGenerateParams {
-    registers_len: usize,
-    data_len: usize,
+    n_registers: usize,
+    n_features: usize,
     #[serde(skip_serializing)]
     executables: Executables,
 }
@@ -82,16 +84,16 @@ pub struct InstructionGenerateParams {
 impl InstructionGenerateParams {
     pub fn new(registers_len: usize, data_len: usize, executables: Executables) -> Self {
         InstructionGenerateParams {
-            registers_len,
-            data_len,
+            n_registers: registers_len,
+            n_features: data_len,
             executables,
         }
     }
 }
 
-impl Eq for Instruction {}
+impl<'a> Eq for Instruction<'a> {}
 
-impl PartialEq for Instruction {
+impl<'a> PartialEq for Instruction<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.source_index == other.source_index
             && self.target_index == other.target_index
@@ -100,7 +102,7 @@ impl PartialEq for Instruction {
     }
 }
 
-impl Debug for Instruction {
+impl<'a> Debug for Instruction<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Instruction")
             .field("mode", &self.mode)
@@ -110,15 +112,18 @@ impl Debug for Instruction {
     }
 }
 
-impl Show for Instruction {}
+impl<'a> Mutate for Instruction<'a> {
+    fn mutate(&self) -> Self {
+        let mutated = self.clone();
+        todo!("")
+    }
+}
+
+impl<'a> Show for Instruction<'a> {}
 impl Show for InstructionGenerateParams {}
 
-impl Instruction {
-    pub fn get_data<'a, InputType>(
-        &self,
-        registers: &'a Registers,
-        data: &'a InputType,
-    ) -> Registers
+impl<'a> Instruction<'a> {
+    fn get_data<InputType>(&self, registers: &'a Registers, data: &'a InputType) -> Registers
     where
         InputType: ValidInput,
     {
@@ -128,5 +133,15 @@ impl Instruction {
         };
 
         target_data
+    }
+
+    pub fn apply<T>(&self, registers: &mut Registers, input: &T)
+    where
+        T: ValidInput,
+    {
+        let data = self.get_data(registers, input);
+        let target_slice = data.get_slice(self.target_index, None);
+        let source_slice = registers.get_mut_slice(self.source_index, None);
+        (self.exec.get_fn())(source_slice, target_slice);
     }
 }

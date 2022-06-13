@@ -14,9 +14,9 @@ use log::trace;
 use super::{characteristics::Organism, population::Population};
 
 #[derive(Clone, Debug)]
-pub struct HyperParameters<OrganismType>
+pub struct HyperParameters<'a, OrganismType>
 where
-    OrganismType: Organism,
+    OrganismType: Organism<'a>,
 {
     pub population_size: usize,
     pub gap: f32,
@@ -47,9 +47,9 @@ where
     }
 }
 
-pub trait GeneticAlgorithm
+pub trait GeneticAlgorithm<'a>
 where
-    Self::O: Organism,
+    Self::O: Organism<'a>,
 {
     type O;
 
@@ -57,7 +57,7 @@ where
         pretty_env_logger::init();
     }
 
-    fn init_population(hyper_params: &HyperParameters<Self::O>) -> Population<Self::O> {
+    fn init_population(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
         let mut population = Population::new(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
@@ -112,7 +112,7 @@ where
     }
 
     // TODO: Add hooks?
-    fn execute(hyper_params: &HyperParameters<Self::O>) -> Population<Self::O> {
+    fn execute(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
         Self::init_env();
 
         trace!("{:#?}", hyper_params);

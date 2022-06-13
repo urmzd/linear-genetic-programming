@@ -33,17 +33,14 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams {
-            max_instructions: 100,
-            inputs: &inputs,
-            executables: IRIS_EXECUTABLES,
-        },
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
     IrisLgp::evaluate(&mut population);
     IrisLgp::rank(&mut population);
 
+    // TODO: Pull the graph section out into a seperate function.
     const PLOT_FILE_NAME: &'static str = "/tmp/tests/plots/given_lgp_instance_when_sufficient_iterations_have_been_used_then_population_contains_the_same_benchmark_fitness.png";
 
     let mut benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>> = vec![];
@@ -138,11 +135,7 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams {
-            max_instructions: 100,
-            inputs: &inputs,
-            executables: IRIS_EXECUTABLES,
-        },
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
@@ -173,11 +166,7 @@ async fn given_population_and_retention_rate_when_selection_occurs_then_populati
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams {
-            max_instructions: 100,
-            inputs: &inputs,
-            executables: IRIS_EXECUTABLES,
-        },
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
@@ -205,11 +194,7 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams {
-            max_instructions: 100,
-            inputs: &inputs,
-            executables: IRIS_EXECUTABLES,
-        },
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
     let population = IrisLgp::init_population(&hyper_params);
@@ -217,10 +202,7 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
     self::assert_eq!(population.len(), hyper_params.population_size);
 
     for individual in population.get_inner() {
-        assert_le!(
-            individual.instructions.len(),
-            hyper_params.program_params.max_instructions
-        )
+        assert_le!(individual.instructions.len(), 100)
     }
 
     Ok(())

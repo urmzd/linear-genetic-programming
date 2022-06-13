@@ -41,7 +41,7 @@ pub enum IrisClass {
 
 pub struct IrisLgp<'a>(PhantomData<&'a ()>);
 
-impl<'a> GeneticAlgorithm for IrisLgp<'a> {
+impl<'a> GeneticAlgorithm<'a> for IrisLgp<'a> {
     type O = Program<'a, IrisInput>;
 }
 

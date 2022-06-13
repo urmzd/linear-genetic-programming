@@ -69,9 +69,9 @@ where
     }
 }
 
-impl<T> Benchmark for Population<T>
+impl<'a, T> Benchmark for Population<T>
 where
-    T: Organism,
+    T: Organism<'a>,
 {
     type InputType = FitnessScore;
 

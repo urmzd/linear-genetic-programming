@@ -21,15 +21,15 @@ where
     fn mutate(&self) -> Self;
 }
 
-pub trait Generate
+pub trait Generate<'a>
 where
     Self::GenerateParamsType: Show,
 {
     type GenerateParamsType;
 
-    fn generate(parameters: &Self::GenerateParamsType) -> Self;
+    fn generate(parameters: &'a Self::GenerateParamsType) -> Self;
 }
 
-pub trait Organism: Fitness + Generate + Compare + Show + Sized + Clone {
-    fn get_instructions(&self) -> &Instructions;
+pub trait Organism<'a>: Fitness + Generate<'a> + Compare + Show + Sized + Clone {
+    fn get_instructions(&'a self) -> &'a Instructions<'a>;
 }
