@@ -17,7 +17,7 @@ use crate::{
 };
 
 use super::{
-    characteristics::{Breed, Fitness, FitnessScore, Generate, Organism},
+    characteristics::{Breed, Fitness, FitnessScore, Generate, Mutate, Organism},
     instruction::{Instruction, InstructionGenerateParams},
     registers::Registers,
 };
@@ -161,6 +161,15 @@ where
 {
     fn get_instructions(&self) -> &Instructions {
         &self.instructions
+    }
+}
+
+impl<'a, InputType> Mutate for Program<'a, InputType>
+where
+    InputType: ValidInput,
+{
+    fn mutate(&self) -> Self {
+        todo!()
     }
 }
 

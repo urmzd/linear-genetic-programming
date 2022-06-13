@@ -14,8 +14,11 @@ pub trait Breed: Clone {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2];
 }
 
-pub trait Mutate: Show {
-    fn mutate(&mut self) -> () {}
+pub trait Mutate: Show
+where
+    Self: Sized,
+{
+    fn mutate(&self) -> Self;
 }
 
 pub trait Generate
