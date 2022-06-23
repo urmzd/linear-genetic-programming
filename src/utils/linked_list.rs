@@ -1,11 +1,3 @@
-// Why are we using this data structure?
-//
-// Chromosomes A: a b c d e f g h
-// Chromosomes B: z y x w v u t s
-//
-// We want to swap <b,.., e> with <z,..x>
-// make a -> z -> f
-// make e -> w
 use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
 use more_asserts::{assert_le, assert_lt};
@@ -19,8 +11,8 @@ pub struct LinkedList<T> {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Node<T> {
-    pub data: T,
-    pub next: Option<Pointer<T>>,
+    data: T,
+    next: Option<Pointer<T>>,
 }
 
 pub struct Iter<'a, T> {
@@ -145,6 +137,7 @@ impl<'a, T> CursorMut<'a, T> {
     /// 4. ..., + Self End + Other End
     ///
     /// TODO: Ensure nodes are cleared if abandoned or prevent people from pointing to None.
+    ///
     /// For instance, other_end points to None. Maybe not? Thinking of the two linked lists like a rope, if one gets bigger, the other gets smaller
     ///
     /// Actually, that is the case, but only if the same start index and end index are used for one pair and not the other, thats exactly what happens. Look below.
@@ -178,7 +171,15 @@ impl<'a, T> CursorMut<'a, T> {
     /// B: 6 -> 7 -> 8 -> 3 -> 4 -> 10
     ///
     ///
-    /// Notes: Start is inclusive, end is exclusive.
+    /// NOTE: Start is inclusive, end is exclusive.
+    /// TODO: Update head and tails of linked list if needed, otherwise the references point to the incorrect nodes.
+    /// TODO: Update linked list lengths.
+    ///
+    /// Possible Options:
+    ///
+    ///
+    /// Swap with/without Head
+    /// Swap with/without Tail
     pub fn swap(
         &mut self,
         other: &mut CursorMut<'a, T>,
@@ -187,27 +188,34 @@ impl<'a, T> CursorMut<'a, T> {
         end_idx: Option<usize>,
         other_end_idx: Option<usize>,
     ) {
-        // We don't want to deal with edge-cases at the moment.
-        // TODO: deal with edge cases. Remove assertions.
-        // Let X => a -> b -> c -> d -> e
-        // Let Y => 1 -> 2 - > 3 -> 4 -> 5
-        // We want to point 2 -> c, d -> 4, b -> 3, 4 -> e
-
         if self.list.len() == 0 || other.list.len() == 0 {
             return;
         }
 
-        // Assumption 1: Start < End
-        assert_lt!(Some(start_idx), end_idx.or(Some(self.list.len())));
-        assert_lt!(
-            Some(other_start_idx),
-            other_end_idx.or(Some(self.list.len()))
-        );
+        if Some(start_idx) > end_idx || Some(other_start_idx) > other_end_idx {
+            return;
+        }
 
-        // Assumption 2: End < Length
-        assert_le!(end_idx, Some(self.list.len()));
-        assert_le!(other_end_idx, Some(self.list.len()));
+        if other_end_idx.unwrap_or(self.list.len()) > self.list.len()
+            || end_idx.unwrap_or(self.list.len()) > other.list.len()
+        {
+            return;
+        }
 
+        // MRE:
+        //  A: 1 -> 2 -> 3 -> 4 -> 5
+        //  B: 5 -> 6 -> 7 -> 8 -> 9 -> 10
+        //
+        //  If we swap [0, 2) for both, we should end up with:
+        //
+        //    A: 6 -> 7 -> 3 -> 4 -> 5
+        //    B: 1 -> 2 -> 8 -> 9 -> 10
+        //
+        // What we want:
+        //
+        // A should have head be a reference to 6.
+        // B should have head to be a reference to 1.
+        //
         // Start at the beginning;
         // TODO: optimize by finding quickest path to start_idx, and if end_idx is used, grab a reference to the pointer.
         self.reset();
@@ -216,30 +224,39 @@ impl<'a, T> CursorMut<'a, T> {
         self.seek_before(start_idx);
         other.seek_before(other_start_idx);
 
-        // TODO: Use the cursor method instead of the property to allow the head to be swapped.
+        // TODO: Use the cursor current method instead of the property to allow the head to be swapped.
         // NOTE: This is concerning, how do we swap when the head is included?
-        let self_start = self.current.unwrap();
-        let other_start = other.current.unwrap();
-
-        let self_start_next = unsafe { (*self_start.as_ptr()).next };
-        let other_start_next = unsafe { (*other_start.as_ptr()).next };
-
-        self.seek_before(end_idx.map_or(self.list.len(), |idx| idx));
-        other.seek_before(other_end_idx.map_or(other.list.len(), |idx| idx));
-
-        let self_end = self.current.unwrap();
-        let other_end = other.current.unwrap();
-
-        let self_end_next = unsafe { (*self_end.as_ptr()).next };
-        let other_end_next = unsafe { (*other_end.as_ptr()).next };
-
-        // Always happens!
-        // Point to the "starts" of each linked list
         unsafe {
+            let self_start = self.current.unwrap();
+            let other_start = other.current.unwrap();
+
+            let self_start_next = unsafe { (*self_start.as_ptr()).next };
+            let other_start_next = unsafe { (*other_start.as_ptr()).next };
+            // NOTE: We can just handle the special head case here.
+            // TODO: substitute x_start for x.list.head if head is included.
             (*self_start.as_ptr()).point_to(other_start_next);
             (*other_start.as_ptr()).point_to(self_start_next);
+        }
+
+        unsafe {
+            self.seek_before(end_idx.unwrap_or(self.list.len()));
+            other.seek_before(other_end_idx.unwrap_or(other.list.len()));
+
+            let self_end = self.current.unwrap();
+            let other_end = other.current.unwrap();
+
+            let self_end_next = unsafe { (*self_end.as_ptr()).next };
+            let other_end_next = unsafe { (*other_end.as_ptr()).next };
+
+            // TODO: substitute x_end for x.list.head if tail is included
             (*self_end.as_ptr()).point_to(other_end_next);
             (*other_end.as_ptr()).point_to(self_end_next);
+        }
+
+        {
+            // Update lengths
+            self.list.length = todo!();
+            other.list.length = todo!();
         }
     }
 }
@@ -741,6 +758,27 @@ mod tests {
 
         let e12 = [1, 2, 8, 9, 5];
         let e21 = [6, 7, 3, 4, 10];
+
+        itertools::assert_equal(l1, e12);
+        itertools::assert_equal(l2, e21);
+    }
+
+    #[test]
+    fn given_linked_list_cursor_when_swap_involves_heads_then_slices_are_swapped_accordingly() {
+        let e1 = [1, 2, 3, 4, 5];
+        let e2 = [6, 7, 8, 9, 10];
+        let mut l1 = LinkedList::new();
+        let mut l2 = LinkedList::new();
+        l1.extend(e1);
+        l2.extend(e2);
+
+        let mut c1 = l1.cursor_mut();
+        let mut c2 = l2.cursor_mut();
+
+        c1.swap(&mut c2, 0, 0, Some(2), Some(2));
+
+        let e12 = [6, 7, 3, 4, 5];
+        let e21 = [1, 2, 8, 9, 10];
 
         itertools::assert_equal(l1, e12);
         itertools::assert_equal(l2, e21);
