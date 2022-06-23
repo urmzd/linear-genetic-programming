@@ -190,14 +190,14 @@ impl<'a, T> CursorMut<'a, T> {
             return None;
         }
 
-        if start_idx > end_idx.unwrap_or(self.list.len())
-            || other_start_idx > other_end_idx.unwrap_or(other.list.len())
+        if start_idx >= end_idx.unwrap_or(self.list.len())
+            || other_start_idx >= other_end_idx.unwrap_or(other.list.len())
         {
             return None;
         }
 
-        if other_end_idx.unwrap_or(self.list.len()) > self.list.len()
-            || end_idx.unwrap_or(self.list.len()) > other.list.len()
+        if other_end_idx.unwrap_or(other.list.len()) > other.list.len()
+            || end_idx.unwrap_or(self.list.len()) > self.list.len()
         {
             return None;
         }
@@ -278,12 +278,13 @@ impl<'a, T> CursorMut<'a, T> {
         }
 
         {
+            let self_swapped_length = end_idx.unwrap_or(self.list.len()) - start_idx + 1;
             let other_swapped_length =
                 other_end_idx.unwrap_or(other.list.len()) - other_start_idx + 1;
-            let self_swapped_length = end_idx.unwrap_or(self.list.len()) - start_idx + 1;
+            let difference = other_swapped_length as isize - self_swapped_length as isize;
 
-            self.list.length = self.list.length - self_swapped_length + other_swapped_length;
-            other.list.length = other.list.length - other_swapped_length + self_swapped_length;
+            self.list.length = (self.list.length as isize + difference) as usize;
+            other.list.length = (other.list.length as isize - difference) as usize;
         }
 
         // TODO: Write a test to verify head, tail and length.

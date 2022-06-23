@@ -22,12 +22,14 @@ impl Registers {
         Registers(vec)
     }
 
-    pub fn reset(&mut self) -> () {
+    pub fn reset(&mut self) -> &mut Self {
         let Registers(internal_registers) = self;
 
         for index in 0..internal_registers.len() {
             internal_registers[index] = OrderedFloat(0f32);
         }
+
+        self
     }
 
     pub fn len(&self) -> usize {

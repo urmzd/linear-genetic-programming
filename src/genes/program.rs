@@ -216,14 +216,14 @@ where
             inputs: &self.inputs,
             instructions: child_a_instructions,
             fitness: None,
-            registers: self.registers.clone(),
+            registers: self.registers.clone().reset().to_owned(),
         };
 
         let program_b = Program {
             inputs: &self.inputs,
             instructions: child_b_instructions,
             fitness: None,
-            registers: self.registers.clone(),
+            registers: self.registers.clone().reset().to_owned(),
         };
 
         [program_a, program_b]
@@ -235,7 +235,7 @@ impl<'a> Breed for Instructions<'a> {
         let mut instructions_a = self.clone();
         let mut instructions_b = mate.clone();
 
-        let a_start = generator().gen_range(0..instructions_a.len());
+        let a_start = generator().gen_range(0..instructions_a.len() - 1);
         let a_end = if a_start == instructions_a.len() {
             None
         } else {
@@ -248,7 +248,7 @@ impl<'a> Breed for Instructions<'a> {
             })
         };
 
-        let b_start = generator().gen_range(0..instructions_b.len());
+        let b_start = generator().gen_range(0..instructions_b.len() - 1);
         let b_end = if b_start == instructions_b.len() {
             None
         } else {
@@ -318,9 +318,7 @@ mod tests {
         assert_ne!(program_a, child_a);
         assert_ne!(program_a, child_b);
 
-        /*
-         *assert_ne!(program_b, child_b);
-         *assert_ne!(program_b, child_b);
-         */
+        assert_ne!(program_b, child_a);
+        assert_ne!(program_b, child_b);
     }
 }

@@ -119,9 +119,7 @@ where
         // Mutate
         while n_mutations_todo > 0 {
             let selected_individual = population.iter().choose(&mut generator());
-            let mutated_child = selected_individual
-                .map(|mut parent| parent.mutate())
-                .unwrap();
+            let mutated_child = selected_individual.map(|parent| parent.mutate()).unwrap();
             population.push_back(mutated_child);
             remaining_size -= 1;
             n_mutations_todo -= 1;
