@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use csv::ReaderBuilder;
 use more_asserts::assert_le;
-use rand::prelude::IteratorRandom;
+use rand::prelude::{IteratorRandom, SliceRandom};
 
 use crate::{
-    genes::characteristics::{Fitness, Generate},
+    genes::characteristics::{Breed, Fitness, Generate},
     utils::{
         common_traits::{Inputs, ValidInput},
         random::generator,
@@ -119,7 +119,9 @@ where
         // Mutate
         while n_mutations_todo > 0 {
             let selected_individual = population.iter().choose(&mut generator());
-            let mutated_child = selected_individual.unwrap().mutate();
+            let mutated_child = selected_individual
+                .map(|mut parent| parent.mutate())
+                .unwrap();
             population.push_back(mutated_child);
             remaining_size -= 1;
             n_mutations_todo -= 1;
@@ -127,8 +129,22 @@ where
 
         // Crossover
         while n_crossovers_todo > 0 {
-            remaining_size -= 1;
-            n_crossovers_todo -= 1;
+            if let &mut [parent_a, parent_b] = population
+                .iter()
+                .choose_multiple(&mut generator(), 2)
+                .as_mut_slice()
+            {
+                let child = parent_a
+                    .two_point_crossover(parent_b)
+                    .choose(&mut generator())
+                    .unwrap()
+                    .to_owned();
+
+                population.push_back(child);
+
+                remaining_size -= 1;
+                n_crossovers_todo -= 1;
+            };
         }
 
         // Fill reset with clones
