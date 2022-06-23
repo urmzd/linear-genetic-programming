@@ -1,6 +1,5 @@
 use std::{fmt, marker::PhantomData, mem, ptr::NonNull};
 
-use more_asserts::{assert_le, assert_lt};
 use serde::{ser::SerializeSeq, Serialize};
 
 pub struct LinkedList<T> {
@@ -43,14 +42,11 @@ impl<'a, T> CursorMut<'a, T> {
         })
     }
 
-    pub fn current_node(&mut self) -> Option<&mut Node<T>> {
-        self.current.map(|node| unsafe {
-            let element = &mut (*node.as_ptr());
-            element
-        })
+    pub fn current_node(&mut self) -> Option<Pointer<T>> {
+        self.current
     }
 
-    pub fn next(&mut self) {
+    pub fn next(&mut self) -> Option<Pointer<T>> {
         // We're somewhere in the "middle"
         if let Some(node) = self.current {
             self.current = unsafe { (*node.as_ptr()).next };
@@ -67,9 +63,11 @@ impl<'a, T> CursorMut<'a, T> {
             match self.current {
                 Some(_) => self.index = Some(0),
                 // Do nothing if head is empty
-                None => return,
+                None => return None,
             }
         }
+
+        return self.current;
     }
 
     // We loop using the modulo operator to determine the "desired" index.
@@ -187,19 +185,21 @@ impl<'a, T> CursorMut<'a, T> {
         other_start_idx: usize,
         end_idx: Option<usize>,
         other_end_idx: Option<usize>,
-    ) {
+    ) -> Option<()> {
         if self.list.len() == 0 || other.list.len() == 0 {
-            return;
+            return None;
         }
 
-        if Some(start_idx) > end_idx || Some(other_start_idx) > other_end_idx {
-            return;
+        if start_idx > end_idx.unwrap_or(self.list.len())
+            || other_start_idx > other_end_idx.unwrap_or(other.list.len())
+        {
+            return None;
         }
 
         if other_end_idx.unwrap_or(self.list.len()) > self.list.len()
             || end_idx.unwrap_or(self.list.len()) > other.list.len()
         {
-            return;
+            return None;
         }
 
         // MRE:
@@ -221,47 +221,77 @@ impl<'a, T> CursorMut<'a, T> {
         self.reset();
         other.reset();
 
+        // TODO: Use the cursor current method instead of the property to allow the head to be swapped.
+        // NOTE: This is concerning, how do we swap when the head is included?
         self.seek_before(start_idx);
         other.seek_before(other_start_idx);
 
-        // TODO: Use the cursor current method instead of the property to allow the head to be swapped.
-        // NOTE: This is concerning, how do we swap when the head is included?
-        unsafe {
-            let self_start = self.current.unwrap();
-            let other_start = other.current.unwrap();
+        let before_start = self.current_node();
+        let before_other_start = other.current_node();
 
-            let self_start_next = unsafe { (*self_start.as_ptr()).next };
-            let other_start_next = unsafe { (*other_start.as_ptr()).next };
-            // NOTE: We can just handle the special head case here.
-            // TODO: substitute x_start for x.list.head if head is included.
-            (*self_start.as_ptr()).point_to(other_start_next);
-            (*other_start.as_ptr()).point_to(self_start_next);
+        let self_start = self.next().or(self.list.head);
+        let other_start = other.next().or(other.list.head);
+
+        self.seek_before(end_idx.unwrap_or(self.list.len()));
+        other.seek_before(other_end_idx.unwrap_or(other.list.len()));
+
+        let before_end = self.current_node();
+        let before_other_end = other.current_node();
+
+        let self_end = self.next();
+        let other_end = other.next();
+
+        // Swaps starts
+        {
+            if start_idx == 0 {
+                // point self head to other
+                self.list.head = other_start
+            } else {
+                unsafe {
+                    (*before_start?.as_ptr()).point_to(other_start);
+                }
+            }
+
+            if other_start_idx == 0 {
+                other.list.head = self_start;
+            } else {
+                unsafe {
+                    (*before_other_start?.as_ptr()).point_to(self_start);
+                }
+            }
         }
 
-        unsafe {
-            self.seek_before(end_idx.unwrap_or(self.list.len()));
-            other.seek_before(other_end_idx.unwrap_or(other.list.len()));
+        // Swap ends
+        {
+            if end_idx == Some(self.list.len()) {
+                self.list.tail = other_end
+            }
 
-            let self_end = self.current.unwrap();
-            let other_end = other.current.unwrap();
+            if other_end_idx == Some(other.list.len()) {
+                other.list.tail = self_end
+            }
 
-            let self_end_next = unsafe { (*self_end.as_ptr()).next };
-            let other_end_next = unsafe { (*other_end.as_ptr()).next };
-
-            // TODO: substitute x_end for x.list.head if tail is included
-            (*self_end.as_ptr()).point_to(other_end_next);
-            (*other_end.as_ptr()).point_to(self_end_next);
+            unsafe {
+                (*before_end?.as_ptr()).point_to(other_end);
+                (*before_other_end?.as_ptr()).point_to(self_end);
+            }
         }
 
         {
             // Update lengths
-            self.list.length = todo!();
-            other.list.length = todo!();
+            self.list.length -= other_end_idx.unwrap_or(self.list.len()) - other_start_idx;
+            other.list.length -= end_idx.unwrap_or(self.list.len()) - start_idx;
         }
+
+        Some(())
     }
 }
 
 type Pointer<T> = NonNull<Node<T>>;
+
+// TODO: Consider moving access methods to the following trait.
+// NOTE: In doing so, we can apply it to options for easier interfacing.
+trait NodeAccess {}
 
 impl<T> Node<T> {
     fn new(data: T) -> Self {
@@ -276,7 +306,7 @@ impl<T> Node<T> {
         Box::leak(self).into()
     }
 
-    // Ensure you clear the allocated space once done.
+    // TODO: Ensure you clear the allocated space once done.
     fn point_to(&mut self, node: Option<Pointer<T>>) -> Option<Pointer<T>> {
         let current_next = self.next;
         self.next = node;
@@ -293,6 +323,10 @@ impl<T> Node<T> {
 
     pub fn next_mut(&mut self) -> Option<&mut Node<T>> {
         unsafe { self.next.map(|mut node| node.as_mut()) }
+    }
+
+    pub fn next_ptr(&mut self) -> Option<Pointer<T>> {
+        self.next
     }
 }
 
@@ -737,6 +771,9 @@ mod tests {
 
         let e12 = [1, 2, 8, 9, 10];
         let e21 = [6, 7, 3, 4, 5];
+
+        println!("{:?}", l1);
+        println!("{:?}", l2);
 
         itertools::assert_equal(l1, e12);
         itertools::assert_equal(l2, e21);
