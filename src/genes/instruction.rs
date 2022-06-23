@@ -1,9 +1,8 @@
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
-use rand::prelude::{SliceRandom, StdRng};
-use rand::{distributions::Standard, prelude::Distribution};
-use rand::{thread_rng, Rng, SeedableRng};
+use rand::prelude::SliceRandom;
+use rand::{thread_rng, Rng};
 use serde::Serialize;
 use std::fmt;
 use std::fmt::Debug;
@@ -20,13 +19,6 @@ use super::registers::Registers;
 pub enum Modes {
     External = 0,
     Internal = 1,
-}
-
-impl Distribution<Modes> for Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Modes {
-        let mode: usize = rng.gen_range(0..=1);
-        FromPrimitive::from_usize(mode).unwrap()
-    }
 }
 
 #[derive(Clone, Serialize)]
@@ -50,7 +42,9 @@ impl<'a> Generate<'a> for Instruction<'a> {
         } = parameters;
 
         let source_index = UniformInt::<usize>::new(0, registers_len).sample(&mut generator());
-        let mode = StdRng::from_entropy().sample(Standard);
+
+        let mode = FromPrimitive::from_usize(generator().gen_range(0..=1)).unwrap();
+
         let target_index = UniformInt::<usize>::new(
             0,
             if mode == Modes::External {

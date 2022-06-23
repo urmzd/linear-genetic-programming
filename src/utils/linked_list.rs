@@ -278,10 +278,15 @@ impl<'a, T> CursorMut<'a, T> {
         }
 
         {
-            // Update lengths
-            self.list.length -= other_end_idx.unwrap_or(self.list.len()) - other_start_idx;
-            other.list.length -= end_idx.unwrap_or(self.list.len()) - start_idx;
+            let other_swapped_length =
+                other_end_idx.unwrap_or(other.list.len()) - other_start_idx + 1;
+            let self_swapped_length = end_idx.unwrap_or(self.list.len()) - start_idx + 1;
+
+            self.list.length = self.list.length - self_swapped_length + other_swapped_length;
+            other.list.length = other.list.length - other_swapped_length + self_swapped_length;
         }
+
+        // TODO: Write a test to verify head, tail and length.
 
         Some(())
     }
