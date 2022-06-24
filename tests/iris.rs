@@ -84,6 +84,41 @@ fn plot_from_benchmarks(
 }
 
 #[tokio::test]
+async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficient_iterations_have_been_met_then_population_shows_increase_in_median_and_best_fitness(
+) -> Result<(), Box<dyn error::Error>> {
+    IrisLgp::init_env();
+
+    let ContentFilePair(_, tmp_file) = get_iris_content().await?;
+    let inputs = IrisLgp::load_inputs(tmp_file.path());
+
+    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+        population_size: 100,
+        gap: 0.5,
+        max_generations: 100,
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+    };
+
+    let mut population = IrisLgp::init_population(&hyper_params);
+    IrisLgp::evaluate(&mut population);
+    IrisLgp::rank(&mut population);
+
+    let benchmarks = (vec![0; 100])
+        .iter_mut()
+        .map(|_| {
+            let benchmark = population.get_benchmark_individuals();
+            IrisLgp::apply_selection(&mut population, hyper_params.gap);
+            IrisLgp::breed(&mut population, Some(50), Some(50));
+            IrisLgp::evaluate(&mut population);
+            IrisLgp::rank(&mut population);
+            benchmark
+        })
+        .collect_vec();
+
+    const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
+    plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+    Ok(())
+}
+#[tokio::test]
 async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_have_been_met_then_population_shows_increase_in_median_and_best_fitness(
 ) -> Result<(), Box<dyn error::Error>> {
     IrisLgp::init_env();
