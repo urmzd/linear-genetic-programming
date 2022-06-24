@@ -177,33 +177,32 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     // TODO: Pull the graph section out into a seperate function.
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
 
-    let mut benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>> = vec![];
     let mut generations = 0;
+    let benchmarks: Result<Vec<ComplexityBenchmark<Option<FitnessScore>>>, &'static str> =
+        (vec![0; 100])
+            .iter_mut()
+            .map(|_| {
+                let benchmark = population.get_benchmark_individuals();
 
-    loop {
-        let benchmark = population.get_benchmark_individuals();
-        benchmarks.push(benchmark);
-        let benchmark_ref = benchmarks.last().unwrap();
+                IrisLgp::apply_selection(&mut population, hyper_params.gap);
+                IrisLgp::breed(&mut population, None, None);
+                IrisLgp::evaluate(&mut population);
+                IrisLgp::rank(&mut population);
 
-        IrisLgp::apply_selection(&mut population, hyper_params.gap);
-        IrisLgp::breed(&mut population, None, None);
-        IrisLgp::evaluate(&mut population);
-        IrisLgp::rank(&mut population);
+                if benchmark.worst == benchmark.median && benchmark.median == benchmark.best {
+                } else {
+                    generations += 1;
 
-        if benchmark_ref.worst == benchmark_ref.median && benchmark_ref.median == benchmark_ref.best
-        {
-            break;
-        } else {
-            generations += 1;
+                    if generations > hyper_params.max_generations {
+                        // TODO: Create concrete error type; SNAFU or Failure?
+                        return Err("Generations exceeded expect convergence time.")?;
+                    }
+                }
+                Ok(benchmark)
+            })
+            .collect();
 
-            if generations > hyper_params.max_generations {
-                // TODO: Create concrete error type; SNAFU or Failure?
-                return Err("Generations exceeded expect convergence time.")?;
-            }
-        }
-    }
-
-    plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+    plot_from_benchmarks(benchmarks?, PLOT_FILE_NAME)?;
 
     Ok(())
 }
