@@ -107,7 +107,7 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
         .map(|_| {
             let benchmark = population.get_benchmark_individuals();
             IrisLgp::apply_selection(&mut population, hyper_params.gap);
-            IrisLgp::breed(&mut population, Some(50), Some(50));
+            IrisLgp::breed(&mut population, Some(25), Some(25));
             IrisLgp::evaluate(&mut population);
             IrisLgp::rank(&mut population);
             benchmark
