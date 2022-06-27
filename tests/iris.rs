@@ -83,6 +83,7 @@ fn plot_from_benchmarks(
     Ok(())
 }
 
+// TODO: Update tests to include assertions about benchmark trends.
 #[tokio::test]
 async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficient_iterations_have_been_met_then_population_shows_increase_in_median_and_best_fitness(
 ) -> Result<(), Box<dyn error::Error>> {
