@@ -12,9 +12,6 @@ use lgp::{
     },
 };
 
-#[derive(Debug, Clone)]
-struct T(pub usize, pub usize);
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
@@ -23,10 +20,19 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
         population_size: 1000,
         gap: 0.5,
+        n_crossovers: 0.5,
+        n_mutations: 0.5,
         max_generations: 5,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
-    IrisLgp::execute(&hyper_params);
+    IrisLgp::execute(
+        &hyper_params,
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+    )?;
     Ok(())
 }

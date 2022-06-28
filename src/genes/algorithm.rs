@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use csv::ReaderBuilder;
-use more_asserts::assert_le;
+use more_asserts::{assert_ge, assert_le};
+use ordered_float::OrderedFloat;
 use rand::prelude::{IteratorRandom, SliceRandom};
 
 use crate::{
@@ -26,6 +27,8 @@ where
 {
     pub population_size: usize,
     pub gap: f32,
+    pub n_mutations: f32,
+    pub n_crossovers: f32,
     pub max_generations: usize,
     pub program_params: OrganismType::GenerateParamsType,
 }
@@ -102,17 +105,21 @@ where
         }
     }
 
-    fn breed(
-        population: &mut Population<Self::O>,
-        n_mutations: Option<usize>,
-        n_crossovers: Option<usize>,
-    ) -> () {
+    fn breed(population: &mut Population<Self::O>, n_mutations: f32, n_crossovers: f32) -> () {
         let pop_cap = population.capacity();
         let pop_len = population.len();
         let mut remaining_size: usize = pop_cap - pop_len;
 
-        let mut n_mutations_todo = n_mutations.unwrap_or(0);
-        let mut n_crossovers_todo = n_crossovers.unwrap_or(0);
+        assert_ge!(OrderedFloat(n_mutations), OrderedFloat(0f32));
+        assert_ge!(OrderedFloat(n_crossovers), OrderedFloat(0f32));
+        assert_le!(OrderedFloat(n_crossovers + n_mutations), OrderedFloat(1f32));
+        assert_le!(OrderedFloat(n_mutations), OrderedFloat(1f32));
+        assert_le!(OrderedFloat(n_crossovers), OrderedFloat(1f32));
+
+        let mut n_mutations_todo =
+            math::round::floor((n_mutations * remaining_size as f32) as f64, 0) as usize;
+        let mut n_crossovers_todo =
+            math::round::floor((n_crossovers * remaining_size as f32) as f64, 0) as usize;
 
         assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
 
@@ -155,21 +162,52 @@ where
         }
     }
 
-    // TODO: Add hooks?
-    fn execute(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
+    fn execute<A, B, C, D, E>(
+        hyper_params: &'a HyperParameters<'a, Self::O>,
+        mut after_init: A,
+        mut after_evaluate: B,
+        mut after_selection: C,
+        mut after_rank: D,
+        mut after_breed: E,
+    ) -> Result<Population<Self::O>, Box<dyn std::error::Error>>
+    where
+        A: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
+        B: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
+        C: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
+        D: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
+        E: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
+    {
         Self::init_env();
 
         trace!("{:#?}", hyper_params);
 
         let mut population = Self::init_population(hyper_params);
 
+        after_init(&mut population)?;
+
         for _ in 0..hyper_params.max_generations {
-            Self::apply_selection(&mut population, hyper_params.gap);
+            // Step 1: Evaluate Fitness
             Self::evaluate(&mut population);
+            after_evaluate(&mut population)?;
+
+            // Step 2: Sort
             Self::rank(&mut population);
-            Self::breed(&mut population, None, None);
+            after_rank(&mut population)?;
+
+            // Step 3: Drop by Gap
+            Self::apply_selection(&mut population, hyper_params.gap);
+            after_selection(&mut population)?;
+
+            // Step 4: Crossover + Mutation
+            Self::breed(
+                &mut population,
+                hyper_params.n_mutations,
+                hyper_params.n_crossovers,
+            );
+
+            after_breed(&mut population)?;
         }
 
-        population
+        Ok(population)
     }
 }

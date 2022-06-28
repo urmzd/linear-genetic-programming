@@ -1,6 +1,5 @@
 use std::error;
 
-use itertools::Itertools;
 use lgp::{
     data::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
     genes::{
@@ -97,23 +96,23 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
     };
 
-    let mut population = IrisLgp::init_population(&hyper_params);
-    IrisLgp::evaluate(&mut population);
-    IrisLgp::rank(&mut population);
-
-    let benchmarks = (vec![0; 100])
-        .iter_mut()
-        .map(|_| {
+    let mut benchmarks = vec![];
+    IrisLgp::execute(
+        &hyper_params,
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |population| {
             let benchmark = population.get_benchmark_individuals();
-            IrisLgp::apply_selection(&mut population, hyper_params.gap);
-            IrisLgp::breed(&mut population, Some(25), Some(25));
-            IrisLgp::evaluate(&mut population);
-            IrisLgp::rank(&mut population);
-            benchmark
-        })
-        .collect_vec();
+            benchmarks.push(benchmark);
+            Ok(())
+        },
+        |_| Ok(()),
+    )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
     plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
@@ -132,23 +131,23 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.5,
+        n_crossovers: 0.,
     };
 
-    let mut population = IrisLgp::init_population(&hyper_params);
-    IrisLgp::evaluate(&mut population);
-    IrisLgp::rank(&mut population);
-
-    let benchmarks = (vec![0; 100])
-        .iter_mut()
-        .map(|_| {
+    let mut benchmarks = vec![];
+    IrisLgp::execute(
+        &hyper_params,
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |population| {
             let benchmark = population.get_benchmark_individuals();
-            IrisLgp::apply_selection(&mut population, hyper_params.gap);
-            IrisLgp::breed(&mut population, Some(50), None);
-            IrisLgp::evaluate(&mut population);
-            IrisLgp::rank(&mut population);
-            benchmark
-        })
-        .collect_vec();
+            benchmarks.push(benchmark);
+            Ok(())
+        },
+    )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
     plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
@@ -168,23 +167,23 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.,
+        n_crossovers: 0.5,
     };
 
-    let mut population = IrisLgp::init_population(&hyper_params);
-    IrisLgp::evaluate(&mut population);
-    IrisLgp::rank(&mut population);
-
-    let benchmarks = (vec![0; 100])
-        .iter_mut()
-        .map(|_| {
+    let mut benchmarks = vec![];
+    IrisLgp::execute(
+        &hyper_params,
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |population| {
             let benchmark = population.get_benchmark_individuals();
-            IrisLgp::apply_selection(&mut population, hyper_params.gap);
-            IrisLgp::breed(&mut population, None, Some(50));
-            IrisLgp::evaluate(&mut population);
-            IrisLgp::rank(&mut population);
-            benchmark
-        })
-        .collect_vec();
+            benchmarks.push(benchmark);
+            Ok(())
+        },
+    )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
     plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
@@ -204,41 +203,40 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
     };
 
-    let mut population = IrisLgp::init_population(&hyper_params);
-    IrisLgp::evaluate(&mut population);
-    IrisLgp::rank(&mut population);
+    let mut generations = 0;
+
+    let mut benchmarks = vec![];
+    IrisLgp::execute(
+        &hyper_params,
+        |_| Ok(()),
+        |_| Ok(()),
+        |_| Ok(()),
+        |population| {
+            let benchmark = population.get_benchmark_individuals();
+
+            if benchmark.worst == benchmark.median && benchmark.median == benchmark.best {
+            } else {
+                generations += 1;
+
+                if generations > hyper_params.max_generations {
+                    // TODO: Create concrete error type; SNAFU or Failure?
+                    return Err("Generations exceeded expect convergence time.")?;
+                }
+            }
+
+            benchmarks.push(benchmark);
+            Ok(())
+        },
+        |_| Ok(()),
+    )?;
 
     // TODO: Pull the graph section out into a seperate function.
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-
-    let mut generations = 0;
-    let benchmarks: Result<Vec<ComplexityBenchmark<Option<FitnessScore>>>, &'static str> =
-        (vec![0; 100])
-            .iter_mut()
-            .map(|_| {
-                let benchmark = population.get_benchmark_individuals();
-
-                IrisLgp::apply_selection(&mut population, hyper_params.gap);
-                IrisLgp::breed(&mut population, None, None);
-                IrisLgp::evaluate(&mut population);
-                IrisLgp::rank(&mut population);
-
-                if benchmark.worst == benchmark.median && benchmark.median == benchmark.best {
-                } else {
-                    generations += 1;
-
-                    if generations > hyper_params.max_generations {
-                        // TODO: Create concrete error type; SNAFU or Failure?
-                        return Err("Generations exceeded expect convergence time.")?;
-                    }
-                }
-                Ok(benchmark)
-            })
-            .collect();
-
-    plot_from_benchmarks(benchmarks?, PLOT_FILE_NAME)?;
+    plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
 
     Ok(())
 }
@@ -255,6 +253,8 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
@@ -267,7 +267,7 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
 
     assert_lt!(dropped_pop_len, hyper_params.population_size);
 
-    IrisLgp::breed(&mut population, None, None);
+    IrisLgp::breed(&mut population, 0f32, 0f32);
 
     assert_eq!(population.len(), hyper_params.population_size);
 
@@ -284,6 +284,8 @@ async fn given_population_and_retention_rate_when_selection_occurs_then_populati
     let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
+        n_crossovers: 0.5,
+        n_mutations: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
@@ -314,6 +316,8 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
         gap: 0.5,
         max_generations: 100,
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
     };
 
     let population = IrisLgp::init_population(&hyper_params);
