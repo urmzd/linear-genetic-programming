@@ -141,12 +141,12 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
         |_| Ok(()),
         |_| Ok(()),
         |_| Ok(()),
-        |_| Ok(()),
         |population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
         },
+        |_| Ok(()),
     )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
@@ -177,12 +177,12 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
         |_| Ok(()),
         |_| Ok(()),
         |_| Ok(()),
-        |_| Ok(()),
         |population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
         },
+        |_| Ok(()),
     )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
