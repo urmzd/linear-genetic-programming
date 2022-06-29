@@ -7,7 +7,7 @@ use lgp::{
         utils::{get_iris_content, ContentFilePair},
     },
     genes::{
-        algorithm::{GeneticAlgorithm, HyperParameters, Loader},
+        algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         program::{Program, ProgramGenerateParams},
     },
 };
@@ -28,11 +28,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
     IrisLgp::execute(
         &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
+        EventHooks {
+            after_init: &mut |_| Ok(()),
+            after_evaluate: &mut |_| Ok(()),
+            after_selection: &mut |_| Ok(()),
+            after_rank: &mut |_| Ok(()),
+            after_breed: &mut |_| Ok(()),
+        },
     )?;
     Ok(())
 }

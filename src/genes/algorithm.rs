@@ -1,3 +1,4 @@
+use core::fmt;
 use std::path::PathBuf;
 
 use csv::ReaderBuilder;
@@ -20,7 +21,7 @@ use super::{
     population::Population,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct HyperParameters<'a, OrganismType>
 where
     OrganismType: Organism<'a>,
@@ -162,41 +163,39 @@ where
         }
     }
 
-    fn execute<A, B, C, D, E>(
+    fn execute<'b>(
         hyper_params: &'a HyperParameters<'a, Self::O>,
-        mut after_init: A,
-        mut after_evaluate: B,
-        mut after_selection: C,
-        mut after_rank: D,
-        mut after_breed: E,
-    ) -> Result<Population<Self::O>, Box<dyn std::error::Error>>
-    where
-        A: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
-        B: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
-        C: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
-        D: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
-        E: FnMut(&mut Population<Self::O>) -> Result<(), Box<dyn std::error::Error>>,
-    {
+        hooks: EventHooks<'a, Self::O>,
+    ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
 
         trace!("{:#?}", hyper_params);
 
+        let EventHooks {
+            after_init,
+            after_evaluate,
+            after_rank,
+            after_selection,
+            after_breed,
+            ..
+        } = hooks;
+
         let mut population = Self::init_population(hyper_params);
 
-        after_init(&mut population)?;
+        (after_init)(&mut population)?;
 
         for _ in 0..hyper_params.max_generations {
             // Step 1: Evaluate Fitness
             Self::evaluate(&mut population);
-            after_evaluate(&mut population)?;
+            (after_evaluate)(&mut population)?;
 
             // Step 2: Sort
             Self::rank(&mut population);
-            after_rank(&mut population)?;
+            (after_rank)(&mut population)?;
 
             // Step 3: Drop by Gap
             Self::apply_selection(&mut population, hyper_params.gap);
-            after_selection(&mut population)?;
+            (after_selection)(&mut population)?;
 
             // Step 4: Crossover + Mutation
             Self::breed(
@@ -205,9 +204,99 @@ where
                 hyper_params.n_crossovers,
             );
 
-            after_breed(&mut population)?;
+            (after_breed)(&mut population)?;
         }
 
         Ok(population)
+    }
+}
+
+type GpHook<'a, O> =
+    &'a mut dyn FnMut(&mut Population<O>) -> Result<(), Box<dyn std::error::Error>>;
+pub struct EventHooks<'a, O>
+where
+    O: Organism<'a>,
+{
+    pub after_init: GpHook<'a, O>,
+    pub after_evaluate: GpHook<'a, O>,
+    pub after_rank: GpHook<'a, O>,
+    pub after_selection: GpHook<'a, O>,
+    pub after_breed: GpHook<'a, O>,
+}
+
+impl<'a, O> EventHooks<'a, O>
+where
+    O: Organism<'a>,
+{
+    pub fn with_after_init(self, f: GpHook<'a, O>) -> Self {
+        Self {
+            after_init: f,
+            ..self
+        }
+    }
+
+    pub fn with_after_evaluate(self, f: GpHook<'a, O>) -> Self {
+        Self {
+            after_evaluate: f,
+            ..self
+        }
+    }
+
+    pub fn with_after_selection(self, f: GpHook<'a, O>) -> Self {
+        Self {
+            after_selection: f,
+            ..self
+        }
+    }
+
+    pub fn with_after_rank(self, f: GpHook<'a, O>) -> Self {
+        Self {
+            after_rank: f,
+            ..self
+        }
+    }
+
+    pub fn with_after_breed<F>(self, f: GpHook<'a, O>) -> Self {
+        Self {
+            after_breed: f,
+            ..self
+        }
+    }
+}
+
+impl<'a, O> fmt::Debug for EventHooks<'a, O>
+where
+    O: Organism<'a>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EventHooks")
+            .field("after_init", &"after_init")
+            .field("after_evaluate", &"after_evaluate")
+            .field("after_selection", &"after_selection")
+            .field("after_rank", &"after_rank")
+            .field("after_breed", &"after_breed")
+            .finish()
+    }
+}
+
+fn default_impl<'a, O>(population: &'a mut Population<O>) -> Result<(), Box<dyn std::error::Error>>
+where
+    O: Organism<'a>,
+{
+    Ok(())
+}
+
+impl<'a, O> Default for EventHooks<'a, O>
+where
+    O: Organism<'a>,
+{
+    fn default() -> Self {
+        Self {
+            after_init: &mut default_impl,
+            after_evaluate: &mut default_impl,
+            after_rank: &mut default_impl,
+            after_selection: &mut default_impl,
+            after_breed: &mut default_impl,
+        }
     }
 }

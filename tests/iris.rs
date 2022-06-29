@@ -3,7 +3,7 @@ use std::error;
 use lgp::{
     data::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
     genes::{
-        algorithm::{GeneticAlgorithm, HyperParameters, Loader},
+        algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         characteristics::FitnessScore,
         program::{Program, ProgramGenerateParams},
     },
@@ -103,15 +103,11 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |population| {
+        EventHooks::default().with_after_rank(&mut |population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
-        },
-        |_| Ok(()),
+        }),
     )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
@@ -138,15 +134,11 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |population| {
+        EventHooks::default().with_after_rank(|population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
-        },
-        |_| Ok(()),
+        }),
     )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
@@ -174,15 +166,11 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |population| {
+        EventHooks::default().with_after_rank(|population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
-        },
-        |_| Ok(()),
+        }),
     )?;
 
     const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
@@ -212,10 +200,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |population| {
+        EventHooks::default().with_after_rank(&mut |population| {
             let benchmark = population.get_benchmark_individuals();
 
             if benchmark.worst == benchmark.median && benchmark.median == benchmark.best {
@@ -230,8 +215,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
 
             benchmarks.push(benchmark);
             Ok(())
-        },
-        |_| Ok(()),
+        }),
     )?;
 
     // TODO: Pull the graph section out into a seperate function.
