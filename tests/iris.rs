@@ -134,7 +134,7 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        EventHooks::default().with_after_rank(|population| {
+        EventHooks::default().with_after_rank(&mut |population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())
@@ -166,7 +166,7 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
     let mut benchmarks = vec![];
     IrisLgp::execute(
         &hyper_params,
-        EventHooks::default().with_after_rank(|population| {
+        EventHooks::default().with_after_rank(&mut |population| {
             let benchmark = population.get_benchmark_individuals();
             benchmarks.push(benchmark);
             Ok(())

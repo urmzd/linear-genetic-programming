@@ -165,7 +165,7 @@ where
 
     fn execute<'b>(
         hyper_params: &'a HyperParameters<'a, Self::O>,
-        hooks: EventHooks<'a, Self::O>,
+        mut hooks: EventHooks<'a, Self::O>,
     ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
 
@@ -178,24 +178,32 @@ where
             after_selection,
             after_breed,
             ..
-        } = hooks;
+        } = &mut hooks;
 
         let mut population = Self::init_population(hyper_params);
 
-        (after_init)(&mut population)?;
+        if let Some(hook) = after_init {
+            (hook)(&mut population)?;
+        }
 
         for _ in 0..hyper_params.max_generations {
             // Step 1: Evaluate Fitness
             Self::evaluate(&mut population);
-            (after_evaluate)(&mut population)?;
+            if let Some(hook) = after_evaluate {
+                (hook)(&mut population)?;
+            }
 
             // Step 2: Sort
             Self::rank(&mut population);
-            (after_rank)(&mut population)?;
+            if let Some(hook) = after_rank {
+                (hook)(&mut population)?;
+            }
 
             // Step 3: Drop by Gap
             Self::apply_selection(&mut population, hyper_params.gap);
-            (after_selection)(&mut population)?;
+            if let Some(hook) = after_selection {
+                (hook)(&mut population)?;
+            }
 
             // Step 4: Crossover + Mutation
             Self::breed(
@@ -204,7 +212,9 @@ where
                 hyper_params.n_crossovers,
             );
 
-            (after_breed)(&mut population)?;
+            if let Some(hook) = after_breed {
+                (hook)(&mut population)?;
+            }
         }
 
         Ok(population)
@@ -217,11 +227,11 @@ pub struct EventHooks<'a, O>
 where
     O: Organism<'a>,
 {
-    pub after_init: GpHook<'a, O>,
-    pub after_evaluate: GpHook<'a, O>,
-    pub after_rank: GpHook<'a, O>,
-    pub after_selection: GpHook<'a, O>,
-    pub after_breed: GpHook<'a, O>,
+    pub after_init: Option<GpHook<'a, O>>,
+    pub after_evaluate: Option<GpHook<'a, O>>,
+    pub after_rank: Option<GpHook<'a, O>>,
+    pub after_selection: Option<GpHook<'a, O>>,
+    pub after_breed: Option<GpHook<'a, O>>,
 }
 
 impl<'a, O> EventHooks<'a, O>
@@ -230,35 +240,35 @@ where
 {
     pub fn with_after_init(self, f: GpHook<'a, O>) -> Self {
         Self {
-            after_init: f,
+            after_init: Some(f),
             ..self
         }
     }
 
     pub fn with_after_evaluate(self, f: GpHook<'a, O>) -> Self {
         Self {
-            after_evaluate: f,
+            after_evaluate: Some(f),
             ..self
         }
     }
 
     pub fn with_after_selection(self, f: GpHook<'a, O>) -> Self {
         Self {
-            after_selection: f,
+            after_selection: Some(f),
             ..self
         }
     }
 
     pub fn with_after_rank(self, f: GpHook<'a, O>) -> Self {
         Self {
-            after_rank: f,
+            after_rank: Some(f),
             ..self
         }
     }
 
     pub fn with_after_breed<F>(self, f: GpHook<'a, O>) -> Self {
         Self {
-            after_breed: f,
+            after_breed: Some(f),
             ..self
         }
     }
@@ -279,24 +289,17 @@ where
     }
 }
 
-fn default_impl<'a, O>(population: &'a mut Population<O>) -> Result<(), Box<dyn std::error::Error>>
-where
-    O: Organism<'a>,
-{
-    Ok(())
-}
-
 impl<'a, O> Default for EventHooks<'a, O>
 where
     O: Organism<'a>,
 {
     fn default() -> Self {
         Self {
-            after_init: &mut default_impl,
-            after_evaluate: &mut default_impl,
-            after_rank: &mut default_impl,
-            after_selection: &mut default_impl,
-            after_breed: &mut default_impl,
+            after_init: None,
+            after_evaluate: None,
+            after_rank: None,
+            after_selection: None,
+            after_breed: None,
         }
     }
 }

@@ -26,15 +26,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
-    IrisLgp::execute(
-        &hyper_params,
-        EventHooks {
-            after_init: &mut |_| Ok(()),
-            after_evaluate: &mut |_| Ok(()),
-            after_selection: &mut |_| Ok(()),
-            after_rank: &mut |_| Ok(()),
-            after_breed: &mut |_| Ok(()),
-        },
-    )?;
+    IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
