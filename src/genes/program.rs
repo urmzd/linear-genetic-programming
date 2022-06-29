@@ -8,6 +8,7 @@ use crate::{
         random::generator,
     },
 };
+use more_asserts::assert_ge;
 use rand::{prelude::IteratorRandom, Rng};
 use serde::Serialize;
 
@@ -44,6 +45,7 @@ where
     max_instructions: usize,
     #[serde(skip_serializing)]
     instruction_generate_params: InstructionGenerateParams,
+    registers_len: usize,
 }
 
 impl<'a, InputType> ProgramGenerateParams<'a, InputType>
@@ -54,19 +56,18 @@ where
         inputs: &'a Inputs<InputType>,
         max_instructions: usize,
         executables: Executables,
-        register_len: Option<usize>,
+        registers_len: usize,
     ) -> ProgramGenerateParams<'a, InputType> {
-        let new_registers_len = register_len
-            .or_else(|| Some(InputType::N_CLASSES + 1))
-            .unwrap();
+        assert_ge!(registers_len, InputType::N_CLASSES);
 
         let instruction_generate_params =
-            InstructionGenerateParams::new(new_registers_len, InputType::N_FEATURES, executables);
+            InstructionGenerateParams::new(registers_len, InputType::N_FEATURES, executables);
 
         ProgramGenerateParams {
             inputs,
             max_instructions,
             instruction_generate_params,
+            registers_len,
         }
     }
 }
@@ -112,9 +113,10 @@ where
             max_instructions,
             inputs,
             instruction_generate_params,
+            registers_len,
         } = &parameters;
 
-        let registers = Registers::new(InputType::N_CLASSES + 1);
+        let registers = Registers::new(registers_len.clone());
 
         let n_instructions = generator().gen_range(0..max_instructions.clone());
 
@@ -306,7 +308,7 @@ mod tests {
         ]
         .to_vec();
 
-        let program_params = ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None);
+        let program_params = ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);

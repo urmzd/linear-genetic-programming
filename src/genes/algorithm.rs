@@ -46,14 +46,13 @@ where
             .from_path(file_path.into())
             .unwrap();
 
-        let mut inputs: Vec<Self::InputType> = vec![];
+        let inputs: Result<Inputs<Self::InputType>, _> = csv_reader
+            .deserialize()
+            .into_iter()
+            .map(|input| input)
+            .collect();
 
-        for input in csv_reader.deserialize() {
-            let record: Self::InputType = input.unwrap();
-            inputs.push(record);
-        }
-
-        inputs
+        inputs.unwrap()
     }
 }
 

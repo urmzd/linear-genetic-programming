@@ -95,7 +95,7 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -126,7 +126,7 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.5,
         n_crossovers: 0.,
     };
@@ -158,7 +158,7 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.,
         n_crossovers: 0.5,
     };
@@ -190,7 +190,7 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -236,7 +236,7 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -271,7 +271,7 @@ async fn given_population_and_retention_rate_when_selection_occurs_then_populati
         n_crossovers: 0.5,
         n_mutations: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
@@ -299,7 +299,7 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
