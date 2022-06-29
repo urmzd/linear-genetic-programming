@@ -30,14 +30,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
     };
 
-    IrisLgp::execute(
-        &hyper_params,
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-        |_| Ok(()),
-    )?;
+    IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
 ```
