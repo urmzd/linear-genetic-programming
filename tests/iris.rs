@@ -1,7 +1,7 @@
 use std::error;
 
 use lgp::{
-    data::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
+    examples::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
     genes::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         characteristics::FitnessScore,
@@ -10,7 +10,7 @@ use lgp::{
     metrics::benchmarks::{Benchmark, ComplexityBenchmark},
 };
 
-use lgp::data::iris::{
+use lgp::examples::iris::{
     data::IrisLgp,
     utils::{get_iris_content, ContentFilePair},
 };

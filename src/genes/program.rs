@@ -4,7 +4,7 @@ use crate::{
     metrics::definitions::Metric,
     utils::{
         common_traits::{Compare, Show, ValidInput},
-        linked_list::LinkedList,
+        problem_types::ClassificationProblem,
         random::generator,
     },
 };
@@ -20,21 +20,9 @@ use crate::{
 use super::{
     characteristics::{Breed, Fitness, FitnessScore, Generate, Mutate, Organism},
     instruction::{Instruction, InstructionGenerateParams},
+    instructions::Instructions,
     registers::Registers,
 };
-
-pub type Instructions<'a> = LinkedList<Instruction<'a>>;
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub struct Program<'a, InputType>
-where
-    InputType: ValidInput,
-{
-    pub instructions: Instructions<'a>,
-    pub inputs: &'a Inputs<InputType>,
-    pub registers: Registers,
-    fitness: Option<FitnessScore>,
-}
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ProgramGenerateParams<'a, InputType>
@@ -73,6 +61,17 @@ where
 }
 
 impl<'a, InputType> Show for ProgramGenerateParams<'a, InputType> where InputType: ValidInput {}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct Program<'a, InputType>
+where
+    InputType: ValidInput,
+{
+    pub instructions: Instructions<'a>,
+    pub inputs: &'a Inputs<InputType>,
+    pub registers: Registers,
+    fitness: Option<FitnessScore>,
+}
 
 impl<'a, InputType> Display for Program<'a, InputType>
 where
@@ -133,9 +132,9 @@ where
     }
 }
 
-impl<'a, InputType> Fitness for Program<'a, InputType>
+impl<'a, ProblemType> Fitness for Program<'a, ProblemType>
 where
-    InputType: ValidInput,
+    ProblemType: ClassificationProblem,
 {
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.inputs;
@@ -149,10 +148,10 @@ where
                 instruction.apply(&mut registers, input);
             }
 
+            let registers_argmax = input.argmax(&registers);
             let correct_index = input.get_class();
-            let registers_argmax = registers.argmax(InputType::N_CLASSES, correct_index);
 
-            Accuracy::observe(&mut fitness, [registers_argmax, Some(correct_index)]);
+            fitness.observe([registers_argmax, Some(correct_index)]);
 
             registers.reset();
         }
@@ -175,7 +174,7 @@ impl<'a, InputType> Compare for Program<'a, InputType> where InputType: ValidInp
 
 impl<'a, InputType> Organism<'a> for Program<'a, InputType>
 where
-    InputType: ValidInput,
+    InputType: ClassificationProblem,
 {
     fn get_instructions(&self) -> &Instructions {
         &self.instructions
@@ -232,49 +231,9 @@ where
     }
 }
 
-impl<'a> Breed for Instructions<'a> {
-    fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
-        let mut instructions_a = self.clone();
-        let mut instructions_b = mate.clone();
-
-        let a_start = generator().gen_range(0..instructions_a.len() - 1);
-        let a_end = if a_start == instructions_a.len() {
-            None
-        } else {
-            Some(generator().gen_range(a_start..=instructions_a.len())).and_then(|index| {
-                if index == instructions_a.len() || a_start == index {
-                    None
-                } else {
-                    Some(index)
-                }
-            })
-        };
-
-        let b_start = generator().gen_range(0..instructions_b.len() - 1);
-        let b_end = if b_start == instructions_b.len() {
-            None
-        } else {
-            Some(generator().gen_range(b_start..=instructions_b.len())).and_then(|index| {
-                if index == instructions_b.len() || b_start == index {
-                    None
-                } else {
-                    Some(index)
-                }
-            })
-        };
-
-        let mut cursor_a = instructions_a.cursor_mut();
-        let mut cursor_b = instructions_b.cursor_mut();
-
-        cursor_a.swap(&mut cursor_b, a_start, b_start, a_end, b_end);
-
-        [instructions_a, instructions_b]
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{data::iris::ops::IRIS_EXECUTABLES, utils::test::TestInput};
+    use crate::{examples::iris::ops::IRIS_EXECUTABLES, utils::test::TestInput};
 
     use super::*;
 

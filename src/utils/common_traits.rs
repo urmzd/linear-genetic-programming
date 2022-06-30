@@ -1,5 +1,6 @@
 use core::fmt;
 
+use num::FromPrimitive;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::genes::registers::{RegisterValue, Registers};
@@ -33,9 +34,14 @@ pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers> {
+pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers>
+where
+    Self::Represent: Compare + FromPrimitive,
+{
     const N_CLASSES: usize;
     const N_FEATURES: usize;
 
-    fn get_class(&self) -> usize;
+    type Represent;
+
+    fn argmax(&self, registers: &Registers) -> Vec<Self::Represent>;
 }

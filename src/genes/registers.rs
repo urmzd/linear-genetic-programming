@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    ops::Range,
-};
+use std::ops::Range;
 
 use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
@@ -66,31 +63,5 @@ impl Registers {
         assert_le!(range.end, self.0.len());
 
         &self.0[range]
-    }
-
-    pub fn argmax(&self, n_classes: usize, desired_index: usize) -> Option<usize> {
-        let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
-
-        let Registers(registers) = &self;
-
-        for index in 0..n_classes {
-            let value = registers.get(index).unwrap();
-            if arg_lookup.contains_key(value) {
-                arg_lookup.get_mut(value).unwrap().insert(index);
-            } else {
-                arg_lookup.insert(*registers.get(index).unwrap(), HashSet::from([index]));
-            }
-        }
-
-        let max_value = arg_lookup.keys().max().unwrap();
-        let indices = arg_lookup.get(max_value).unwrap();
-
-        if indices.contains(&desired_index) {
-            if indices.len() == 1 {
-                return Some(desired_index);
-            }
-        }
-
-        None
     }
 }

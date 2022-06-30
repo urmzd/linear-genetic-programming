@@ -91,16 +91,13 @@ where
     fn apply_selection(population: &mut Population<Self::O>, gap: f32) -> () {
         assert!(gap >= 0f32 && gap <= 1f32);
 
-        assert_le!(
-            population.first().unwrap().eval_fitness(),
-            population.last().unwrap().eval_fitness()
-        );
+        assert_le!(population.first(), population.last());
 
         let pop_len = population.len();
 
-        let lowest_index = ((1f32 - gap) * (pop_len as f32)).floor() as i32 as usize;
+        let cutoff_index = ((1f32 - gap) * (pop_len as f32)).floor() as i32 as usize;
 
-        for _ in 0..lowest_index {
+        for _ in 0..cutoff_index {
             population.pop_front();
         }
     }

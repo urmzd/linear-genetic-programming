@@ -1,6 +1,12 @@
 use core::fmt;
-use std::{fmt::Display, marker::PhantomData};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+    marker::PhantomData,
+};
 
+use num::FromPrimitive;
+use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
@@ -10,7 +16,10 @@ use crate::{
         program::Program,
         registers::{RegisterValue, Registers},
     },
-    utils::common_traits::{Compare, Show, ValidInput},
+    utils::{
+        common_traits::{Compare, Show, ValidInput},
+        problem_types::ClassificationProblem,
+    },
 };
 
 pub const IRIS_DATASET_LINK: &'static str =
@@ -29,6 +38,7 @@ pub const IRIS_DATASET_LINK: &'static str =
     Serialize,
     Deserialize,
     Hash,
+    FromPrimitive,
 )]
 pub enum IrisClass {
     #[serde(rename = "Iris-setosa")]
@@ -58,6 +68,14 @@ pub struct IrisInput {
     class: IrisClass,
 }
 
+impl ClassificationProblem for IrisInput {
+    fn get_class(&self) -> Self::Represent {
+        self.class
+    }
+}
+
+impl Compare for IrisClass {}
+
 impl Display for IrisInput {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let serialized = toml::to_string(&self).unwrap();
@@ -72,8 +90,32 @@ impl ValidInput for IrisInput {
     const N_CLASSES: usize = 3;
     const N_FEATURES: usize = 4;
 
-    fn get_class(&self) -> usize {
-        self.class as usize
+    type Represent = IrisClass;
+
+    fn argmax(&self, registers: &Registers) -> Vec<Self::Represent> {
+        let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
+
+        let Registers(registers) = &registers;
+
+        for index in 0..Self::N_CLASSES {
+            let value = registers.get(index).unwrap();
+            if arg_lookup.contains_key(value) {
+                arg_lookup.get_mut(value).unwrap().insert(index);
+            } else {
+                arg_lookup.insert(*registers.get(index).unwrap(), HashSet::from([index]));
+            }
+        }
+
+        let max_value = arg_lookup.keys().max().unwrap();
+        let indices = arg_lookup.get(max_value).unwrap();
+
+        let mapped_indices = indices
+            .to_owned()
+            .iter()
+            .map(|index| FromPrimitive::from_usize(*index).unwrap())
+            .collect();
+
+        mapped_indices
     }
 }
 
