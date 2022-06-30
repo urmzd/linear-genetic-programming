@@ -46,10 +46,10 @@ where
         executables: Executables,
         registers_len: usize,
     ) -> ProgramGenerateParams<'a, InputType> {
-        assert_ge!(registers_len, InputType::N_CLASSES);
+        assert_ge!(registers_len, InputType::N_OUTPUTS);
 
         let instruction_generate_params =
-            InstructionGenerateParams::new(registers_len, InputType::N_FEATURES, executables);
+            InstructionGenerateParams::new(registers_len, InputType::N_INPUTS, executables);
 
         ProgramGenerateParams {
             inputs,
@@ -139,7 +139,7 @@ where
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.inputs;
 
-        let mut fitness: Accuracy<Option<usize>> = Accuracy::new();
+        let mut fitness: Accuracy<Option<ProblemType::Represent>> = Accuracy::new();
 
         for input in inputs {
             let mut registers = self.registers.clone();
@@ -148,10 +148,10 @@ where
                 instruction.apply(&mut registers, input);
             }
 
-            let registers_argmax = input.argmax(&registers);
-            let correct_index = input.get_class();
+            let argmax = input.argmax(&registers);
+            let correct_class = input.get_class();
 
-            fitness.observe([registers_argmax, Some(correct_index)]);
+            fitness.observe([argmax, Some(correct_class)]);
 
             registers.reset();
         }

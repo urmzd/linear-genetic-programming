@@ -22,8 +22,8 @@ impl Into<Registers> for TestInput {
 impl Compare for TestInput {}
 impl Show for TestInput {}
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, FromPrimitive)]
-enum TestRepresent {
+#[derive(Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone)]
+pub enum TestRepresent {
     One = 0,
     Two = 1,
 }
@@ -32,18 +32,25 @@ impl Compare for TestRepresent {}
 
 impl ValidInput for TestInput {
     // 0 or 1
-    const N_CLASSES: usize = 2;
-    const N_FEATURES: usize = 4;
+    const N_OUTPUTS: usize = 2;
+    const N_INPUTS: usize = 4;
 
     type Represent = TestRepresent;
 
-    fn argmax(&self, registers: &Registers) -> Vec<Self::Represent> {
-        todo!()
+    fn argmax(&self, registers: &Registers) -> Option<Self::Represent> {
+        let index = registers
+            .argmax::<Self>()
+            .into_iter()
+            .enumerate()
+            .max_by_key(|&(_, value)| value)
+            .map(|(idx, _)| idx);
+
+        index.and_then(|v| FromPrimitive::from_usize(v))
     }
 }
 
 impl ClassificationProblem for TestInput {
     fn get_class(&self) -> TestRepresent {
-        FromPrimitive::from_usize(self.0[Self::N_FEATURES]).unwrap()
+        FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
     }
 }

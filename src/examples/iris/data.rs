@@ -1,9 +1,5 @@
 use core::fmt;
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Display,
-    marker::PhantomData,
-};
+use std::{fmt::Display, marker::PhantomData};
 
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
@@ -87,35 +83,19 @@ impl Show for IrisInput {}
 impl Compare for IrisInput {}
 
 impl ValidInput for IrisInput {
-    const N_CLASSES: usize = 3;
-    const N_FEATURES: usize = 4;
+    const N_OUTPUTS: usize = 3;
+    const N_INPUTS: usize = 4;
 
     type Represent = IrisClass;
 
-    fn argmax(&self, registers: &Registers) -> Vec<Self::Represent> {
-        let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
-
-        let Registers(registers) = &registers;
-
-        for index in 0..Self::N_CLASSES {
-            let value = registers.get(index).unwrap();
-            if arg_lookup.contains_key(value) {
-                arg_lookup.get_mut(value).unwrap().insert(index);
-            } else {
-                arg_lookup.insert(*registers.get(index).unwrap(), HashSet::from([index]));
-            }
+    fn argmax(&self, registers: &Registers) -> Option<Self::Represent> {
+        let mut max_indices = registers.argmax::<Self>();
+        if max_indices.len() == 1 {
+            let index = max_indices.pop()?;
+            return FromPrimitive::from_usize(index);
         }
 
-        let max_value = arg_lookup.keys().max().unwrap();
-        let indices = arg_lookup.get(max_value).unwrap();
-
-        let mapped_indices = indices
-            .to_owned()
-            .iter()
-            .map(|index| FromPrimitive::from_usize(*index).unwrap())
-            .collect();
-
-        mapped_indices
+        return None;
     }
 }
 

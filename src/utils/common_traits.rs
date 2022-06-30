@@ -1,6 +1,6 @@
 use core::fmt;
+use std::hash::Hash;
 
-use num::FromPrimitive;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::genes::registers::{RegisterValue, Registers};
@@ -36,12 +36,12 @@ pub type Inputs<InputType> = Vec<InputType>;
 
 pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers>
 where
-    Self::Represent: Compare + FromPrimitive,
+    Self::Represent: Compare + Hash + Clone,
 {
-    const N_CLASSES: usize;
-    const N_FEATURES: usize;
+    const N_OUTPUTS: usize;
+    const N_INPUTS: usize;
 
     type Represent;
 
-    fn argmax(&self, registers: &Registers) -> Vec<Self::Represent>;
+    fn argmax(&self, registers: &Registers) -> Option<Self::Represent>;
 }

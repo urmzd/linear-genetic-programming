@@ -1,8 +1,13 @@
-use std::ops::Range;
+use std::{
+    collections::{HashMap, HashSet},
+    ops::Range,
+};
 
 use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
+
+use crate::utils::common_traits::ValidInput;
 
 pub type RegisterValue = OrderedFloat<f32>;
 
@@ -63,5 +68,28 @@ impl Registers {
         assert_le!(range.end, self.0.len());
 
         &self.0[range]
+    }
+
+    pub fn argmax<V>(&self) -> Vec<usize>
+    where
+        V: ValidInput,
+    {
+        let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
+
+        let Registers(registers) = &self;
+
+        for index in 0..V::N_OUTPUTS {
+            let value = registers.get(index).unwrap();
+            if arg_lookup.contains_key(value) {
+                arg_lookup.get_mut(value).unwrap().insert(index);
+            } else {
+                arg_lookup.insert(*registers.get(index).unwrap(), HashSet::from([index]));
+            }
+        }
+
+        let max_value = arg_lookup.keys().max().unwrap().to_owned();
+        let indices = arg_lookup.remove(&max_value).unwrap();
+
+        indices.into_iter().collect()
     }
 }
