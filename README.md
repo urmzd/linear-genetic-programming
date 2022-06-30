@@ -7,7 +7,7 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 ## Modules
 
 -   [Metrics](src/metrics)
--   [Data](src/data)
+-   [Examples](src/examples)
 -   [Genes](src/genes)
 -   [Utils](src/utils)
 
