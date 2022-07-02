@@ -5,9 +5,12 @@ use lgp::{
     genes::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         characteristics::FitnessScore,
+        instruction::{InstructionGeneratorParameters, Modes},
         program::{Program, ProgramGeneratorParameters},
     },
     metrics::benchmarks::{Benchmark, ComplexityBenchmark},
+    problem_types::classification::Classification,
+    utils::common_traits::ValidInput,
 };
 
 use lgp::examples::iris::{
@@ -91,11 +94,20 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
     let ContentFilePair(_, tmp_file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -122,11 +134,20 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
     let ContentFilePair(_, tmp_file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
         n_crossovers: 0.,
     };
@@ -154,11 +175,20 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
     let ContentFilePair(_, tmp_file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.,
         n_crossovers: 0.5,
     };
@@ -186,11 +216,20 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     let ContentFilePair(_, tmp_file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -232,11 +271,20 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
 
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };
@@ -265,13 +313,22 @@ async fn given_population_and_retention_rate_when_selection_occurs_then_populati
 
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
-        n_crossovers: 0.5,
-        n_mutations: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
     };
 
     let mut population = IrisLgp::init_population(&hyper_params);
@@ -295,11 +352,20 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
 
     let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
         population_size: 100,
         gap: 0.5,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4),
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
         n_crossovers: 0.5,
     };

@@ -19,13 +19,13 @@ use super::{
 };
 
 #[derive(Clone, Debug, Serialize, new)]
-pub struct ProgramGeneratorParameters<'a, T> {
+pub struct ProgramGeneratorParameters<T> {
     max_instructions: usize,
-    instruction_generator_parameters: &'a InstructionGeneratorParameters,
-    other: &'a T,
+    instruction_generator_parameters: InstructionGeneratorParameters,
+    other: T,
 }
 
-impl<'a, T> Show for ProgramGeneratorParameters<'a, T> where T: Show {}
+impl<T> Show for ProgramGeneratorParameters<T> where T: Show {}
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct Program<'a, T> {
@@ -65,7 +65,7 @@ where
 }
 
 impl<'a, T> Generate<'a> for Program<'a, T> {
-    type GeneratorParameters = ProgramGeneratorParameters<'a, T>;
+    type GeneratorParameters = ProgramGeneratorParameters<T>;
 
     fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let ProgramGeneratorParameters {
@@ -191,7 +191,7 @@ mod tests {
             InstructionGeneratorParameters::new(3, Some(5), Modes::all(), IRIS_EXECUTABLES);
         let classification_params = Classification::new(&inputs);
         let program_params =
-            ProgramGeneratorParameters::new(100, &instruction_params, &classification_params);
+            ProgramGeneratorParameters::new(100, instruction_params, classification_params);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);
