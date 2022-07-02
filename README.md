@@ -13,7 +13,7 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 
 ## Examples
 
-### Iris Dataset Implementation
+### Classification (Iris)
 
 ```rust
 #[tokio::main]
@@ -32,6 +32,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
+}
+```
+
+### Reinforcement Learning (Mountain Car)
+```rust
+fn main() {
+    todo!()
 }
 ```
 
