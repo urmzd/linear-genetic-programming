@@ -70,7 +70,11 @@ impl Registers {
         &self.0[range]
     }
 
-    pub fn argmax<V>(&self) -> Vec<usize>
+    // TODO: compute ties
+    pub fn argmax<V>(
+        &self,
+        break_ties_fn: Option<impl FnOnce(Vec<usize>) -> V::Represent>,
+    ) -> V::Represent
     where
         V: ValidInput,
     {

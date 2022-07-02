@@ -27,76 +27,66 @@ pub struct Instruction<'a> {
     target_index: usize,
     mode: Modes,
     #[serde(skip_serializing)]
-    exec: AnyExecutable,
-    params_used: &'a InstructionGenerateParams,
+    executable: AnyExecutable,
+    parameters_used: &'a InstructionGeneratorParameters,
 }
 
 impl<'a> Generate<'a> for Instruction<'a> {
-    type GenerateParamsType = InstructionGenerateParams;
+    type GenerateParamsType = InstructionGeneratorParameters;
 
     fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
-        let InstructionGenerateParams {
-            n_features: data_len,
-            n_registers: registers_len,
-            executables,
+        let InstructionGeneratorParameters {
+            n_registers,
+            n_inputs,
+            modes_available,
+            executables_available: executables,
         } = parameters;
 
-        let source_index = UniformInt::<usize>::new(0, registers_len).sample(&mut generator());
+        let source_index = UniformInt::<usize>::new(0, n_registers).sample(&mut generator());
 
-        let mode = FromPrimitive::from_usize(generator().gen_range(0..=1)).unwrap();
+        let mode = modes_available.choose(&mut generator()).unwrap();
 
-        let target_index = UniformInt::<usize>::new(
-            0,
-            if mode == Modes::External {
-                data_len
-            } else {
-                registers_len
-            },
-        )
-        .sample(&mut thread_rng());
+        let upper_bound_target_index = if mode == Modes::External {
+            n_inputs.unwrap()
+        } else {
+            n_registers
+        };
+        let target_index =
+            UniformInt::<usize>::new(0, upper_bound_target_index).sample(&mut thread_rng());
 
         let exec = executables.choose(&mut generator()).unwrap().to_owned();
 
         Instruction {
             source_index,
             target_index,
-            exec,
+            executable: exec,
             mode,
-            params_used: &parameters,
+            parameters_used: &parameters,
         }
     }
 }
 
 #[derive(Clone, Debug, Serialize, Copy)]
-pub struct InstructionGenerateParams {
-    n_registers: usize,
-    n_features: usize,
+pub struct InstructionGeneratorParameters {
+    pub n_registers: usize,
+    pub n_inputs: Option<usize>,
+    pub modes_available: Vec<Modes>,
     #[serde(skip_serializing)]
-    executables: Executables,
+    pub executables_available: Executables,
 }
 
-impl InstructionGenerateParams {
-    pub fn new(registers_len: usize, data_len: usize, executables: Executables) -> Self {
-        InstructionGenerateParams {
-            n_registers: registers_len,
-            n_features: data_len,
-            executables,
-        }
-    }
-}
+impl<'b> Eq for Instruction<'b> {}
 
-impl<'a> Eq for Instruction<'a> {}
-
-impl<'a> PartialEq for Instruction<'a> {
+impl<'b> PartialEq for Instruction<'b> {
     fn eq(&self, other: &Self) -> bool {
         self.source_index == other.source_index
             && self.target_index == other.target_index
             && self.mode == other.mode
-            && self.exec.get_fn() as usize == other.exec.get_fn() as usize
+            && self.executable.get_fn() as usize == other.executable.get_fn() as usize
     }
 }
 
-impl<'a> Debug for Instruction<'a> {
+impl<'b> Debug for Instruction<'b> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Instruction")
             .field("mode", &self.mode)
@@ -106,9 +96,9 @@ impl<'a> Debug for Instruction<'a> {
     }
 }
 
-impl<'a> Mutate for Instruction<'a> {
+impl<'b> Mutate for Instruction<'b> {
     fn mutate(&self) -> Self {
-        let mut mutated = Self::generate(&self.params_used);
+        let mut mutated = Self::generate(&self.parameters_used);
 
         let swap_target = generator().gen_bool(0.5);
         let swap_source = generator().gen_bool(0.5);
@@ -127,18 +117,18 @@ impl<'a> Mutate for Instruction<'a> {
 
         // Flip a Coin: Executable
         if swap_exec {
-            mutated.exec = self.exec.clone();
+            mutated.executable = self.executable.clone();
         }
 
         mutated
     }
 }
 
-impl<'a> Show for Instruction<'a> {}
-impl Show for InstructionGenerateParams {}
+impl<'b> Show for Instruction<'b> {}
+impl<'b> Show for InstructionGeneratorParameters {}
 
-impl<'a> Instruction<'a> {
-    fn get_data<InputType>(&self, registers: &'a Registers, data: &'a InputType) -> Registers
+impl<'b> Instruction<'b> {
+    fn get_data<InputType>(&self, registers: &Registers, data: &InputType) -> Registers
     where
         InputType: ValidInput,
     {
@@ -157,6 +147,6 @@ impl<'a> Instruction<'a> {
         let data = self.get_data(registers, input);
         let target_slice = data.get_slice(self.target_index, None);
         let source_slice = registers.get_mut_slice(self.source_index, None);
-        (self.exec.get_fn())(source_slice, target_slice);
+        (self.executable.get_fn())(source_slice, target_slice);
     }
 }

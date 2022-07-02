@@ -44,4 +44,4 @@ impl<'a> Breed for Instructions<'a> {
     }
 }
 
-pub type Instructions<'a> = LinkedList<Instruction<'a>>;
+pub type Instructions<'a> = LinkedList<Instruction>;

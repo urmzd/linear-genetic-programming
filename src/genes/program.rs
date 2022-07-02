@@ -19,48 +19,25 @@ use crate::{
 
 use super::{
     characteristics::{Breed, Fitness, FitnessScore, Generate, Mutate, Organism},
-    instruction::{Instruction, InstructionGenerateParams},
+    instruction::{Instruction, InstructionGeneratorParameters},
     instructions::Instructions,
     registers::Registers,
 };
 
 #[derive(Clone, Debug, Serialize)]
-pub struct ProgramGenerateParams<'a, InputType>
-where
-    InputType: ValidInput,
-{
-    inputs: &'a Inputs<InputType>,
+pub struct ProgramGeneratorParameters<'a, T> {
     max_instructions: usize,
-    #[serde(skip_serializing)]
-    instruction_generate_params: InstructionGenerateParams,
-    registers_len: usize,
+    n_registers: usize,
+    task_specific: T,
+    instructions: Instructions,
 }
 
-impl<'a, InputType> ProgramGenerateParams<'a, InputType>
-where
-    InputType: ValidInput,
-{
-    pub fn new(
-        inputs: &'a Inputs<InputType>,
-        max_instructions: usize,
-        executables: Executables,
-        registers_len: usize,
-    ) -> ProgramGenerateParams<'a, InputType> {
-        assert_ge!(registers_len, InputType::N_OUTPUTS);
-
-        let instruction_generate_params =
-            InstructionGenerateParams::new(registers_len, InputType::N_INPUTS, executables);
-
-        ProgramGenerateParams {
-            inputs,
-            max_instructions,
-            instruction_generate_params,
-            registers_len,
-        }
-    }
+#[derive(Clone, Debug, Serialize)]
+struct ClassificationSpecificParameters<'a, InputType> {
+    inputs: &'a Inputs<InputType>,
 }
 
-impl<'a, InputType> Show for ProgramGenerateParams<'a, InputType> where InputType: ValidInput {}
+impl<'a, InputType> Show for ProgramGeneratorParameters<'a, InputType> where InputType: ValidInput {}
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct Program<'a, InputType>
@@ -105,23 +82,17 @@ impl<'a, InputType> Generate<'a> for Program<'a, InputType>
 where
     InputType: ValidInput,
 {
-    type GenerateParamsType = ProgramGenerateParams<'a, InputType>;
+    type GenerateParamsType = ProgramGeneratorParameters;
 
     fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
-        let ProgramGenerateParams {
+        let ProgramGeneratorParameters {
             max_instructions,
             inputs,
-            instruction_generate_params,
-            registers_len,
+            instructions,
+            n_registers: registers_len,
         } = &parameters;
 
         let registers = Registers::new(registers_len.clone());
-
-        let n_instructions = generator().gen_range(0..max_instructions.clone());
-
-        let instructions: Instructions = (0..n_instructions)
-            .map(|_| Instruction::generate(instruction_generate_params))
-            .collect();
 
         Program {
             instructions,
@@ -239,8 +210,8 @@ mod tests {
 
     #[test]
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
-        let params_a = InstructionGenerateParams::new(5, 5, IRIS_EXECUTABLES);
-        let params_b = InstructionGenerateParams::new(6, 6, IRIS_EXECUTABLES);
+        let params_a = InstructionGeneratorParameters::new(5, 5, IRIS_EXECUTABLES);
+        let params_b = InstructionGeneratorParameters::new(6, 6, IRIS_EXECUTABLES);
         let instructions_a: Instructions =
             (0..5).map(|_| Instruction::generate(&params_a)).collect();
         let instructions_b: Instructions =
@@ -267,7 +238,7 @@ mod tests {
         ]
         .to_vec();
 
-        let program_params = ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, 4);
+        let program_params = ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);
