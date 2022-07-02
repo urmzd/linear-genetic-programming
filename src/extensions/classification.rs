@@ -7,7 +7,7 @@ use crate::{
         characteristics::{Fitness, FitnessScore, Organism},
         program::Program,
     },
-    metrics::{accuracy::Accuracy, definitions::Metric},
+    measure::{accuracy::Accuracy, definitions::Metric},
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 

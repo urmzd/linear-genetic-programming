@@ -3,7 +3,7 @@ use std::collections::{
     VecDeque,
 };
 
-use crate::{metrics::benchmarks::Benchmark, utils::common_traits::Compare};
+use crate::{measure::benchmarks::Benchmark, utils::common_traits::Compare};
 
 use super::characteristics::{FitnessScore, Organism};
 

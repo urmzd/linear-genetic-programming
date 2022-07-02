@@ -149,7 +149,7 @@ mod tests {
     use crate::{
         core::instruction::{InstructionGeneratorParameters, Modes},
         examples::iris::ops::IRIS_EXECUTABLES,
-        problem_types::classification::Classification,
+        extensions::classification::Classification,
         utils::test::TestInput,
     };
 
