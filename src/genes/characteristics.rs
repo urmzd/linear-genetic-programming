@@ -14,14 +14,14 @@ pub trait Breed: Clone {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2];
 }
 
-pub trait Mutate {
+pub trait Mutate: Clone {
     fn mutate(&self) -> Self;
 }
 
 pub trait Generate<'a> {
-    type GenerateParamsType;
+    type GeneratorParameters;
 
-    fn generate(parameters: &'a Self::GenerateParamsType) -> Self;
+    fn generate(parameters: &'a Self::GeneratorParameters) -> Self;
 }
 
 pub trait Organism<'a>:

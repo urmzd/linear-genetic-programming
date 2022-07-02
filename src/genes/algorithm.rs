@@ -5,6 +5,7 @@ use csv::ReaderBuilder;
 use more_asserts::{assert_ge, assert_le};
 use ordered_float::OrderedFloat;
 use rand::prelude::{IteratorRandom, SliceRandom};
+use serde::de::DeserializeOwned;
 
 use crate::{
     genes::characteristics::{Breed, Fitness, Generate},
@@ -13,8 +14,6 @@ use crate::{
         random::generator,
     },
 };
-
-use log::trace;
 
 use super::{
     characteristics::{Mutate, Organism},
@@ -31,12 +30,12 @@ where
     pub n_mutations: f32,
     pub n_crossovers: f32,
     pub max_generations: usize,
-    pub program_params: OrganismType::GenerateParamsType,
+    pub program_params: OrganismType::GeneratorParameters,
 }
 
 pub trait Loader
 where
-    Self::InputType: ValidInput,
+    Self::InputType: ValidInput + DeserializeOwned,
 {
     type InputType;
 
@@ -164,8 +163,6 @@ where
         mut hooks: EventHooks<'a, Self::O>,
     ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
-
-        trace!("{:#?}", hyper_params);
 
         let EventHooks {
             after_init,

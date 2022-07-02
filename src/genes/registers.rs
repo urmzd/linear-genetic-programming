@@ -16,8 +16,8 @@ pub struct Registers(pub Vec<RegisterValue>);
 
 impl Registers {
     pub fn new(n_registers: usize) -> Registers {
-        let internal_vec = vec![OrderedFloat(0f32); n_registers];
-        Registers(internal_vec)
+        let registers = vec![OrderedFloat(0f32); n_registers];
+        Registers(registers)
     }
 
     pub fn from(vec: Vec<RegisterValue>) -> Registers {
@@ -71,9 +71,10 @@ impl Registers {
     }
 
     // TODO: compute ties
-    pub fn argmax<V>(&self, break_ties_fn: impl FnOnce(Vec<usize>) -> V) -> V
+    pub fn argmax<V, F>(&self, break_ties_fn: F) -> Option<V::Represent>
     where
         V: ValidInput,
+        F: FnOnce(Vec<usize>) -> Option<V::Represent>,
     {
         let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
 

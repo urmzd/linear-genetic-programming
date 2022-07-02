@@ -3,8 +3,6 @@ use std::marker::PhantomData;
 use num_derive::FromPrimitive;
 use strum::{Display, EnumCount};
 
-use crate::genes::algorithm::GeneticAlgorithm;
-
 #[derive(Debug, Clone, Display, Eq, PartialEq, EnumCount, FromPrimitive)]
 pub enum Actions {
     AccelerateLeft = 0,

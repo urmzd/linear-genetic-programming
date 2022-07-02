@@ -23,13 +23,13 @@ pub enum Modes {
 
 impl Modes {
     pub fn new(include_external: bool, include_internal: bool) -> Vec<Modes> {
-        let modes_available = vec![];
+        let mut modes_available = vec![];
         if include_internal {
-            modes_available.push(Modes::internal)
+            modes_available.push(Modes::Internal)
         }
 
         if include_external {
-            modes_available.push(Modes::Internal)
+            modes_available.push(Modes::External)
         }
 
         modes_available
@@ -51,9 +51,9 @@ pub struct Instruction<'a> {
 }
 
 impl<'a> Generate<'a> for Instruction<'a> {
-    type GenerateParamsType = InstructionGeneratorParameters;
+    type GeneratorParameters = InstructionGeneratorParameters;
 
-    fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
+    fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let InstructionGeneratorParameters {
             n_registers,
             n_inputs,
@@ -88,11 +88,11 @@ impl<'a> Generate<'a> for Instruction<'a> {
 impl<'b> Show for InstructionGeneratorParameters {}
 #[derive(Clone, Debug, Serialize, new)]
 pub struct InstructionGeneratorParameters {
-    n_registers: usize,
-    n_inputs: Option<usize>,
-    modes_available: Vec<Modes>,
+    pub n_registers: usize,
+    pub n_inputs: Option<usize>,
+    pub modes_available: Vec<Modes>,
     #[serde(skip_serializing)]
-    executables_available: Executables,
+    pub executables_available: Executables,
 }
 
 impl<'b> Eq for Instruction<'b> {}

@@ -1,7 +1,8 @@
 use core::fmt;
 use std::hash::Hash;
 
-use serde::{de::DeserializeOwned, Serialize};
+use num::FromPrimitive;
+use serde::Serialize;
 
 use crate::genes::registers::{RegisterValue, Registers};
 
@@ -34,9 +35,9 @@ pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Clone + Compare + Show + DeserializeOwned + Into<Registers>
+pub trait ValidInput: Clone + Compare + Show + Into<Registers>
 where
-    Self::Represent: Compare + Hash + Clone,
+    Self::Represent: Compare + Hash + Clone + FromPrimitive,
 {
     const N_OUTPUTS: usize;
     const N_INPUTS: usize;

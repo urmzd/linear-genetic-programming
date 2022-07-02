@@ -1,3 +1,5 @@
+use derive_new::new;
+use num::FromPrimitive;
 use serde::Serialize;
 
 use crate::{
@@ -6,11 +8,11 @@ use crate::{
         program::Program,
     },
     metrics::{accuracy::Accuracy, definitions::Metric},
-    utils::common_traits::{Inputs, ValidInput},
+    utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 
-#[derive(Clone, Debug, Serialize)]
-struct Classification<'a, InputType>
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
+pub struct Classification<'a, InputType>
 where
     InputType: ClassificationInput,
 {
@@ -28,7 +30,7 @@ where
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
 
-        let mut fitness: Accuracy<Option<InputType>> = Accuracy::new();
+        let mut fitness: Accuracy<Option<InputType::Represent>> = Accuracy::new();
 
         for input in inputs {
             let mut registers = self.registers.clone();
@@ -37,7 +39,15 @@ where
                 instruction.apply(&mut registers, input);
             }
 
-            let argmax = registers.argmax(|ties| if ties.len() > 1 { None } else { ties.pop() });
+            let argmax = registers.argmax::<InputType, _>(|mut ties| {
+                if ties.len() > 1 {
+                    None
+                } else {
+                    let classification: Option<InputType::Represent> =
+                        FromPrimitive::from_usize(ties.pop().unwrap());
+                    classification
+                }
+            });
             let correct_class = input.get_class();
 
             fitness.observe([argmax, Some(correct_class)]);
@@ -58,3 +68,5 @@ where
 }
 
 impl<'a, T> Organism<'a> for Program<'a, Classification<'a, T>> where T: ClassificationInput {}
+impl<'a, T> Show for Classification<'a, T> where T: ClassificationInput {}
+impl<'a, T> Compare for Classification<'a, T> where T: ClassificationInput {}

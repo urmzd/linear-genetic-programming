@@ -1,7 +1,6 @@
 use core::fmt;
 use std::{fmt::Display, marker::PhantomData};
 
-use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -12,7 +11,7 @@ use crate::{
         program::Program,
         registers::{RegisterValue, Registers},
     },
-    problem_types::classification::ClassificationInput,
+    problem_types::classification::{Classification, ClassificationInput},
     utils::common_traits::{Compare, Show, ValidInput},
 };
 
@@ -46,7 +45,7 @@ pub enum IrisClass {
 pub struct IrisLgp<'a>(PhantomData<&'a ()>);
 
 impl<'a> GeneticAlgorithm<'a> for IrisLgp<'a> {
-    type O = Program<'a, IrisInput>;
+    type O = Program<'a, Classification<'a, IrisInput>>;
 }
 
 impl<'a> Loader for IrisLgp<'a> {

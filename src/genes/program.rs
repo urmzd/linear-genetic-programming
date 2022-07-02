@@ -5,7 +5,10 @@ use crate::utils::{
     random::generator,
 };
 use derive_new::new;
-use rand::{distributions::Uniform, prelude::IteratorRandom};
+use rand::{
+    distributions::Uniform,
+    prelude::{Distribution, IteratorRandom},
+};
 use serde::Serialize;
 
 use super::{
@@ -18,8 +21,7 @@ use super::{
 #[derive(Clone, Debug, Serialize, new)]
 pub struct ProgramGeneratorParameters<'a, T> {
     max_instructions: usize,
-    n_registers: usize,
-    instruction_generator_parameters: InstructionGeneratorParameters,
+    instruction_generator_parameters: &'a InstructionGeneratorParameters,
     other: &'a T,
 }
 
@@ -63,20 +65,21 @@ where
 }
 
 impl<'a, T> Generate<'a> for Program<'a, T> {
-    type GenerateParamsType = ProgramGeneratorParameters<'a, T>;
+    type GeneratorParameters = ProgramGeneratorParameters<'a, T>;
 
-    fn generate(parameters: &'a Self::GenerateParamsType) -> Self {
+    fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let ProgramGeneratorParameters {
             max_instructions,
             instruction_generator_parameters,
-            n_registers,
             other,
         } = &parameters;
 
-        let registers = Registers::new(n_registers.clone());
-        let instructions = Uniform::new_inclusive(0, max_instructions)
-            .sample(&mut generator())
-            .map(|_| Instruction::generate(instruction_generator_parameters));
+        let registers = Registers::new(instruction_generator_parameters.n_registers.clone());
+        let n_instructions = Uniform::new_inclusive(0, max_instructions).sample(&mut generator());
+        let instructions = (0..n_instructions)
+            .into_iter()
+            .map(|_| Instruction::generate(instruction_generator_parameters))
+            .collect();
 
         Program {
             instructions,
@@ -91,7 +94,10 @@ impl<'a, T> Show for Program<'a, T> where T: Show {}
 
 impl<'a, T> Compare for Program<'a, T> where T: Compare {}
 
-impl<'a, T> Mutate for Program<'a, T> {
+impl<'a, T> Mutate for Program<'a, T>
+where
+    T: Clone,
+{
     fn mutate(&self) -> Self {
         let mut mutated = self.clone();
 
@@ -143,6 +149,7 @@ mod tests {
     use crate::{
         examples::iris::ops::IRIS_EXECUTABLES,
         genes::instruction::{InstructionGeneratorParameters, Modes},
+        problem_types::classification::Classification,
         utils::test::TestInput,
     };
 
@@ -150,8 +157,10 @@ mod tests {
 
     #[test]
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
-        let params_a = InstructionGeneratorParameters::new(5, 5, Modes::all(), IRIS_EXECUTABLES);
-        let params_b = InstructionGeneratorParameters::new(6, 6, Modes::all(), IRIS_EXECUTABLES);
+        let params_a =
+            InstructionGeneratorParameters::new(5, Some(5), Modes::all(), IRIS_EXECUTABLES);
+        let params_b =
+            InstructionGeneratorParameters::new(6, Some(6), Modes::all(), IRIS_EXECUTABLES);
         let instructions_a: Instructions =
             (0..5).map(|_| Instruction::generate(&params_a)).collect();
         let instructions_b: Instructions =
@@ -178,7 +187,11 @@ mod tests {
         ]
         .to_vec();
 
-        let program_params = ProgramGeneratorParameters::new(&inputs, 100, IRIS_EXECUTABLES, 4);
+        let instruction_params =
+            InstructionGeneratorParameters::new(3, Some(5), Modes::all(), IRIS_EXECUTABLES);
+        let classification_params = Classification::new(&inputs);
+        let program_params =
+            ProgramGeneratorParameters::new(100, &instruction_params, &classification_params);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);
