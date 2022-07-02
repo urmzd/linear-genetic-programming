@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{distributions::Uniform, prelude::Distribution, Rng};
 
 use crate::utils::{linked_list::LinkedList, random::generator};
 
@@ -9,30 +9,22 @@ impl<'a> Breed for Instructions<'a> {
         let mut instructions_a = self.clone();
         let mut instructions_b = mate.clone();
 
-        let a_start = generator().gen_range(0..instructions_a.len() - 1);
-        let a_end = if a_start == instructions_a.len() {
+        let a_start = Uniform::new(0, instructions_a.len()).sample(&mut generator());
+        let a_end = if a_start == instructions_a.len() - 1 {
             None
         } else {
-            Some(generator().gen_range(a_start..=instructions_a.len())).and_then(|index| {
-                if index == instructions_a.len() || a_start == index {
-                    None
-                } else {
-                    Some(index)
-                }
-            })
+            let tmp_end = Uniform::new(a_start, instructions_a.len()).sample(&mut generator());
+
+            Some(tmp_end)
         };
 
-        let b_start = generator().gen_range(0..instructions_b.len() - 1);
-        let b_end = if b_start == instructions_b.len() {
+        let b_start = Uniform::new(0, instructions_b.len()).sample(&mut generator());
+        let b_end = if a_start == instructions_b.len() - 1 {
             None
         } else {
-            Some(generator().gen_range(b_start..=instructions_b.len())).and_then(|index| {
-                if index == instructions_b.len() || b_start == index {
-                    None
-                } else {
-                    Some(index)
-                }
-            })
+            let tmp_end = Uniform::new(b_start, instructions_b.len()).sample(&mut generator());
+
+            Some(tmp_end)
         };
 
         let mut cursor_a = instructions_a.cursor_mut();
@@ -44,4 +36,4 @@ impl<'a> Breed for Instructions<'a> {
     }
 }
 
-pub type Instructions<'a> = LinkedList<Instruction>;
+pub type Instructions<'a> = LinkedList<Instruction<'a>>;

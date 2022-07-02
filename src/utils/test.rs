@@ -4,12 +4,9 @@ use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 
-use crate::genes::registers::Registers;
+use crate::{genes::registers::Registers, problem_types::classification::ClassificationInput};
 
-use super::{
-    common_traits::{Compare, Show, ValidInput},
-    problem_types::ClassificationProblem,
-};
+use super::common_traits::{Compare, Show, ValidInput};
 
 #[derive(PartialEq, PartialOrd, Ord, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct TestInput(pub [usize; 5]);
@@ -36,20 +33,9 @@ impl ValidInput for TestInput {
     const N_INPUTS: usize = 4;
 
     type Represent = TestRepresent;
-
-    fn argmax(&self, registers: &Registers) -> Option<Self::Represent> {
-        let index = registers
-            .argmax::<Self>()
-            .into_iter()
-            .enumerate()
-            .max_by_key(|&(_, value)| value)
-            .map(|(idx, _)| idx);
-
-        index.and_then(|v| FromPrimitive::from_usize(v))
-    }
 }
 
-impl ClassificationProblem for TestInput {
+impl ClassificationInput for TestInput {
     fn get_class(&self) -> TestRepresent {
         FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
     }

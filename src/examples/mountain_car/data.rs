@@ -14,7 +14,6 @@ pub enum Actions {
 
 struct MountainCarLgp<'a>(PhantomData<&'a ()>);
 
-impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
-}
-
-
+// impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
+//     type O;
+// }

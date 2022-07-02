@@ -1,4 +1,4 @@
-use num::FromPrimitive;
+use derive_new::new;
 use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::prelude::SliceRandom;
@@ -19,6 +19,25 @@ use super::registers::Registers;
 pub enum Modes {
     External = 0,
     Internal = 1,
+}
+
+impl Modes {
+    pub fn new(include_external: bool, include_internal: bool) -> Vec<Modes> {
+        let modes_available = vec![];
+        if include_internal {
+            modes_available.push(Modes::internal)
+        }
+
+        if include_external {
+            modes_available.push(Modes::Internal)
+        }
+
+        modes_available
+    }
+
+    pub fn all() -> Vec<Modes> {
+        Self::new(true, true)
+    }
 }
 
 #[derive(Clone, Serialize)]
@@ -44,12 +63,12 @@ impl<'a> Generate<'a> for Instruction<'a> {
 
         let source_index = UniformInt::<usize>::new(0, n_registers).sample(&mut generator());
 
-        let mode = modes_available.choose(&mut generator()).unwrap();
+        let mode = modes_available.choose(&mut generator()).unwrap().clone();
 
         let upper_bound_target_index = if mode == Modes::External {
             n_inputs.unwrap()
         } else {
-            n_registers
+            *n_registers
         };
         let target_index =
             UniformInt::<usize>::new(0, upper_bound_target_index).sample(&mut thread_rng());
@@ -66,13 +85,14 @@ impl<'a> Generate<'a> for Instruction<'a> {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Copy)]
+impl<'b> Show for InstructionGeneratorParameters {}
+#[derive(Clone, Debug, Serialize, new)]
 pub struct InstructionGeneratorParameters {
-    pub n_registers: usize,
-    pub n_inputs: Option<usize>,
-    pub modes_available: Vec<Modes>,
+    n_registers: usize,
+    n_inputs: Option<usize>,
+    modes_available: Vec<Modes>,
     #[serde(skip_serializing)]
-    pub executables_available: Executables,
+    executables_available: Executables,
 }
 
 impl<'b> Eq for Instruction<'b> {}
@@ -125,7 +145,6 @@ impl<'b> Mutate for Instruction<'b> {
 }
 
 impl<'b> Show for Instruction<'b> {}
-impl<'b> Show for InstructionGeneratorParameters {}
 
 impl<'b> Instruction<'b> {
     fn get_data<InputType>(&self, registers: &Registers, data: &InputType) -> Registers

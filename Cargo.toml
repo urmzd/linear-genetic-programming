@@ -24,6 +24,7 @@ more-asserts = { version = "0.2" }
 toml = "0.5"
 rand_chacha = "0.3.1"
 lazy_static = "1.4.0"
+derive-new = "0.5"
 
 [dev-dependencies]
 pretty_assertions = { version= "1.2"}

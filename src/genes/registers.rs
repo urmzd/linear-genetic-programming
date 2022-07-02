@@ -71,10 +71,7 @@ impl Registers {
     }
 
     // TODO: compute ties
-    pub fn argmax<V>(
-        &self,
-        break_ties_fn: Option<impl FnOnce(Vec<usize>) -> V::Represent>,
-    ) -> V::Represent
+    pub fn argmax<V>(&self, break_ties_fn: impl FnOnce(Vec<usize>) -> V) -> V
     where
         V: ValidInput,
     {
@@ -94,6 +91,6 @@ impl Registers {
         let max_value = arg_lookup.keys().max().unwrap().to_owned();
         let indices = arg_lookup.remove(&max_value).unwrap();
 
-        indices.into_iter().collect()
+        break_ties_fn(indices.into_iter().collect())
     }
 }

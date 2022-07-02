@@ -42,6 +42,4 @@ where
     const N_INPUTS: usize;
 
     type Represent;
-
-    fn argmax(&self, registers: &Registers) -> Option<Self::Represent>;
 }

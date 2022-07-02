@@ -12,10 +12,8 @@ use crate::{
         program::Program,
         registers::{RegisterValue, Registers},
     },
-    utils::{
-        common_traits::{Compare, Show, ValidInput},
-        problem_types::ClassificationProblem,
-    },
+    problem_types::classification::ClassificationInput,
+    utils::common_traits::{Compare, Show, ValidInput},
 };
 
 pub const IRIS_DATASET_LINK: &'static str =
@@ -64,7 +62,7 @@ pub struct IrisInput {
     class: IrisClass,
 }
 
-impl ClassificationProblem for IrisInput {
+impl ClassificationInput for IrisInput {
     fn get_class(&self) -> Self::Represent {
         self.class
     }
@@ -87,16 +85,6 @@ impl ValidInput for IrisInput {
     const N_INPUTS: usize = 4;
 
     type Represent = IrisClass;
-
-    fn argmax(&self, registers: &Registers) -> Option<Self::Represent> {
-        let mut max_indices = registers.argmax::<Self>();
-        if max_indices.len() == 1 {
-            let index = max_indices.pop()?;
-            return FromPrimitive::from_usize(index);
-        }
-
-        return None;
-    }
 }
 
 impl From<IrisInput> for Registers {
