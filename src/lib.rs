@@ -1,5 +1,5 @@
+pub mod core;
 pub mod examples;
-pub mod genes;
-pub mod metrics;
-pub mod problem_types;
+pub mod extensions;
+pub mod measure;
 pub mod utils;

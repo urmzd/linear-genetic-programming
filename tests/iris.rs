@@ -1,15 +1,15 @@
 use std::error;
 
 use lgp::{
-    examples::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
-    genes::{
+    core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         characteristics::FitnessScore,
         instruction::{InstructionGeneratorParameters, Modes},
         program::{Program, ProgramGeneratorParameters},
     },
-    metrics::benchmarks::{Benchmark, ComplexityBenchmark},
-    problem_types::classification::Classification,
+    examples::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
+    extensions::classification::Classification,
+    measure::benchmarks::{Benchmark, ComplexityBenchmark},
     utils::common_traits::ValidInput,
 };
 

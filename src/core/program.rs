@@ -147,8 +147,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
+        core::instruction::{InstructionGeneratorParameters, Modes},
         examples::iris::ops::IRIS_EXECUTABLES,
-        genes::instruction::{InstructionGeneratorParameters, Modes},
         problem_types::classification::Classification,
         utils::test::TestInput,
     };

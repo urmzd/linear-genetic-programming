@@ -2,7 +2,7 @@ use std::{collections::HashMap, hash::Hash, marker::PhantomData};
 
 use ordered_float::OrderedFloat;
 
-use crate::genes::registers::RegisterValue;
+use crate::core::registers::RegisterValue;
 
 use super::definitions::Metric;
 

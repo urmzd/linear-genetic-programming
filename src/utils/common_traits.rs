@@ -4,7 +4,7 @@ use std::hash::Hash;
 use num::FromPrimitive;
 use serde::Serialize;
 
-use crate::genes::registers::{RegisterValue, Registers};
+use crate::core::registers::{RegisterValue, Registers};
 
 #[derive(Clone)]
 pub struct AnyExecutable(pub &'static str, pub InternalFn);

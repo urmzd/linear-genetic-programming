@@ -1,4 +1,4 @@
-use crate::{executables, genes::registers::RegisterValue};
+use crate::{core::registers::RegisterValue, executables};
 use ordered_float::OrderedFloat;
 
 use crate::{executable, utils::common_traits::AnyExecutable};

@@ -4,7 +4,7 @@ use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 
-use crate::{genes::registers::Registers, problem_types::classification::ClassificationInput};
+use crate::{core::registers::Registers, extensions::classification::ClassificationInput};
 
 use super::common_traits::{Compare, Show, ValidInput};
 

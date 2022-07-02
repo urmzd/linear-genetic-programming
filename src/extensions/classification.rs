@@ -3,7 +3,7 @@ use num::FromPrimitive;
 use serde::Serialize;
 
 use crate::{
-    genes::{
+    core::{
         characteristics::{Fitness, FitnessScore, Organism},
         program::Program,
     },

@@ -8,7 +8,7 @@ use rand::prelude::{IteratorRandom, SliceRandom};
 use serde::de::DeserializeOwned;
 
 use crate::{
-    genes::characteristics::{Breed, Fitness, Generate},
+    core::characteristics::{Breed, Fitness, Generate},
     utils::{
         common_traits::{Inputs, ValidInput},
         random::generator,

@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
 use crate::{
-    genes::{
+    core::{
         algorithm::{GeneticAlgorithm, Loader},
         program::Program,
         registers::{RegisterValue, Registers},
     },
-    problem_types::classification::{Classification, ClassificationInput},
+    extensions::classification::{Classification, ClassificationInput},
     utils::common_traits::{Compare, Show, ValidInput},
 };
 

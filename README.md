@@ -6,10 +6,11 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 
 ## Modules
 
--   [Metrics](src/metrics)
--   [Examples](src/examples)
--   [Genes](src/genes)
--   [Utils](src/utils)
+-   [Core](src/core/)
+-   [Measurement Tools](src/measure/)
+-   [Examples](src/examples/)
+-   [Extension](src/extensions/)
+-   [Utilities](src/utils/)
 
 ## Examples
 
@@ -21,13 +22,22 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
-    let hyper_params: HyperParameters<Program<IrisInput>> = HyperParameters {
-        population_size: 1000,
+    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
+        population_size: 100,
         gap: 0.5,
-        n_crossovers: 0.5,
+        max_generations: 100,
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::new(
+                IrisInput::N_OUTPUTS + 1,
+                Some(IrisInput::N_INPUTS),
+                Modes::all(),
+                IRIS_EXECUTABLES,
+            ),
+            Classification::new(&inputs),
+        ),
         n_mutations: 0.5,
-        max_generations: 5,
-        program_params: ProgramGenerateParams::new(&inputs, 100, IRIS_EXECUTABLES, None),
+        n_crossovers: 0.5,
     };
 
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
@@ -36,6 +46,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 ```
 
 ### Reinforcement Learning (Mountain Car)
+
 ```rust
 fn main() {
     todo!()
