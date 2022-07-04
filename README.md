@@ -22,24 +22,25 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
-    let hyper_params: HyperParameters<Program<Classification<IrisInput>>> = HyperParameters {
-        population_size: 100,
-        gap: 0.5,
-        max_generations: 100,
-        program_params: ProgramGeneratorParameters::new(
-            100,
-            InstructionGeneratorParameters::new(
-                IrisInput::N_OUTPUTS + 1,
-                Some(IrisInput::N_INPUTS),
-                Modes::all(),
-                IRIS_EXECUTABLES,
-            ),
-            Classification::new(&inputs),
-        ),
-        n_mutations: 0.5,
-        n_crossovers: 0.5,
-    };
 
+    let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        HyperParameters {
+            population_size: 100,
+            max_generations: 100,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                ),
+            },
+            gap: 0.5,
+            n_mutations: 0.5,
+            n_crossovers: 0.5,
+        };
+        
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
