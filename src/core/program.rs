@@ -29,10 +29,11 @@ pub struct ProgramGeneratorParameters<OtherParameters>
 where
     OtherParameters: ExtensionParameters,
 {
-    max_instructions: usize,
-    instruction_generator_parameters: InstructionGeneratorParameters<OtherParameters::InputType>,
-    register_generator_parameters: RegisterGeneratorParameters<OtherParameters::InputType>,
-    other: OtherParameters,
+    pub max_instructions: usize,
+    pub instruction_generator_parameters:
+        InstructionGeneratorParameters<OtherParameters::InputType>,
+    pub register_generator_parameters: RegisterGeneratorParameters<OtherParameters::InputType>,
+    pub other: OtherParameters,
 }
 
 impl<T> Show for ProgramGeneratorParameters<T> where T: Show + ExtensionParameters {}
@@ -164,10 +165,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::instruction::{InstructionGeneratorParameters, Mode},
-        examples::iris::ops::IRIS_EXECUTABLES,
-        extensions::classification::ClassificationParameters,
-        utils::test::TestInput,
+        core::instruction::InstructionGeneratorParameters,
+        extensions::classification::ClassificationParameters, utils::test::TestInput,
     };
 
     use super::*;
@@ -204,8 +203,12 @@ mod tests {
         let instruction_params = InstructionGeneratorParameters::new(3, Some(4));
         let classification_params = ClassificationParameters::new(&inputs);
         let register_params = RegisterGeneratorParameters::new(2);
-        let program_params =
-            ProgramGeneratorParameters::new(100, instruction_params, classification_params);
+        let program_params = ProgramGeneratorParameters::new(
+            100,
+            instruction_params,
+            register_params,
+            classification_params,
+        );
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);

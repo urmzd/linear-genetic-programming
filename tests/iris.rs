@@ -1,14 +1,14 @@
-use std::{error, marker::PhantomData};
+use std::error;
 
 use lgp::{
     core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         characteristics::FitnessScore,
-        instruction::{InstructionGeneratorParameters, Mode},
+        instruction::InstructionGeneratorParameters,
         program::{Program, ProgramGeneratorParameters},
         registers::RegisterGeneratorParameters,
     },
-    examples::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
+    examples::iris::data::IrisInput,
     extensions::classification::{ClassificationInput, ClassificationParameters},
     measure::benchmarks::{Benchmark, ComplexityBenchmark},
     utils::common_traits::ValidInput,
@@ -139,18 +139,17 @@ async fn given_lgp_instance_with_mutation_operations_when_sufficient_iterations_
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
+            },
+            gap: 0.5,
             n_mutations: 0.5,
             n_crossovers: 0.,
         };
@@ -181,18 +180,17 @@ async fn given_lgp_instance_with_crossover_operations_when_sufficient_iterations
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
+            },
+            gap: 0.5,
             n_mutations: 0.,
             n_crossovers: 0.5,
         };
@@ -223,18 +221,17 @@ async fn given_lgp_instance_when_sufficient_iterations_have_been_used_then_popul
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
+            },
+            gap: 0.5,
             n_mutations: 0.5,
             n_crossovers: 0.5,
         };
@@ -275,23 +272,21 @@ async fn given_population_when_breeding_occurs_then_population_capacity_is_met(
     let ContentFilePair(_, tmp_file) = get_iris_content().await?;
 
     let inputs = IrisLgp::load_inputs(tmp_file.path());
-
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
-            n_mutations: 0.5,
+            },
+            gap: 0.5,
+            n_mutations: 0.,
             n_crossovers: 0.5,
         };
 
@@ -322,19 +317,18 @@ async fn given_population_and_retention_rate_when_selection_occurs_then_populati
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
-            n_mutations: 0.5,
+            },
+            gap: 0.5,
+            n_mutations: 0.,
             n_crossovers: 0.5,
         };
 
@@ -362,19 +356,18 @@ async fn given_inputs_and_hyperparams_when_population_is_initialized_then_popula
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput::N_OUTPUTS + 1,
-                    Some(IrisInput::N_INPUTS),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
-            n_mutations: 0.5,
+            },
+            gap: 0.5,
+            n_mutations: 0.,
             n_crossovers: 0.5,
         };
 
