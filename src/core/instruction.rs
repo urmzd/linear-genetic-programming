@@ -28,8 +28,8 @@ pub struct InstructionGeneratorParameters<T>
 where
     T: ValidInput,
 {
-    pub n_features: Option<usize>,
     pub n_registers: usize,
+    pub n_features: Option<usize>,
     marker: PhantomData<T>,
 }
 

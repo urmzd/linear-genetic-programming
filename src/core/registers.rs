@@ -26,7 +26,7 @@ pub struct RegisterGeneratorParameters<T>
 where
     T: ValidInput,
 {
-    n_extras: usize,
+    n_extra_registers: usize,
     marker: PhantomData<T>,
 }
 
@@ -35,7 +35,10 @@ impl Registers {
     where
         T: ValidInput,
     {
-        let RegisterGeneratorParameters { n_extras, .. } = parameters;
+        let RegisterGeneratorParameters {
+            n_extra_registers: n_extras,
+            ..
+        } = parameters;
 
         let n_outputs = T::Actions::COUNT;
 

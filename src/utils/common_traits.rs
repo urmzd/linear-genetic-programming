@@ -8,7 +8,7 @@ use serde::Serialize;
 use strum::EnumCount;
 
 use crate::core::{
-    instruction::{Mode, Modes},
+    instruction::Modes,
     registers::{RegisterValue, Registers},
 };
 

@@ -1,4 +1,4 @@
-use std::error;
+use std::{error, marker::PhantomData};
 
 use lgp::{
     core::{
@@ -6,12 +6,14 @@ use lgp::{
         characteristics::FitnessScore,
         instruction::{InstructionGeneratorParameters, Mode},
         program::{Program, ProgramGeneratorParameters},
+        registers::RegisterGeneratorParameters,
     },
     examples::iris::{data::IrisInput, ops::IRIS_EXECUTABLES},
-    extensions::classification::ClassificationParameters,
+    extensions::classification::{ClassificationInput, ClassificationParameters},
     measure::benchmarks::{Benchmark, ComplexityBenchmark},
     utils::common_traits::ValidInput,
 };
+use strum::EnumCount;
 
 use lgp::examples::iris::{
     data::IrisLgp,
@@ -97,18 +99,17 @@ async fn given_lgp_instance_with_mutation_and_crossover_operations_when_sufficie
     let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
         HyperParameters {
             population_size: 100,
-            gap: 0.5,
             max_generations: 100,
-            program_params: ProgramGeneratorParameters::new(
-                100,
-                InstructionGeneratorParameters::new(
-                    IrisInput + 1,
-                    Some(IrisInput),
-                    Mode::all(),
-                    IRIS_EXECUTABLES,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
                 ),
-                ClassificationParameters::new(&inputs),
-            ),
+            },
+            gap: 0.5,
             n_mutations: 0.5,
             n_crossovers: 0.5,
         };

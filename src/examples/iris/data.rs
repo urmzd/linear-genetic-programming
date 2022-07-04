@@ -9,6 +9,7 @@ use strum::EnumCount;
 use crate::{
     core::{
         algorithm::{GeneticAlgorithm, Loader},
+        instruction::{Mode, Modes},
         program::Program,
         registers::{RegisterValue, Registers},
     },
@@ -88,6 +89,7 @@ impl ValidInput for IrisInput {
     type Actions = IrisClass;
 
     const AVAILABLE_EXECUTABLES: Executables = IRIS_EXECUTABLES;
+    const AVAILABLE_MODES: Modes = Mode::ALL;
 
     fn argmax(mut ties: Vec<usize>) -> Option<Self::Actions> {
         if ties.len() > 1 {
