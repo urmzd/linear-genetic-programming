@@ -8,45 +8,22 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 
 -   [Core](src/core/)
 -   [Measurement Tools](src/measure/)
--   [Examples](src/examples/)
 -   [Extension](src/extensions/)
 -   [Utilities](src/utils/)
 
 ## Examples
 
-### Classification (Iris)
+All examples can be built and ran through Cargo, `cargo run --bin <example name>)
+
+### Classification (iris)
 
 ```rust
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn error::Error>> {
-    let ContentFilePair(_, file) = get_iris_content().await?;
-    let inputs = IrisLgp::load_inputs(file.path());
-
-
-    let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
-        HyperParameters {
-            population_size: 100,
-            max_generations: 100,
-            program_params: ProgramGeneratorParameters {
-                max_instructions: 100,
-                register_generator_parameters: RegisterGeneratorParameters::new(1),
-                other: ClassificationParameters::new(&inputs),
-                instruction_generator_parameters: InstructionGeneratorParameters::new(
-                    <IrisInput as ValidInput>::Actions::COUNT,
-                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
-                ),
-            },
-            gap: 0.5,
-            n_mutations: 0.5,
-            n_crossovers: 0.5,
-        };
-        
-    IrisLgp::execute(&hyper_params, EventHooks::default())?;
-    Ok(())
+fn main() {
+    todo!()
 }
 ```
 
-### Reinforcement Learning (Mountain Car)
+### Reinforcement Learning (mountain_car)
 
 ```rust
 fn main() {

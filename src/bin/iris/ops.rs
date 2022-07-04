@@ -1,12 +1,14 @@
-use crate::{core::registers::RegisterValue, executables};
+use lgp::{
+    core::registers::RegisterValue,
+    executable, executables,
+    utils::common_traits::{AnyExecutable, Executables},
+};
 use ordered_float::OrderedFloat;
-
-use crate::{executable, utils::common_traits::AnyExecutable};
 
 executable!(add, +);
 executable!(multiply, *);
 executable!(subtract, -);
 executable!(divide, /, OrderedFloat(2f32));
 
-pub const IRIS_EXECUTABLES: &[AnyExecutable] =
+pub const IRIS_EXECUTABLES: Executables =
     executables!(self::add, self::subtract, self::divide, self::multiply);

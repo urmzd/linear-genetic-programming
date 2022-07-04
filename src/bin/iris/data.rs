@@ -6,7 +6,7 @@ use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
-use crate::{
+use lgp::{
     core::{
         algorithm::{GeneticAlgorithm, Loader},
         instruction::{Mode, Modes},
@@ -17,7 +17,7 @@ use crate::{
     utils::common_traits::{Compare, Executables, Show, ValidInput},
 };
 
-use super::ops::IRIS_EXECUTABLES;
+use crate::ops::IRIS_EXECUTABLES;
 
 pub const IRIS_DATASET_LINK: &'static str =
     "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/bezdekIris.data";
