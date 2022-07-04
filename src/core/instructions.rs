@@ -1,10 +1,13 @@
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::utils::{linked_list::LinkedList, random::generator};
+use crate::utils::{common_traits::ValidInput, linked_list::LinkedList, random::generator};
 
 use super::{characteristics::Breed, instruction::Instruction};
 
-impl<'a> Breed for Instructions<'a> {
+impl<'a, T> Breed for Instructions<'a, T>
+where
+    T: ValidInput,
+{
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let mut instructions_a = self.clone();
         let mut instructions_b = mate.clone();
@@ -36,4 +39,4 @@ impl<'a> Breed for Instructions<'a> {
     }
 }
 
-pub type Instructions<'a> = LinkedList<Instruction<'a>>;
+pub type Instructions<'a, T> = LinkedList<Instruction<'a, T>>;

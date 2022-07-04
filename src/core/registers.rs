@@ -1,51 +1,76 @@
 use std::{
     collections::{HashMap, HashSet},
+    marker::PhantomData,
     ops::Range,
 };
 
+use derive_new::new;
 use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
+use strum::EnumCount;
 
 use crate::utils::common_traits::ValidInput;
 
 pub type RegisterValue = OrderedFloat<f32>;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct Registers(pub Vec<RegisterValue>);
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new)]
+pub struct Registers {
+    data: Vec<RegisterValue>,
+    n_outputs: usize,
+    n_extras: usize,
+}
+
+#[derive(Clone, Debug, Serialize, new)]
+pub struct RegisterGeneratorParameters<T>
+where
+    T: ValidInput,
+{
+    n_extras: usize,
+    marker: PhantomData<T>,
+}
 
 impl Registers {
-    pub fn new(n_registers: usize) -> Registers {
-        let registers = vec![OrderedFloat(0f32); n_registers];
-        Registers(registers)
-    }
+    pub fn generate<'a, T>(parameters: &'a RegisterGeneratorParameters<T>) -> Self
+    where
+        T: ValidInput,
+    {
+        let RegisterGeneratorParameters { n_extras, .. } = parameters;
 
-    pub fn from(vec: Vec<RegisterValue>) -> Registers {
-        Registers(vec)
+        let n_outputs = T::Actions::COUNT;
+
+        let data = (0..(n_outputs + n_extras))
+            .map(T::generate_register_value_from)
+            .collect();
+
+        Registers {
+            data,
+            n_outputs,
+            n_extras: *n_extras,
+        }
     }
 
     pub fn reset(&mut self) -> &mut Self {
-        let Registers(internal_registers) = self;
+        let Registers { data, .. } = self;
 
-        for index in 0..internal_registers.len() {
-            internal_registers[index] = OrderedFloat(0f32);
+        for index in 0..data.len() {
+            data[index] = OrderedFloat(0f32);
         }
 
         self
     }
 
     pub fn len(&self) -> usize {
-        let Registers(internal_registers) = &self;
-        internal_registers.len()
+        self.n_extras + self.n_outputs
     }
 
     pub fn update(&mut self, index: usize, value: RegisterValue) -> () {
-        let Registers(internal_values) = self;
-        internal_values[index] = value
+        let Registers { data, .. } = self;
+        data[index] = value
     }
 
     pub fn get(&self, index: usize) -> RegisterValue {
-        self.0[index]
+        self.data[index]
     }
 
     pub fn get_mut_slice(&mut self, start: usize, end: Option<usize>) -> &mut [RegisterValue] {
@@ -54,9 +79,9 @@ impl Registers {
             end: end.unwrap_or(start + 1),
         };
 
-        assert_le!(range.end, self.0.len());
+        assert_le!(range.end, self.data.len());
 
-        &mut self.0[range]
+        &mut self.data[range]
     }
 
     pub fn get_slice(&self, start: usize, end: Option<usize>) -> &[RegisterValue] {
@@ -65,33 +90,31 @@ impl Registers {
             end: end.unwrap_or(start + 1),
         };
 
-        assert_le!(range.end, self.0.len());
+        assert_le!(range.end, self.data.len());
 
-        &self.0[range]
+        &self.data[range]
     }
 
-    // TODO: compute ties
-    pub fn argmax<V, F>(&self, break_ties_fn: F) -> Option<V::Represent>
-    where
-        V: ValidInput,
-        F: FnOnce(Vec<usize>) -> Option<V::Represent>,
-    {
+    pub fn argmax(&self) -> Vec<usize> {
         let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
 
-        let Registers(registers) = &self;
+        let Registers {
+            data, n_outputs, ..
+        } = &self;
 
-        for index in 0..V::N_OUTPUTS {
-            let value = registers.get(index).unwrap();
+        for index in 0..(*n_outputs) {
+            let value = data.get(index).unwrap();
             if arg_lookup.contains_key(value) {
                 arg_lookup.get_mut(value).unwrap().insert(index);
             } else {
-                arg_lookup.insert(*registers.get(index).unwrap(), HashSet::from([index]));
+                arg_lookup.insert(*data.get(index).unwrap(), HashSet::from([index]));
             }
         }
 
         let max_value = arg_lookup.keys().max().unwrap().to_owned();
         let indices = arg_lookup.remove(&max_value).unwrap();
+        let indices_vec = indices.into_iter().collect();
 
-        break_ties_fn(indices.into_iter().collect())
+        indices_vec
     }
 }

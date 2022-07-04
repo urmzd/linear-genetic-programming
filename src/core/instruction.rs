@@ -7,65 +7,71 @@ use serde::Serialize;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
+use std::marker::PhantomData;
 use strum::EnumCount;
 
-use crate::utils::common_traits::{AnyExecutable, Executables, Show, ValidInput};
+use crate::utils::common_traits::{AnyExecutable, Show, ValidInput};
 use crate::utils::random::generator;
 
 use super::characteristics::{Generate, Mutate};
 use super::registers::Registers;
 
 #[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]
-pub enum Modes {
+pub enum Mode {
     External = 0,
     Internal = 1,
 }
 
-impl Modes {
-    pub fn new(include_external: bool, include_internal: bool) -> Vec<Modes> {
-        let mut modes_available = vec![];
-        if include_internal {
-            modes_available.push(Modes::Internal)
-        }
+impl<'b, T> Show for InstructionGeneratorParameters<T> where T: Show + ValidInput {}
+#[derive(Clone, Debug, Serialize, new)]
+pub struct InstructionGeneratorParameters<T>
+where
+    T: ValidInput,
+{
+    pub n_features: Option<usize>,
+    pub n_registers: usize,
+    marker: PhantomData<T>,
+}
 
-        if include_external {
-            modes_available.push(Modes::External)
-        }
+pub type Modes = &'static [Mode];
 
-        modes_available
-    }
-
-    pub fn all() -> Vec<Modes> {
-        Self::new(true, true)
-    }
+impl Mode {
+    pub const ALL: Modes = &[Mode::Internal, Mode::External];
+    pub const INTERNAL_ONLY: Modes = &[Mode::Internal];
+    pub const EXTERNAL_ONLY: Modes = &[Mode::External];
 }
 
 #[derive(Clone, Serialize)]
-pub struct Instruction<'a> {
+pub struct Instruction<'a, T>
+where
+    T: ValidInput,
+{
     source_index: usize,
     target_index: usize,
-    mode: Modes,
+    mode: Mode,
     #[serde(skip_serializing)]
     executable: AnyExecutable,
-    parameters_used: &'a InstructionGeneratorParameters,
+    parameters_used: &'a InstructionGeneratorParameters<T>,
 }
 
-impl<'a> Generate<'a> for Instruction<'a> {
-    type GeneratorParameters = InstructionGeneratorParameters;
+impl<'a, T> Generate<'a> for Instruction<'a, T>
+where
+    T: ValidInput,
+{
+    type GeneratorParameters = InstructionGeneratorParameters<T>;
 
     fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let InstructionGeneratorParameters {
+            n_features: n_inputs,
             n_registers,
-            n_inputs,
-            modes_available,
-            executables_available: executables,
+            ..
         } = parameters;
 
         let source_index = UniformInt::<usize>::new(0, n_registers).sample(&mut generator());
 
-        let mode = modes_available.choose(&mut generator()).unwrap().clone();
+        let mode = T::AVAILABLE_MODES.choose(&mut generator()).unwrap().clone();
 
-        let upper_bound_target_index = if mode == Modes::External {
+        let upper_bound_target_index = if mode == Mode::External {
             n_inputs.unwrap()
         } else {
             *n_registers
@@ -73,7 +79,10 @@ impl<'a> Generate<'a> for Instruction<'a> {
         let target_index =
             UniformInt::<usize>::new(0, upper_bound_target_index).sample(&mut thread_rng());
 
-        let exec = executables.choose(&mut generator()).unwrap().to_owned();
+        let exec = T::AVAILABLE_EXECUTABLES
+            .choose(&mut generator())
+            .unwrap()
+            .to_owned();
 
         Instruction {
             source_index,
@@ -85,19 +94,12 @@ impl<'a> Generate<'a> for Instruction<'a> {
     }
 }
 
-impl<'b> Show for InstructionGeneratorParameters {}
-#[derive(Clone, Debug, Serialize, new)]
-pub struct InstructionGeneratorParameters {
-    pub n_registers: usize,
-    pub n_inputs: Option<usize>,
-    pub modes_available: Vec<Modes>,
-    #[serde(skip_serializing)]
-    pub executables_available: Executables,
-}
+impl<'b, T> Eq for Instruction<'b, T> where T: ValidInput {}
 
-impl<'b> Eq for Instruction<'b> {}
-
-impl<'b> PartialEq for Instruction<'b> {
+impl<'b, T> PartialEq for Instruction<'b, T>
+where
+    T: ValidInput,
+{
     fn eq(&self, other: &Self) -> bool {
         self.source_index == other.source_index
             && self.target_index == other.target_index
@@ -106,7 +108,10 @@ impl<'b> PartialEq for Instruction<'b> {
     }
 }
 
-impl<'b> Debug for Instruction<'b> {
+impl<'b, T> Debug for Instruction<'b, T>
+where
+    T: ValidInput,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Instruction")
             .field("mode", &self.mode)
@@ -116,7 +121,10 @@ impl<'b> Debug for Instruction<'b> {
     }
 }
 
-impl<'b> Mutate for Instruction<'b> {
+impl<'b, T> Mutate for Instruction<'b, T>
+where
+    T: ValidInput,
+{
     fn mutate(&self) -> Self {
         let mut mutated = Self::generate(&self.parameters_used);
 
@@ -144,25 +152,22 @@ impl<'b> Mutate for Instruction<'b> {
     }
 }
 
-impl<'b> Show for Instruction<'b> {}
+impl<'b, T> Show for Instruction<'b, T> where T: ValidInput {}
 
-impl<'b> Instruction<'b> {
-    fn get_data<InputType>(&self, registers: &Registers, data: &InputType) -> Registers
-    where
-        InputType: ValidInput,
-    {
+impl<'b, T> Instruction<'b, T>
+where
+    T: ValidInput,
+{
+    fn get_data(&self, registers: &Registers, data: &T) -> Registers {
         let target_data: Registers = match self.mode {
-            Modes::Internal => registers.clone(),
-            Modes::External => data.clone().into(),
+            Mode::Internal => registers.clone(),
+            Mode::External => data.clone().into(),
         };
 
         target_data
     }
 
-    pub fn apply<T>(&self, registers: &mut Registers, input: &T)
-    where
-        T: ValidInput,
-    {
+    pub fn apply(&self, registers: &mut Registers, input: &T) {
         let data = self.get_data(registers, input);
         let target_slice = data.get_slice(self.target_index, None);
         let source_slice = registers.get_mut_slice(self.source_index, None);

@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::utils::{
-    common_traits::{Compare, Show},
+    common_traits::{Compare, Show, ValidInput},
     random::generator,
 };
 use derive_new::new;
@@ -15,21 +15,34 @@ use super::{
     characteristics::{Breed, FitnessScore, Generate, Mutate},
     instruction::{Instruction, InstructionGeneratorParameters},
     instructions::Instructions,
-    registers::Registers,
+    registers::{RegisterGeneratorParameters, Registers},
 };
-
-#[derive(Clone, Debug, Serialize, new)]
-pub struct ProgramGeneratorParameters<T> {
-    max_instructions: usize,
-    instruction_generator_parameters: InstructionGeneratorParameters,
-    other: T,
+pub trait ExtensionParameters
+where
+    Self::InputType: ValidInput,
+{
+    type InputType;
 }
 
-impl<T> Show for ProgramGeneratorParameters<T> where T: Show {}
+#[derive(Clone, Debug, Serialize, new)]
+pub struct ProgramGeneratorParameters<OtherParameters>
+where
+    OtherParameters: ExtensionParameters,
+{
+    max_instructions: usize,
+    instruction_generator_parameters: InstructionGeneratorParameters<OtherParameters::InputType>,
+    register_generator_parameters: RegisterGeneratorParameters<OtherParameters::InputType>,
+    other: OtherParameters,
+}
+
+impl<T> Show for ProgramGeneratorParameters<T> where T: Show + ExtensionParameters {}
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub struct Program<'a, T> {
-    pub instructions: Instructions<'a>,
+pub struct Program<'a, T>
+where
+    T: ExtensionParameters,
+{
+    pub instructions: Instructions<'a, T::InputType>,
     pub registers: Registers,
     pub fitness: Option<FitnessScore>,
     // Problem specific parameters
@@ -38,7 +51,7 @@ pub struct Program<'a, T> {
 
 impl<'a, T> Display for Program<'a, T>
 where
-    T: Serialize,
+    T: Serialize + ExtensionParameters,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let serialized = toml::to_string(&self).unwrap();
@@ -48,7 +61,7 @@ where
 
 impl<'a, T> Ord for Program<'a, T>
 where
-    T: Ord,
+    T: Ord + ExtensionParameters,
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.fitness.cmp(&other.fitness)
@@ -57,24 +70,28 @@ where
 
 impl<'a, T> PartialOrd for Program<'a, T>
 where
-    T: PartialOrd,
+    T: PartialOrd + ExtensionParameters,
 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.fitness.partial_cmp(&other.fitness)
     }
 }
 
-impl<'a, T> Generate<'a> for Program<'a, T> {
+impl<'a, T> Generate<'a> for Program<'a, T>
+where
+    T: ExtensionParameters,
+{
     type GeneratorParameters = ProgramGeneratorParameters<T>;
 
     fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let ProgramGeneratorParameters {
             max_instructions,
             instruction_generator_parameters,
+            register_generator_parameters,
             other,
         } = &parameters;
 
-        let registers = Registers::new(instruction_generator_parameters.n_registers.clone());
+        let registers = Registers::generate::<T::InputType>(register_generator_parameters);
         let n_instructions = Uniform::new_inclusive(0, max_instructions).sample(&mut generator());
         let instructions = (0..n_instructions)
             .into_iter()
@@ -90,13 +107,13 @@ impl<'a, T> Generate<'a> for Program<'a, T> {
     }
 }
 
-impl<'a, T> Show for Program<'a, T> where T: Show {}
+impl<'a, T> Show for Program<'a, T> where T: Show + ExtensionParameters {}
 
-impl<'a, T> Compare for Program<'a, T> where T: Compare {}
+impl<'a, T> Compare for Program<'a, T> where T: Compare + ExtensionParameters {}
 
 impl<'a, T> Mutate for Program<'a, T>
 where
-    T: Clone,
+    T: Clone + ExtensionParameters,
 {
     fn mutate(&self) -> Self {
         let mut mutated = self.clone();
@@ -120,7 +137,7 @@ where
 
 impl<'a, T> Breed for Program<'a, T>
 where
-    T: Clone,
+    T: Clone + ExtensionParameters,
 {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =
@@ -147,9 +164,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::instruction::{InstructionGeneratorParameters, Modes},
+        core::instruction::{InstructionGeneratorParameters, Mode},
         examples::iris::ops::IRIS_EXECUTABLES,
-        extensions::classification::Classification,
+        extensions::classification::ClassificationParameters,
         utils::test::TestInput,
     };
 
@@ -157,13 +174,11 @@ mod tests {
 
     #[test]
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
-        let params_a =
-            InstructionGeneratorParameters::new(5, Some(5), Modes::all(), IRIS_EXECUTABLES);
-        let params_b =
-            InstructionGeneratorParameters::new(6, Some(6), Modes::all(), IRIS_EXECUTABLES);
-        let instructions_a: Instructions =
+        let params_a = InstructionGeneratorParameters::new(Some(5), 5);
+        let params_b = InstructionGeneratorParameters::new(Some(6), 5);
+        let instructions_a: Instructions<TestInput> =
             (0..5).map(|_| Instruction::generate(&params_a)).collect();
-        let instructions_b: Instructions =
+        let instructions_b: Instructions<TestInput> =
             (0..5).map(|_| Instruction::generate(&params_b)).collect();
 
         let [child_a, child_b] = instructions_a.two_point_crossover(&instructions_b);
@@ -188,8 +203,9 @@ mod tests {
         .to_vec();
 
         let instruction_params =
-            InstructionGeneratorParameters::new(3, Some(5), Modes::all(), IRIS_EXECUTABLES);
-        let classification_params = Classification::new(&inputs);
+            InstructionGeneratorParameters::new(3, Some(5), Mode::all(), IRIS_EXECUTABLES);
+        let classification_params = ClassificationParameters::new(&inputs);
+        let register_params = RegisterGeneratorParameters::new(2);
         let program_params =
             ProgramGeneratorParameters::new(100, instruction_params, classification_params);
 

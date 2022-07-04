@@ -1,36 +1,43 @@
 use derive_new::new;
-use num::FromPrimitive;
 use serde::Serialize;
 
 use crate::{
     core::{
         characteristics::{Fitness, FitnessScore, Organism},
-        program::Program,
+        program::{ExtensionParameters, Program},
     },
     measure::{accuracy::Accuracy, definitions::Metric},
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
-pub struct Classification<'a, InputType>
+pub struct ClassificationParameters<'a, InputType>
 where
     InputType: ClassificationInput,
 {
     inputs: &'a Inputs<InputType>,
 }
 
-pub trait ClassificationInput: ValidInput {
-    fn get_class(&self) -> Self::Represent;
+impl<'a, T> ExtensionParameters for ClassificationParameters<'a, T>
+where
+    T: ClassificationInput,
+{
+    type InputType = T;
 }
 
-impl<'a, InputType> Fitness for Program<'a, Classification<'a, InputType>>
+pub trait ClassificationInput: ValidInput {
+    const N_INPUTS: usize;
+    fn get_class(&self) -> Self::Actions;
+}
+
+impl<'a, T> Fitness for Program<'a, ClassificationParameters<'a, T>>
 where
-    InputType: ClassificationInput,
+    T: ClassificationInput,
 {
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
 
-        let mut fitness: Accuracy<Option<InputType::Represent>> = Accuracy::new();
+        let mut fitness: Accuracy<Option<T::Actions>> = Accuracy::new();
 
         for input in inputs {
             let mut registers = self.registers.clone();
@@ -39,18 +46,11 @@ where
                 instruction.apply(&mut registers, input);
             }
 
-            let argmax = registers.argmax::<InputType, _>(|mut ties| {
-                if ties.len() > 1 {
-                    None
-                } else {
-                    let classification: Option<InputType::Represent> =
-                        FromPrimitive::from_usize(ties.pop().unwrap());
-                    classification
-                }
-            });
+            let ties = registers.argmax();
+            let predicted_class = T::argmax(ties);
             let correct_class = input.get_class();
 
-            fitness.observe([argmax, Some(correct_class)]);
+            fitness.observe([predicted_class, Some(correct_class)]);
 
             registers.reset();
         }
@@ -67,6 +67,9 @@ where
     }
 }
 
-impl<'a, T> Organism<'a> for Program<'a, Classification<'a, T>> where T: ClassificationInput {}
-impl<'a, T> Show for Classification<'a, T> where T: ClassificationInput {}
-impl<'a, T> Compare for Classification<'a, T> where T: ClassificationInput {}
+impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>> where
+    T: ClassificationInput
+{
+}
+impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput {}
+impl<'a, T> Compare for ClassificationParameters<'a, T> where T: ClassificationInput {}

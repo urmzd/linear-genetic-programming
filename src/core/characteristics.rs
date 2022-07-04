@@ -18,7 +18,7 @@ pub trait Mutate: Clone {
     fn mutate(&self) -> Self;
 }
 
-pub trait Generate<'a> {
+pub trait Generate<'a, T = Self> {
     type GeneratorParameters;
 
     fn generate(parameters: &'a Self::GeneratorParameters) -> Self;

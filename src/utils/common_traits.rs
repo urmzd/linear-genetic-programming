@@ -2,9 +2,17 @@ use core::fmt;
 use std::hash::Hash;
 
 use num::FromPrimitive;
+use ordered_float::OrderedFloat;
+use rand::prelude::SliceRandom;
 use serde::Serialize;
+use strum::EnumCount;
 
-use crate::core::registers::{RegisterValue, Registers};
+use crate::core::{
+    instruction::{Mode, Modes},
+    registers::{RegisterValue, Registers},
+};
+
+use super::random::generator;
 
 #[derive(Clone)]
 pub struct AnyExecutable(pub &'static str, pub InternalFn);
@@ -37,10 +45,24 @@ pub type Inputs<InputType> = Vec<InputType>;
 
 pub trait ValidInput: Clone + Compare + Show + Into<Registers>
 where
-    Self::Represent: Compare + Hash + Clone + FromPrimitive,
+    Self::Actions: Compare + Hash + Clone + FromPrimitive + EnumCount,
 {
-    const N_OUTPUTS: usize;
-    const N_INPUTS: usize;
+    type Actions;
 
-    type Represent;
+    const AVAILABLE_EXECUTABLES: Executables;
+    const AVAILABLE_MODES: Modes;
+
+    fn argmax(mut ties: Vec<usize>) -> Option<Self::Actions> {
+        let chosen_index = if ties.len() > 1 {
+            ties.choose(&mut generator()).map(|val| *val)
+        } else {
+            ties.pop()
+        };
+
+        FromPrimitive::from_usize(chosen_index.unwrap())
+    }
+
+    fn generate_register_value_from(_index: usize) -> RegisterValue {
+        OrderedFloat(0f32)
+    }
 }

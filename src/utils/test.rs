@@ -3,6 +3,7 @@
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
+use strum::EnumCount;
 
 use crate::{core::registers::Registers, extensions::classification::ClassificationInput};
 
@@ -19,7 +20,7 @@ impl Into<Registers> for TestInput {
 impl Compare for TestInput {}
 impl Show for TestInput {}
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount)]
 pub enum TestRepresent {
     One = 0,
     Two = 1,
@@ -28,14 +29,16 @@ pub enum TestRepresent {
 impl Compare for TestRepresent {}
 
 impl ValidInput for TestInput {
-    // 0 or 1
-    const N_OUTPUTS: usize = 2;
-    const N_INPUTS: usize = 4;
+    type Actions = TestRepresent;
 
-    type Represent = TestRepresent;
+    fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
+        todo!()
+    }
 }
 
 impl ClassificationInput for TestInput {
+    const N_INPUTS: usize = 4;
+
     fn get_class(&self) -> TestRepresent {
         FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
     }
