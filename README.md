@@ -13,7 +13,7 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 
 ## Examples
 
-All examples can be built and ran through Cargo, `cargo run --bin <example name>)
+All examples can be built and ran through Cargo, `cargo run --bin <example name>`
 
 ### Classification (iris)
 
