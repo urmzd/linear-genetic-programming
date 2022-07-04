@@ -163,6 +163,9 @@ mod test {
                 n_crossovers: 0.5,
             };
 
+        assert_eq!(hyper_params.n_crossovers, 0.5);
+        assert_eq!(hyper_params.n_mutations, 0.5);
+
         let mut benchmarks = vec![];
         IrisLgp::execute(
             &hyper_params,
@@ -203,6 +206,9 @@ mod test {
                 n_mutations: 0.5,
                 n_crossovers: 0.,
             };
+
+        assert_eq!(hyper_params.n_crossovers, 0.);
+        assert_eq!(hyper_params.n_mutations, 0.5);
 
         let mut benchmarks = vec![];
         IrisLgp::execute(
@@ -245,6 +251,9 @@ mod test {
                 n_crossovers: 0.5,
             };
 
+        assert_eq!(hyper_params.n_crossovers, 0.5);
+        assert_eq!(hyper_params.n_mutations, 0.);
+
         let mut benchmarks = vec![];
         IrisLgp::execute(
             &hyper_params,
@@ -282,9 +291,12 @@ mod test {
                     ),
                 },
                 gap: 0.5,
-                n_mutations: 0.5,
-                n_crossovers: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.,
             };
+
+        assert_eq!(hyper_params.n_crossovers, 0.);
+        assert_eq!(hyper_params.n_mutations, 0.);
 
         let mut generations = 0;
 

@@ -1,5 +1,20 @@
-struct ReinforcementLearning {}
+use std::marker::PhantomData;
 
-struct ReinforcementLearningParameters {}
+use derive_new::new;
 
-impl ExtensionParameters for ReinforcementLearningParameters {}
+use crate::{core::program::ExtensionParameters, utils::common_traits::ValidInput};
+
+#[derive(Debug, Clone, new)]
+pub struct ReinforcementLearningParameters<T>
+where
+    T: ValidInput,
+{
+    marker: PhantomData<T>,
+}
+
+impl<T> ExtensionParameters for ReinforcementLearningParameters<T>
+where
+    T: ValidInput,
+{
+    type InputType = T;
+}
