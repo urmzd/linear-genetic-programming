@@ -7,10 +7,7 @@ use rand::prelude::SliceRandom;
 use serde::Serialize;
 use strum::EnumCount;
 
-use crate::core::{
-    instruction::Modes,
-    registers::{RegisterValue, Registers},
-};
+use crate::core::{instruction::Modes, registers::RegisterValue};
 
 use super::random::generator;
 
@@ -43,7 +40,7 @@ pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Clone + Compare + Show + Into<Registers>
+pub trait ValidInput: Clone + Compare + Show
 where
     Self::Actions: Compare + Hash + Clone + FromPrimitive + EnumCount,
 {

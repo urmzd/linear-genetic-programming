@@ -5,6 +5,7 @@ use crate::{
     core::{
         characteristics::{Fitness, FitnessScore, Organism},
         program::{ExtensionParameters, Program},
+        registers::Registers,
     },
     measure::{accuracy::Accuracy, definitions::Metric},
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
@@ -25,7 +26,7 @@ where
     type InputType = T;
 }
 
-pub trait ClassificationInput: ValidInput {
+pub trait ClassificationInput: ValidInput + Into<Registers> {
     const N_INPUTS: usize;
     fn get_class(&self) -> Self::Actions;
 }

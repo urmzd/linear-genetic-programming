@@ -1,6 +1,7 @@
+mod set_up;
+
 use std::error;
 
-use data::{IrisInput, IrisLgp};
 use lgp::{
     core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
@@ -11,11 +12,9 @@ use lgp::{
     extensions::classification::{ClassificationInput, ClassificationParameters},
     utils::common_traits::ValidInput,
 };
+use set_up::{get_iris_content, ContentFilePair};
+use set_up::{IrisInput, IrisLgp};
 use strum::EnumCount;
-use utils::{get_iris_content, ContentFilePair};
-mod data;
-mod ops;
-mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
@@ -70,10 +69,7 @@ mod test {
     };
     use pretty_assertions::{assert_eq, assert_ne};
 
-    use crate::{
-        data::{IrisInput, IrisLgp},
-        utils::{get_iris_content, ContentFilePair},
-    };
+    use crate::set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
 
     fn plot_from_benchmarks(
         benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>>,

@@ -158,7 +158,7 @@ impl<'b, T> Instruction<'b, T>
 where
     T: ValidInput,
 {
-    fn get_data(&self, registers: &Registers, data: &T) -> Registers {
+    fn get_data(&self, registers: &Registers, data: &(impl Into<Registers> + Clone)) -> Registers {
         let target_data: Registers = match self.mode {
             Mode::Internal => registers.clone(),
             Mode::External => data.clone().into(),
@@ -167,7 +167,7 @@ where
         target_data
     }
 
-    pub fn apply(&self, registers: &mut Registers, input: &T) {
+    pub fn apply(&self, registers: &mut Registers, input: &(impl Into<Registers> + Clone)) {
         let data = self.get_data(registers, input);
         let target_slice = data.get_slice(self.target_index, None);
         let source_slice = registers.get_mut_slice(self.source_index, None);

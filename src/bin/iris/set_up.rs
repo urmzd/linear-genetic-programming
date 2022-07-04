@@ -17,7 +17,32 @@ use lgp::{
     utils::common_traits::{Compare, Executables, Show, ValidInput},
 };
 
-use crate::ops::IRIS_EXECUTABLES;
+use lgp::{executable, executables, utils::common_traits::AnyExecutable};
+use ordered_float::OrderedFloat;
+
+use std::error;
+
+use tempfile::NamedTempFile;
+
+use std::io::Write;
+
+pub struct ContentFilePair(pub String, pub NamedTempFile);
+
+pub async fn get_iris_content() -> Result<ContentFilePair, Box<dyn error::Error>> {
+    let tmp_file = NamedTempFile::new()?;
+    let response = reqwest::get(IRIS_DATASET_LINK).await?;
+    let content = response.text().await?;
+    writeln!(&tmp_file, "{}", &content)?;
+
+    Ok(ContentFilePair(content, tmp_file))
+}
+executable!(add, +);
+executable!(multiply, *);
+executable!(subtract, -);
+executable!(divide, /, OrderedFloat(2f32));
+
+pub const IRIS_EXECUTABLES: Executables =
+    executables!(self::add, self::subtract, self::divide, self::multiply);
 
 pub const IRIS_DATASET_LINK: &'static str =
     "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/bezdekIris.data";

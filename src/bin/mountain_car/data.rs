@@ -12,6 +12,10 @@ pub enum Actions {
 
 struct MountainCarLgp<'a>(PhantomData<&'a ()>);
 
+struct MountainCarInput;
+
+impl ReinforcmentLearningInput for MountainCarInput {}
+
 // impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
 //     type O;
 // }
