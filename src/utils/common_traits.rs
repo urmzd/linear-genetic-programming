@@ -52,14 +52,8 @@ where
     const AVAILABLE_EXECUTABLES: Executables;
     const AVAILABLE_MODES: Modes;
 
-    fn argmax(mut ties: Vec<usize>) -> Option<Self::Actions> {
-        let chosen_index = if ties.len() > 1 {
-            ties.choose(&mut generator()).map(|val| *val)
-        } else {
-            ties.pop()
-        };
-
-        FromPrimitive::from_usize(chosen_index.unwrap())
+    fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
+        FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
     }
 
     fn generate_register_value_from(_index: usize) -> RegisterValue {
