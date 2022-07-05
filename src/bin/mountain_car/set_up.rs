@@ -9,9 +9,10 @@ use lgp::{
         characteristics::FitnessScore,
         instruction::{Mode, Modes},
     },
-    extensions::reinforcment_learning::ReinforcementLearningInput,
+    extensions::reinforcement_learning::ReinforcementLearningInput,
     utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
 };
+use num::bigint::ParseBigIntError;
 use num_derive::FromPrimitive;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
@@ -26,9 +27,37 @@ enum Actions {
 
 struct MountainCarLgp<'a>(PhantomData<&'a ()>);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 struct MountainCarInput {
     game: MountainCarEnv,
+}
+
+impl Clone for MountainCarInput {
+    fn clone(&self) -> Self {
+        Self {
+            game: MountainCarEnv::default(),
+        }
+    }
+}
+
+impl Ord for MountainCarInput {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.cmp(other)
+    }
+}
+
+impl PartialEq for MountainCarInput {
+    fn eq(&self, other: &Self) -> bool {
+        true
+    }
+}
+
+impl Eq for MountainCarInput {}
+
+impl PartialOrd for MountainCarInput {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(std::cmp::Ordering::Equal)
+    }
 }
 
 impl Show for MountainCarInput {}
@@ -83,21 +112,6 @@ impl Div<usize> for MountainCarRewardValue {
 
 impl ReinforcementLearningInput for MountainCarInput {
     type RewardValue = MountainCarRewardValue;
-
-    fn init(&mut self) {
-        MountainCarEnv
-    }
-
-    fn act(
-        &mut self,
-        action: Self::Actions,
-    ) -> lgp::extensions::reinforcment_learning::Reward<Self::RewardValue> {
-        todo!()
-    }
-
-    fn finish(&mut self) {
-        todo!()
-    }
 }
 
 // impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {

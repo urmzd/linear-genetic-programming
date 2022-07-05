@@ -11,7 +11,7 @@ use crate::{
     utils::common_traits::{Compare, Show, ValidInput},
 };
 
-#[derive(Debug, Clone, new, Serialize, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Debug, Clone, new, Serialize)]
 pub struct ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
@@ -19,6 +19,40 @@ where
     n_runs: usize,
     environment: T,
 }
+
+impl<T> PartialEq for ReinforcementLearningParameters<T>
+where
+    T: ReinforcementLearningInput + PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.n_runs == other.n_runs && self.environment == other.environment
+    }
+}
+
+impl<T> PartialOrd for ReinforcementLearningParameters<T>
+where
+    T: ReinforcementLearningInput + PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match self.n_runs.partial_cmp(&other.n_runs) {
+            Some(core::cmp::Ordering::Equal) => {}
+            ord => return ord,
+        }
+        self.environment.partial_cmp(&other.environment)
+    }
+}
+
+impl<T> Eq for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Eq {}
+
+impl<T> Ord for ReinforcementLearningParameters<T>
+where
+    T: ReinforcementLearningInput + Ord,
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.n_runs.cmp(&other.n_runs)
+    }
+}
+
 pub enum Reward<RewardValue> {
     Continue(RewardValue),
     Terminal(RewardValue),
@@ -120,8 +154,8 @@ where
 }
 
 impl<'a, T> Organism<'a> for Program<'a, ReinforcementLearningParameters<T>> where
-    T: ReinforcementLearningInput
+    T: ReinforcementLearningInput + Compare + Show
 {
 }
-impl<T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}
-impl<T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}
+impl<T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Show {}
+impl<T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Compare {}

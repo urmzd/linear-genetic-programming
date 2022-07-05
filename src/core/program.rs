@@ -17,7 +17,7 @@ use super::{
     instructions::Instructions,
     registers::{RegisterGeneratorParameters, Registers},
 };
-pub trait ExtensionParameters: Show + Compare + Sized
+pub trait ExtensionParameters
 where
     Self::InputType: ValidInput,
 {
@@ -50,8 +50,6 @@ where
     pub other: &'a T,
 }
 
-impl<'a, T> PartialEq for Program<'a, T> where T: ExtensionParameters {}
-
 impl<'a, T> Display for Program<'a, T>
 where
     T: Serialize + ExtensionParameters,
@@ -79,6 +77,19 @@ where
         self.fitness.partial_cmp(&other.fitness)
     }
 }
+
+impl<'a, T> PartialEq for Program<'a, T>
+where
+    T: ExtensionParameters,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.instructions == other.instructions
+            && self.registers == other.registers
+            && self.fitness == other.fitness
+    }
+}
+
+impl<'a, T> Eq for Program<'a, T> where T: ExtensionParameters {}
 
 impl<'a, T> Generate<'a> for Program<'a, T>
 where
