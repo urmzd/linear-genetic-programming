@@ -1,5 +1,4 @@
 use core::fmt;
-use std::hash::Hash;
 
 use num::FromPrimitive;
 use ordered_float::OrderedFloat;
@@ -7,7 +6,10 @@ use rand::prelude::SliceRandom;
 use serde::Serialize;
 use strum::EnumCount;
 
-use crate::core::{instruction::Modes, registers::RegisterValue};
+use crate::{
+    core::{instruction::Modes, registers::RegisterValue},
+    executable, executables,
+};
 
 use super::random::generator;
 
@@ -35,14 +37,20 @@ impl fmt::Debug for AnyExecutable {
 
 pub type Executables = &'static [AnyExecutable];
 
-pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd + Ord {}
+executable!(add, +);
+executable!(subtract, -);
+executable!(divide, /, OrderedFloat(2f32));
+executable!(multiply, *);
+
+pub const DEFAULT_EXECUTABLES: Executables = executables!(add, subtract, divide, multiply);
+pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd<V> + Ord {}
 pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Clone + Compare + Show
+pub trait ValidInput: Clone + Show
 where
-    Self::Actions: Compare + Hash + Clone + FromPrimitive + EnumCount,
+    Self::Actions: Clone + FromPrimitive + EnumCount,
 {
     type Actions;
 

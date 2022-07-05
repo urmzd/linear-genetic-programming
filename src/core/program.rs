@@ -17,7 +17,7 @@ use super::{
     instructions::Instructions,
     registers::{RegisterGeneratorParameters, Registers},
 };
-pub trait ExtensionParameters
+pub trait ExtensionParameters: Show + Compare + Sized
 where
     Self::InputType: ValidInput,
 {
@@ -38,7 +38,7 @@ where
 
 impl<T> Show for ProgramGeneratorParameters<T> where T: Show + ExtensionParameters {}
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Program<'a, T>
 where
     T: ExtensionParameters,
@@ -49,6 +49,8 @@ where
     // Problem specific parameters
     pub other: &'a T,
 }
+
+impl<'a, T> PartialEq for Program<'a, T> where T: ExtensionParameters {}
 
 impl<'a, T> Display for Program<'a, T>
 where

@@ -14,11 +14,8 @@ use lgp::{
         registers::{RegisterValue, Registers},
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
-    utils::common_traits::{Compare, Executables, Show, ValidInput},
+    utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
 };
-
-use lgp::{executable, executables, utils::common_traits::AnyExecutable};
-use ordered_float::OrderedFloat;
 
 use std::error;
 
@@ -36,13 +33,8 @@ pub async fn get_iris_content() -> Result<ContentFilePair, Box<dyn error::Error>
 
     Ok(ContentFilePair(content, tmp_file))
 }
-executable!(add, +);
-executable!(multiply, *);
-executable!(subtract, -);
-executable!(divide, /, OrderedFloat(2f32));
 
-pub const IRIS_EXECUTABLES: Executables =
-    executables!(self::add, self::subtract, self::divide, self::multiply);
+pub const IRIS_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
 pub const IRIS_DATASET_LINK: &'static str =
     "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/bezdekIris.data";

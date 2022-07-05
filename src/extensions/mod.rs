@@ -1,2 +1,2 @@
 pub mod classification;
-pub mod reinforcment_learning;
+pub mod reinforcement_learning;

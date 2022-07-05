@@ -11,10 +11,13 @@ use crate::{
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 
+use std::hash::Hash;
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
 pub struct ClassificationParameters<'a, InputType>
 where
     InputType: ClassificationInput,
+    <InputType as ValidInput>::Actions: Hash + Compare,
 {
     inputs: &'a Inputs<InputType>,
 }
@@ -22,11 +25,15 @@ where
 impl<'a, T> ExtensionParameters for ClassificationParameters<'a, T>
 where
     T: ClassificationInput,
+    <T as ValidInput>::Actions: Hash + Compare,
 {
     type InputType = T;
 }
 
-pub trait ClassificationInput: ValidInput + Into<Registers> {
+pub trait ClassificationInput: ValidInput + Into<Registers> + Compare
+where
+    Self::Actions: Compare + Hash,
+{
     const N_INPUTS: usize;
     fn get_class(&self) -> Self::Actions;
 }
@@ -34,6 +41,7 @@ pub trait ClassificationInput: ValidInput + Into<Registers> {
 impl<'a, T> Fitness for Program<'a, ClassificationParameters<'a, T>>
 where
     T: ClassificationInput,
+    <T as ValidInput>::Actions: Hash + Compare,
 {
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
@@ -68,9 +76,21 @@ where
     }
 }
 
-impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>> where
-    T: ClassificationInput
+impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>>
+where
+    T: ClassificationInput,
+    <T as ValidInput>::Actions: Hash + Compare,
 {
 }
-impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput {}
-impl<'a, T> Compare for ClassificationParameters<'a, T> where T: ClassificationInput {}
+impl<'a, T> Show for ClassificationParameters<'a, T>
+where
+    T: ClassificationInput,
+    <T as ValidInput>::Actions: Hash + Compare,
+{
+}
+impl<'a, T> Compare for ClassificationParameters<'a, T>
+where
+    T: ClassificationInput,
+    <T as ValidInput>::Actions: Hash + Compare,
+{
+}

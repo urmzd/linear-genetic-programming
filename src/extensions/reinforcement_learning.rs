@@ -11,15 +11,14 @@ use crate::{
     utils::common_traits::{Compare, Show, ValidInput},
 };
 
-#[derive(Debug, Clone, new, Ord, PartialEq, PartialOrd, Eq, Serialize)]
+#[derive(Debug, Clone, new, Serialize, PartialEq, PartialOrd, Eq, Ord)]
 pub struct ReinforcementLearningParameters<T>
 where
-    T: ReinforcmentLearningInput,
+    T: ReinforcementLearningInput,
 {
     n_runs: usize,
     environment: T,
 }
-
 pub enum Reward<RewardValue> {
     Continue(RewardValue),
     Terminal(RewardValue),
@@ -46,18 +45,17 @@ where
 
 impl<T> ExtensionParameters for ReinforcementLearningParameters<T>
 where
-    T: ReinforcmentLearningInput,
+    T: ReinforcementLearningInput,
 {
     type InputType = T;
 }
 
-pub trait ReinforcmentLearningInput: ValidInput
+pub trait ReinforcementLearningInput: ValidInput
 where
     Self::RewardValue: Default
         + Add<Self::RewardValue>
         + AddAssign<Self::RewardValue>
         + Copy
-        + Into<FitnessScore>
         + Div<usize, Output = FitnessScore>,
 {
     type RewardValue;
@@ -69,7 +67,7 @@ where
 
 impl<'a, T> Fitness for Program<'a, ReinforcementLearningParameters<T>>
 where
-    T: ReinforcmentLearningInput,
+    T: ReinforcementLearningInput,
 {
     fn eval_fitness(&self) -> crate::core::characteristics::FitnessScore {
         let mut scores = vec![];
@@ -109,7 +107,7 @@ where
                 current_weighted + acc
             });
 
-        average.into()
+        average
     }
 
     fn eval_set_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
@@ -122,8 +120,8 @@ where
 }
 
 impl<'a, T> Organism<'a> for Program<'a, ReinforcementLearningParameters<T>> where
-    T: ReinforcmentLearningInput
+    T: ReinforcementLearningInput
 {
 }
-impl<'a, T> Show for ReinforcementLearningParameters<T> where T: ReinforcmentLearningInput {}
-impl<'a, T> Compare for ReinforcementLearningParameters<T> where T: ReinforcmentLearningInput {}
+impl<T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}
+impl<T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}
