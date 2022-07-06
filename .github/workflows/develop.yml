@@ -1,14 +1,14 @@
 name: develop
-on: 
+on:
   push:
     paths:
       - "src/**.rs"
       - "tests/**.rs"
       - "examples/**.rs"
-      - "github/**.yml"
+      - ".github/**.rs"
 jobs:
   test:
-    name: Execute Tests 
+    name: Execute Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,15 +28,10 @@ jobs:
         with:
           command: test --all-targets
       - uses: actions/upload-artifact@v3
-        with: 
+        with:
           name: plots
           path: ./assets/tests/plots
           if-no-files-found: error
       - uses: EndBug/add-and-commit@v9
         with:
-          add: 'assets/tests/plots'
-
-
-
-
-
+          add: "assets/tests/plots"
