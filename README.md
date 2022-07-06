@@ -22,12 +22,14 @@ cargo run --bin <example_name>
 
 ### Classification (iris)
 
-```rust:examples/iris/main.rs [19-44]
+```rust
+//examples/iris/main.rs#L19-L44
 ```
 
 ### Reinforcement Learning (mountain_car)
 
-```rust:examples/mountain_car/main.rs [15-36]
+```rust
+//examples/mountain_car/main.rs#L15-L36
 ```
 
 ## Building

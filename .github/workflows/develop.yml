@@ -12,13 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with: 
+          node-version: 14
+      - run: npm install -g embedme
+      - run: embedme README.md
+      - uses: EndBug/add-and-commit@v9
         with:
-          persist-credentials: false 
-          fetch-depth: 0 
-          ref: refs/heads/${{ github.head_ref }}
-      - uses: tdabasinskas/markdown-embed-code@fork
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          add: "README.md"
 
   test:
     name: Execute Tests
