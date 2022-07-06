@@ -15,7 +15,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: tdabasinskas/markdown-embed-code@main
+      - uses: tdabasinskas/markdown-embed-code@fork
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
