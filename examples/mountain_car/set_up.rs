@@ -3,32 +3,42 @@ use std::{
     ops::{Add, AddAssign, Div},
 };
 
-use gym_rs::envs::classical_control::mountain_car::MountainCarEnv;
-use gym_rs::utils::renderer::RenderMode;
+use derive_new::new;
+use gym_rs::{core::ActionReward, utils::renderer::RenderMode};
+use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::{
     core::{
+        algorithm::GeneticAlgorithm,
         characteristics::FitnessScore,
         instruction::{Mode, Modes},
+        program::Program,
     },
-    extensions::reinforcement_learning::ReinforcementLearningInput,
+    extensions::reinforcement_learning::{
+        ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
+    },
     utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
 };
-use num_derive::FromPrimitive;
+use num::NumCast;
+use num_derive::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 use strum::{Display, EnumCount};
 
-#[derive(Debug, Clone, Display, Eq, PartialEq, EnumCount, FromPrimitive)]
-enum Actions {
+#[derive(Debug, Clone, Display, Eq, PartialEq, EnumCount, FromPrimitive, ToPrimitive)]
+pub enum Actions {
     AccelerateLeft = 0,
-    AccelerateRight = 1,
-    Pause = 2,
+    Pause = 1,
+    AccelerateRight = 2,
 }
 
-struct MountainCarLgp<'a>(PhantomData<&'a ()>);
+pub struct MountainCarLgp<'a>(PhantomData<&'a ()>);
 
-#[derive(Debug, Serialize)]
-struct MountainCarInput<'a> {
+impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
+    type O = Program<'a, ReinforcementLearningParameters<MountainCarInput<'a>>>;
+}
+
+#[derive(Debug, Serialize, new)]
+pub struct MountainCarInput<'a> {
     game: MountainCarEnv<'a>,
 }
 
@@ -42,7 +52,7 @@ impl<'a> Clone for MountainCarInput<'a> {
 
 impl<'a> Ord for MountainCarInput<'a> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.cmp(other)
+        std::cmp::Ordering::Equal
     }
 }
 
@@ -80,11 +90,11 @@ impl<'a> ValidInput for MountainCarInput<'a> {
 }
 
 #[derive(Clone, Copy)]
-struct MountainCarRewardValue(usize);
+pub struct MountainCarRewardValue(f64);
 
 impl Default for MountainCarRewardValue {
     fn default() -> Self {
-        Self(0)
+        Self(0.)
     }
 }
 
@@ -106,7 +116,7 @@ impl Div<usize> for MountainCarRewardValue {
     type Output = FitnessScore;
 
     fn div(self, rhs: usize) -> Self::Output {
-        OrderedFloat((self.0 / rhs) as f32)
+        OrderedFloat((self.0 / rhs as f64) as f32)
     }
 }
 
@@ -114,21 +124,23 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     type RewardValue = MountainCarRewardValue;
 
     fn init(&mut self) {
-        todo!()
+        self.game.reset();
     }
 
     fn act(
         &mut self,
         action: Self::Actions,
     ) -> lgp::extensions::reinforcement_learning::Reward<Self::RewardValue> {
-        todo!()
+        let transformed_action = NumCast::from(action).unwrap();
+        let ActionReward { reward, done, .. } = self.game.step(transformed_action);
+        if done {
+            Reward::Terminal(MountainCarRewardValue(reward))
+        } else {
+            Reward::Continue(MountainCarRewardValue(reward))
+        }
     }
 
     fn finish(&mut self) {
-        todo!()
+        // RENDER STUFF
     }
 }
-
-// impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
-//     type O;
-// }

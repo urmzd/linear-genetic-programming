@@ -570,7 +570,7 @@ checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
 [[package]]
 name = "gym-rs"
 version = "0.2.1"
-source = "git+https://github.com/urmzd/gym-rs#5b761cdff39c6df2e8f974769907700a26b01840"
+source = "git+https://github.com/urmzd/gym-rs#b8975154f8ae40c9f272eb49a67b1ae0596118c9"
 dependencies = [
  "derivative",
  "derive-new",
@@ -805,6 +805,7 @@ name = "lgp"
 version = "0.1.0"
 dependencies = [
  "csv",
+ "derivative",
  "derive-new",
  "gym-rs",
  "itertools",
