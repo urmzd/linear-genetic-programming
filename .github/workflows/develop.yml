@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false 
+          fetch-depth: 0 
+          ref: refs/heads/${{ github.head_ref }}
       - uses: tdabasinskas/markdown-embed-code@fork
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -29,7 +33,8 @@ jobs:
           default: true
       - uses: actions-rs/cargo@v1
         with:
-          command: test --all-targets
+          command: test
+          args: --all-targets
       - uses: actions/upload-artifact@v3
         with:
           name: plots
