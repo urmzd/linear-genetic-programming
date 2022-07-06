@@ -51,13 +51,13 @@ impl<'a> Clone for MountainCarInput<'a> {
 }
 
 impl<'a> Ord for MountainCarInput<'a> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, _other: &Self) -> std::cmp::Ordering {
         std::cmp::Ordering::Equal
     }
 }
 
 impl<'a> PartialEq for MountainCarInput<'a> {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
@@ -65,7 +65,7 @@ impl<'a> PartialEq for MountainCarInput<'a> {
 impl<'a> Eq for MountainCarInput<'a> {}
 
 impl<'a> PartialOrd for MountainCarInput<'a> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
         Some(std::cmp::Ordering::Equal)
     }
 }
