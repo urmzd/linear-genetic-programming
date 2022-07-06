@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          fetch-depth: 0
       - uses: tdabasinskas/markdown-embed-code@fork
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
