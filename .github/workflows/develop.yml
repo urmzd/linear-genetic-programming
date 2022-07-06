@@ -10,7 +10,13 @@ jobs:
     name: Execute Tests 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: tokusumi/markdown-embed-code@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - run: mkdir -p ./assets/tests/plots
       - uses: actions-rs/toolchain@v1
         with:

@@ -22,18 +22,12 @@ cargo run --bin <example_name>
 
 ### Classification (iris)
 
-```rust
-fn main() {
-    todo!()
-}
+```rust:examples/iris/main.rs [19-44]
 ```
 
 ### Reinforcement Learning (mountain_car)
 
-```rust
-fn main() {
-    todo!()
-}
+```rust:examples/mountain_car/main.rs [15-36]
 ```
 
 ## Building
