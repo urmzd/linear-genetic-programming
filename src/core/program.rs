@@ -106,7 +106,7 @@ where
         } = &parameters;
 
         let registers = Registers::generate::<T::InputType>(register_generator_parameters);
-        let n_instructions = Uniform::new_inclusive(0, max_instructions).sample(&mut generator());
+        let n_instructions = Uniform::new_inclusive(1, max_instructions).sample(&mut generator());
         let instructions = (0..n_instructions)
             .into_iter()
             .map(|_| Instruction::generate(instruction_generator_parameters))
