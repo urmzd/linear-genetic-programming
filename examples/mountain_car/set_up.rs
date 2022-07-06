@@ -3,7 +3,8 @@ use std::{
     ops::{Add, AddAssign, Div},
 };
 
-use gym_rs::{envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode};
+use gym_rs::envs::classical_control::mountain_car::MountainCarEnv;
+use gym_rs::utils::renderer::RenderMode;
 use lgp::{
     core::{
         characteristics::FitnessScore,
@@ -34,7 +35,7 @@ struct MountainCarInput<'a> {
 impl<'a> Clone for MountainCarInput<'a> {
     fn clone(&self) -> Self {
         Self {
-            game: MountainCarEnv::new(RendegithurMode::None, None),
+            game: MountainCarEnv::new(RenderMode::None, None),
         }
     }
 }
@@ -111,6 +112,21 @@ impl Div<usize> for MountainCarRewardValue {
 
 impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     type RewardValue = MountainCarRewardValue;
+
+    fn init(&mut self) {
+        todo!()
+    }
+
+    fn act(
+        &mut self,
+        action: Self::Actions,
+    ) -> lgp::extensions::reinforcement_learning::Reward<Self::RewardValue> {
+        todo!()
+    }
+
+    fn finish(&mut self) {
+        todo!()
+    }
 }
 
 // impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
