@@ -16,17 +16,16 @@ where
         let a_end = if a_start == instructions_a.len() - 1 {
             None
         } else {
-            let tmp_end = Uniform::new(a_start, instructions_a.len()).sample(&mut generator());
+            let tmp_end = Uniform::new(a_start + 1, instructions_a.len()).sample(&mut generator());
 
             Some(tmp_end)
         };
 
         let b_start = Uniform::new(0, instructions_b.len()).sample(&mut generator());
-        let b_end = if a_start == instructions_b.len() - 1 {
+        let b_end = if b_start == instructions_b.len() - 1 {
             None
         } else {
-            let tmp_end = Uniform::new(b_start, instructions_b.len()).sample(&mut generator());
-
+            let tmp_end = Uniform::new(b_start + 1, instructions_b.len()).sample(&mut generator());
             Some(tmp_end)
         };
 

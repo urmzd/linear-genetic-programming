@@ -4,6 +4,7 @@ on:
     paths:
       - "src/**.rs"
       - "tests/**.rs"
+      - "examples/**.rs"
 jobs:
   test:
     name: Execute Tests 
