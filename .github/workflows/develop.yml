@@ -15,8 +15,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: egor-tensin/setup-gcc@v1
-      - uses: tokusumi/markdown-embed-code@main
+      - uses: tdabasinskas/markdown-embed-code
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
