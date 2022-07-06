@@ -1,6 +1,5 @@
 // For testing purposes only (binary classification).
 
-use crate::{core::registers::RegisterValue, executables};
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use rand::prelude::SliceRandom;
@@ -12,12 +11,11 @@ use crate::{
         instruction::{Mode, Modes},
         registers::Registers,
     },
-    executable,
     extensions::classification::ClassificationInput,
 };
 
 use super::{
-    common_traits::{AnyExecutable, Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
+    common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
     random::generator,
 };
 

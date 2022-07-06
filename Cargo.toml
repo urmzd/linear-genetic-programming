@@ -30,5 +30,5 @@ derive-new = "0.5"
 pretty_assertions = { version= "1.2"}
 plotters = "0.3.1"
 itertools = "0.10.3"
-gym-rs = "0.2.1"
+gym-rs = { git = "https://github.com/urmzd/gym-rs" }
 tabled = "0.7"

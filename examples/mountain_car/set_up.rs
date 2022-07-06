@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Div},
 };
 
-use gym_rs::MountainCarEnv;
+use gym_rs::{envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode};
 use lgp::{
     core::{
         characteristics::FitnessScore,
@@ -12,7 +12,6 @@ use lgp::{
     extensions::reinforcement_learning::ReinforcementLearningInput,
     utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
 };
-use num::bigint::ParseBigIntError;
 use num_derive::FromPrimitive;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
@@ -28,42 +27,42 @@ enum Actions {
 struct MountainCarLgp<'a>(PhantomData<&'a ()>);
 
 #[derive(Debug, Serialize)]
-struct MountainCarInput {
-    game: MountainCarEnv,
+struct MountainCarInput<'a> {
+    game: MountainCarEnv<'a>,
 }
 
-impl Clone for MountainCarInput {
+impl<'a> Clone for MountainCarInput<'a> {
     fn clone(&self) -> Self {
         Self {
-            game: MountainCarEnv::default(),
+            game: MountainCarEnv::new(RendegithurMode::None, None),
         }
     }
 }
 
-impl Ord for MountainCarInput {
+impl<'a> Ord for MountainCarInput<'a> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.cmp(other)
     }
 }
 
-impl PartialEq for MountainCarInput {
+impl<'a> PartialEq for MountainCarInput<'a> {
     fn eq(&self, other: &Self) -> bool {
         true
     }
 }
 
-impl Eq for MountainCarInput {}
+impl<'a> Eq for MountainCarInput<'a> {}
 
-impl PartialOrd for MountainCarInput {
+impl<'a> PartialOrd for MountainCarInput<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(std::cmp::Ordering::Equal)
     }
 }
 
-impl Show for MountainCarInput {}
-impl Compare for MountainCarInput {}
+impl<'a> Show for MountainCarInput<'a> {}
+impl<'a> Compare for MountainCarInput<'a> {}
 
-impl ValidInput for MountainCarInput {
+impl<'a> ValidInput for MountainCarInput<'a> {
     type Actions = Actions;
 
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
@@ -110,7 +109,7 @@ impl Div<usize> for MountainCarRewardValue {
     }
 }
 
-impl ReinforcementLearningInput for MountainCarInput {
+impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     type RewardValue = MountainCarRewardValue;
 }
 
