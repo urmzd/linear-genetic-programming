@@ -24,12 +24,62 @@ cargo run --bin <example_name>
 
 ```rust
 //examples/iris/main.rs#L19-L44
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn error::Error>> {
+    let ContentFilePair(_, file) = get_iris_content().await?;
+    let inputs = IrisLgp::load_inputs(file.path());
+
+    let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        HyperParameters {
+            population_size: 100,
+            max_generations: 100,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 100,
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(&inputs),
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <IrisInput as ValidInput>::Actions::COUNT,
+                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                ),
+            },
+            gap: 0.5,
+            n_mutations: 0.5,
+            n_crossovers: 0.5,
+        };
+
+    IrisLgp::execute(&hyper_params, EventHooks::default())?;
+    Ok(())
+}
 ```
 
 ### Reinforcement Learning (mountain_car)
 
 ```rust
 //examples/mountain_car/main.rs#L15-L36
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let game = MountainCarEnv::new(RenderMode::None, None);
+    let input = MountainCarInput::new(game);
+
+    let hyper_params = HyperParameters {
+        population_size: 10,
+        gap: 0.5,
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
+        max_generations: 5,
+        program_params: ProgramGeneratorParameters {
+            max_instructions: 200,
+            instruction_generator_parameters: InstructionGeneratorParameters::new(6, None),
+            register_generator_parameters: RegisterGeneratorParameters::new(3),
+            other: ReinforcementLearningParameters::new(5, input),
+        },
+    };
+
+    MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+    Ok(())
+}
 ```
 
 ## Building
