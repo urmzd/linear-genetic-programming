@@ -7,17 +7,23 @@ on:
       - "examples/**.rs"
       - ".github/**.yml"
 jobs:
-  test:
-    name: Execute Tests
+  embed_code:
+    name: Embed Code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
         with:
           persist-credentials: false
           fetch-depth: 0
       - uses: tokusumi/markdown-embed-code@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Execute Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - run: mkdir -p ./assets/tests/plots
       - uses: actions-rs/toolchain@v1
         with:
