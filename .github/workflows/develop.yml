@@ -5,6 +5,7 @@ on:
       - "src/**.rs"
       - "tests/**.rs"
       - "examples/**.rs"
+      - "./github/**.yml"
 jobs:
   test:
     name: Execute Tests 
