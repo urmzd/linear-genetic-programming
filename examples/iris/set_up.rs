@@ -86,8 +86,6 @@ impl ClassificationInput for IrisInput {
     fn get_class(&self) -> Self::Actions {
         self.class
     }
-
-    const N_INPUTS: usize = 4;
 }
 
 impl Compare for IrisClass {}
@@ -107,6 +105,8 @@ impl ValidInput for IrisInput {
 
     const AVAILABLE_EXECUTABLES: Executables = IRIS_EXECUTABLES;
     const AVAILABLE_MODES: Modes = Mode::ALL;
+
+    const N_INPUTS: usize = 4;
 
     fn argmax(mut ties: Vec<usize>) -> Option<Self::Actions> {
         if ties.len() > 1 {

@@ -34,7 +34,6 @@ pub trait ClassificationInput: ValidInput + Into<Registers> + Compare
 where
     Self::Actions: Compare + Hash,
 {
-    const N_INPUTS: usize;
     fn get_class(&self) -> Self::Actions;
 }
 

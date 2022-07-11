@@ -76,25 +76,25 @@ impl<'a> Compare for MountainCarInput<'a> {}
 impl<'a> ValidInput for MountainCarInput<'a> {
     type Actions = Actions;
 
+    const N_INPUTS: usize = 2;
+
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
     const AVAILABLE_MODES: Modes = Mode::INTERNAL_ONLY;
+}
 
-    fn generate_register_value_from(index: usize) -> lgp::core::registers::RegisterValue {
-        if index < 3 {
-            ordered_float::OrderedFloat(0f32)
-        } else {
-            ordered_float::OrderedFloat(1f32)
-        }
+impl From<MountainCarRewardValue> for FitnessScore {
+    fn from(reward: MountainCarRewardValue) -> Self {
+        OrderedFloat(reward.0.into_inner() as f32)
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct MountainCarRewardValue(f64);
+#[derive(Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
+pub struct MountainCarRewardValue(OrderedFloat<f64>);
 
 impl Default for MountainCarRewardValue {
     fn default() -> Self {
-        Self(0.)
+        Self(OrderedFloat(0.))
     }
 }
 
@@ -116,7 +116,7 @@ impl Div<usize> for MountainCarRewardValue {
     type Output = FitnessScore;
 
     fn div(self, rhs: usize) -> Self::Output {
-        OrderedFloat((self.0 / rhs as f64) as f32)
+        OrderedFloat((self.0 / OrderedFloat(rhs as f64)).into_inner() as f32)
     }
 }
 
@@ -134,11 +134,13 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
         let transformed_action = NumCast::from(action).unwrap();
         let ActionReward { reward, done, .. } = self.game.step(transformed_action);
         if done {
-            Reward::Terminal(MountainCarRewardValue(reward))
+            Reward::Terminal(MountainCarRewardValue(OrderedFloat(reward)))
         } else {
-            Reward::Continue(MountainCarRewardValue(reward))
+            Reward::Continue(MountainCarRewardValue(OrderedFloat(reward)))
         }
     }
+
+    fn get_state(&self) -> Vec<lgp::core::registers::RegisterValue> {}
 
     fn finish(&mut self) {
         // RENDER STUFF

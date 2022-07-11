@@ -32,7 +32,7 @@ where
     pub max_instructions: usize,
     pub instruction_generator_parameters:
         InstructionGeneratorParameters<OtherParameters::InputType>,
-    pub register_generator_parameters: RegisterGeneratorParameters<OtherParameters::InputType>,
+    pub register_generator_parameters: RegisterGeneratorParameters,
     pub other: OtherParameters,
 }
 

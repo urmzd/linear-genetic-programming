@@ -11,6 +11,7 @@ pub trait Fitness {
 }
 
 pub trait Breed: Clone {
+    // TODO: Add parameter to select number of "genes".
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2];
 }
 

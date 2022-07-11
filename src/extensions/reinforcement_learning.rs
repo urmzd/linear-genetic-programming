@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div};
+use std::ops::{Add, AddAssign};
 
 use derive_new::new;
 use serde::Serialize;
@@ -7,6 +7,7 @@ use crate::{
     core::{
         characteristics::{Fitness, FitnessScore, Organism},
         program::{ExtensionParameters, Program},
+        registers::RegisterValue,
     },
     utils::common_traits::{Compare, Show, ValidInput},
 };
@@ -90,12 +91,15 @@ where
         + Add<Self::RewardValue>
         + AddAssign<Self::RewardValue>
         + Copy
-        + Div<usize, Output = FitnessScore>,
+        + PartialOrd
+        + Ord
+        + Into<FitnessScore>,
 {
     type RewardValue;
 
     fn init(&mut self);
     fn act(&mut self, action: Self::Actions) -> Reward<Self::RewardValue>;
+    fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
 }
 
@@ -117,6 +121,7 @@ where
 
             for instruction in &self.instructions {
                 let target_data = registers.clone();
+                // TODO: USE STATE AS READ ONLY REGISTERS
                 instruction.apply(&mut registers, &target_data);
                 let possible_actions = registers.argmax();
                 let selected_action = T::argmax(possible_actions).unwrap();
@@ -134,14 +139,12 @@ where
             scores.push(score)
         }
 
-        let average = scores
-            .into_iter()
-            .fold(FitnessScore::default(), |acc, current| {
-                let current_weighted = current / n_runs;
-                current_weighted + acc
-            });
+        scores.sort();
 
-        average
+        // TODO: Switch over to median
+        let median = scores.remove(n_runs / 2);
+
+        median.into()
     }
 
     fn eval_set_fitness(&mut self) -> crate::core::characteristics::FitnessScore {

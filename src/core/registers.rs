@@ -1,14 +1,14 @@
 use std::{
     collections::{HashMap, HashSet},
-    marker::PhantomData,
     ops::Range,
 };
+
+use strum::EnumCount;
 
 use derive_new::new;
 use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
-use strum::EnumCount;
 
 use crate::utils::common_traits::ValidInput;
 
@@ -21,35 +21,21 @@ pub struct Registers {
     n_extras: usize,
 }
 
-#[derive(Clone, Debug, Serialize, new)]
-pub struct RegisterGeneratorParameters<T>
-where
-    T: ValidInput,
-{
-    n_extra_registers: usize,
-    marker: PhantomData<T>,
+#[derive(Debug, Clone, new, Serialize)]
+pub struct RegisterGeneratorParameters {
+    n_extra_action_registers: usize,
 }
 
 impl Registers {
-    pub fn generate<'a, T>(parameters: &'a RegisterGeneratorParameters<T>) -> Self
-    where
-        T: ValidInput,
-    {
+    pub fn generate<T: ValidInput>(parameters: &RegisterGeneratorParameters) -> Self {
         let RegisterGeneratorParameters {
-            n_extra_registers: n_extras,
-            ..
+            n_extra_action_registers,
         } = parameters;
 
-        let n_outputs = T::Actions::COUNT;
-
-        let data = (0..(n_outputs + n_extras))
-            .map(T::generate_register_value_from)
-            .collect();
-
         Registers {
-            data,
-            n_outputs,
-            n_extras: *n_extras,
+            data: vec![OrderedFloat(0.); T::Actions::COUNT + *n_extra_action_registers],
+            n_extras: *n_extra_action_registers,
+            n_outputs: T::Actions::COUNT,
         }
     }
 

@@ -41,6 +41,8 @@ impl Compare for TestRepresent {}
 impl ValidInput for TestInput {
     type Actions = TestRepresent;
 
+    const N_INPUTS: usize = 4;
+
     fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
     }
@@ -51,8 +53,6 @@ impl ValidInput for TestInput {
 }
 
 impl ClassificationInput for TestInput {
-    const N_INPUTS: usize = 4;
-
     fn get_class(&self) -> TestRepresent {
         FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
     }
