@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 other: ClassificationParameters::new(&inputs),
                 instruction_generator_parameters: InstructionGeneratorParameters::new(
                     <IrisInput as ValidInput>::Actions::COUNT,
-                    Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                    Some(<IrisInput as ValidInput>::N_INPUTS),
                 ),
             },
             gap: 0.5,
