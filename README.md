@@ -25,7 +25,6 @@ cargo run --example <example_name>
 ```rust
 //examples/iris/main.rs#L19-L44
 
-#[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
@@ -51,6 +50,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
+
 ```
 
 ### Reinforcement Learning (mountain_car)
