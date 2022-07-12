@@ -47,7 +47,7 @@ where
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
 
-        let scores = vec![];
+        let mut scores = vec![];
 
         for input in inputs {
             let mut registers = self.registers.clone();

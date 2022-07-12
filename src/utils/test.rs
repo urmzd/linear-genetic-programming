@@ -30,7 +30,9 @@ impl Into<Registers> for TestInput {
 impl Compare for TestInput {}
 impl Show for TestInput {}
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount)]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount, num_derive::ToPrimitive,
+)]
 pub enum TestRepresent {
     One = 0,
     Two = 1,

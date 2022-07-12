@@ -52,10 +52,12 @@ mod tests {
             registers::RegisterGeneratorParameters,
         },
         extensions::classification::ClassificationParameters,
-        measure::benchmarks::Benchmark,
-        utils::{common_traits::ValidInput, plots::plot_from_benchmarks},
+        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
     };
     use more_asserts::{assert_le, assert_lt};
+    use ndarray::{aview1, s, Array2, Axis};
+    use ndarray_stats::{interpolate::Higher, QuantileExt};
+    use noisy_float::prelude::n64;
     use pretty_assertions::{assert_eq, assert_ne};
     use std::error;
     use strum::EnumCount;
@@ -92,19 +94,26 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.5);
         assert_eq!(hyper_params.n_mutations, 0.5);
 
-        let mut benchmarks = vec![];
+        let mut uninit_populations =
+            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut generations: usize = 0;
+
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let benchmark = population.get_benchmark_individuals();
-                benchmarks.push(benchmark);
+                population
+                    .ndarray()
+                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                generations += 1;
                 Ok(())
             }),
         )?;
 
+        let init_populations = unsafe { uninit_populations.assume_init() };
+
         const PLOT_FILE_NAME: &'static str =
             "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
-        plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
         Ok(())
     }
     #[tokio::test]
@@ -136,18 +145,25 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.);
         assert_eq!(hyper_params.n_mutations, 0.5);
 
-        let mut benchmarks = vec![];
+        let mut uninit_populations =
+            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut generations: usize = 0;
+
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let benchmark = population.get_benchmark_individuals();
-                benchmarks.push(benchmark);
+                population
+                    .ndarray()
+                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                generations += 1;
                 Ok(())
             }),
         )?;
 
+        let init_populations = unsafe { uninit_populations.assume_init() };
+
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
-        plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
         Ok(())
     }
 
@@ -180,18 +196,26 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.5);
         assert_eq!(hyper_params.n_mutations, 0.);
 
-        let mut benchmarks = vec![];
+        let mut uninit_populations =
+            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut generations: usize = 0;
+
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let benchmark = population.get_benchmark_individuals();
-                benchmarks.push(benchmark);
+                population
+                    .ndarray()
+                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                generations += 1;
                 Ok(())
             }),
         )?;
 
+        let init_populations = unsafe { uninit_populations.assume_init() };
+
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
-        plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+
         Ok(())
     }
 
@@ -224,15 +248,24 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.);
         assert_eq!(hyper_params.n_mutations, 0.);
 
-        let mut generations = 0;
+        let mut uninit_populations =
+            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut generations: usize = 0;
 
-        let mut benchmarks = vec![];
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let benchmark = population.get_benchmark_individuals();
+                let qs = &[n64(0.), n64(0.5), n64(1.)];
+                let benchmark = population
+                    .ndarray()
+                    .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
+                    .unwrap();
 
-                if benchmark.worst == benchmark.median && benchmark.median == benchmark.best {
+                let worst = benchmark.get([0]);
+                let median = benchmark.get([1]);
+                let best = benchmark.get([2]);
+
+                if worst == median && median == best {
                 } else {
                     generations += 1;
 
@@ -241,15 +274,19 @@ mod tests {
                         return Err("Generations exceeded expect convergence time.")?;
                     }
                 }
-
-                benchmarks.push(benchmark);
+                population
+                    .ndarray()
+                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                generations += 1;
                 Ok(())
             }),
         )?;
 
+        let init_populations = unsafe { uninit_populations.assume_init() };
+
         // TODO: Pull the graph section out into a seperate function.
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-        plot_from_benchmarks(benchmarks, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
 
         Ok(())
     }

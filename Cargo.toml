@@ -10,12 +10,12 @@ serde = { version = "1.0", features = ["derive"] }
 reqwest = "0.11"
 tempfile = "3.3"
 tokio = { version = "1.18", features = ["full", "macros"] }
-num = {version = "0.4.0", features=["std"]}
+num = { version = "0.4.0", features=["std"] }
 num-derive = "0.3.3"
 num-traits = "0.2.15"
 rand = "0.8.5"
 log = "0.4.17"
-ordered-float = {version = "3.0", features=["serde", "rand"]}
+ordered-float = { version = "3.0", features=["serde", "rand"] }
 strum = {version = "0.24", features=["derive"]}
 strum_macros = "0.24"
 libmath = "0.2.1"
@@ -28,7 +28,8 @@ derive-new = "0.5"
 derivative = "2.2.0"
 plotters = "0.3.1"
 smartcore = "0.2"
-ndarray = "0.15"
+ndarray = { version = "0.15", features = ["std", "serde"] }
+noisy_float = { version = "0.2.0" }
 ndarray-stats = "0.5"
 
 [dev-dependencies]

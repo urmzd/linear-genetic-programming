@@ -61,17 +61,17 @@ where
 {
     type O;
 
+    /// Prevent errors from being thrown when "multple" initializations occur.
     fn init_env() -> () {
-        // Prevent errors from being thrown when "multple" initializations occur.
         pretty_env_logger::try_init().unwrap_or(());
     }
 
     fn init_population(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
-        let mut population = Population::new_with_capacity(hyper_params.population_size);
+        let mut population = Population::with_capacity(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
             let program = Self::O::generate(&hyper_params.program_params);
-            population.push_back(program)
+            population.push(program)
         }
 
         population
@@ -97,7 +97,7 @@ where
         let cutoff_index = ((1f32 - gap) * (pop_len as f32)).floor() as i32 as usize;
 
         for _ in 0..cutoff_index {
-            population.pop_front();
+            population.pop();
         }
     }
 
@@ -112,39 +112,53 @@ where
         assert_le!(OrderedFloat(n_mutations), OrderedFloat(1f32));
         assert_le!(OrderedFloat(n_crossovers), OrderedFloat(1f32));
 
-        let mut n_mutations_todo =
-            math::round::floor((n_mutations * remaining_size as f32) as f64, 0) as usize;
+        let mut n_mutations_todo = ((n_mutations * remaining_size as f32) as f64).floor() as usize;
         let mut n_crossovers_todo =
-            math::round::floor((n_crossovers * remaining_size as f32) as f64, 0) as usize;
+            ((n_crossovers * remaining_size as f32) as f64).floor() as usize;
 
         assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
 
-        // Mutate
-        while n_mutations_todo > 0 {
-            let selected_individual = population.iter().choose(&mut generator());
-            let mutated_child = selected_individual.map(|parent| parent.mutate()).unwrap();
-            population.push_back(mutated_child);
-            remaining_size -= 1;
-            n_mutations_todo -= 1;
-        }
-
-        // Crossover
-        while n_crossovers_todo > 0 {
-            if let &mut [parent_a, parent_b] = population
+        // Crossover + Mutation
+        while (n_crossovers_todo + n_mutations_todo) > 0 {
+            if let [parent_a, parent_b] = population
                 .iter()
                 .choose_multiple(&mut generator(), 2)
-                .as_mut_slice()
+                .as_slice()
             {
-                let child = parent_a
-                    .two_point_crossover(parent_b)
-                    .choose(&mut generator())
-                    .unwrap()
-                    .to_owned();
+                let mut child_a = None;
+                let mut child_b = None;
+                if n_crossovers_todo > 0 {
+                    let crossover_child = parent_a
+                        .two_point_crossover(parent_b)
+                        .choose(&mut generator())
+                        .unwrap()
+                        .to_owned();
 
-                population.push_back(child);
+                    child_a = Some(crossover_child);
 
-                remaining_size -= 1;
-                n_crossovers_todo -= 1;
+                    remaining_size -= 1;
+                    n_crossovers_todo -= 1;
+                }
+
+                if n_mutations_todo > 0 {
+                    let parents = [parent_a, parent_b];
+                    let selected_parent = parents.choose(&mut generator());
+
+                    let mutation_child = selected_parent.map(|parent| parent.mutate()).unwrap();
+
+                    child_b = Some(mutation_child);
+
+                    remaining_size -= 1;
+                    n_mutations_todo -= 1;
+                }
+
+                if child_a.is_some() {
+                    population.push(child_a.unwrap())
+                }
+
+                if child_b.is_some() {
+                    population.push(child_b.unwrap())
+                }
             };
         }
 
@@ -154,7 +168,7 @@ where
             .cloned()
             .choose_multiple(&mut generator(), remaining_size)
         {
-            population.push_back(individual)
+            population.push(individual)
         }
     }
 
@@ -214,7 +228,7 @@ where
     }
 }
 
-type GpHook<'a, O> =
+pub type GpHook<'a, O> =
     &'a mut dyn FnMut(&mut Population<O>) -> Result<(), Box<dyn std::error::Error>>;
 pub struct EventHooks<'a, O>
 where

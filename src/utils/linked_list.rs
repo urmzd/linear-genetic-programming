@@ -392,6 +392,8 @@ impl<T> LinkedList<T> {
                 self.tail = None
             }
 
+            self.length -= 1;
+
             contained_node
         })
     }

@@ -62,7 +62,7 @@ where
 
 impl<'a, T> Ord for Program<'a, T>
 where
-    T: Ord + ExtensionParameters,
+    T: ExtensionParameters,
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.fitness.cmp(&other.fitness)
@@ -71,7 +71,7 @@ where
 
 impl<'a, T> PartialOrd for Program<'a, T>
 where
-    T: PartialOrd + ExtensionParameters,
+    T: ExtensionParameters,
 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.fitness.partial_cmp(&other.fitness)

@@ -1,15 +1,15 @@
-use std::collections::{
-    vec_deque::{IntoIter, Iter, IterMut},
-    VecDeque,
-};
+use ndarray::{Array, Dim};
 
 use crate::utils::common_traits::Compare;
+use crate::utils::common_traits::Show;
+use std::slice::{Iter, IterMut};
+use std::vec::IntoIter;
 
-type InnerPopulation<T> = VecDeque<T>;
-#[derive(Debug, Clone)]
+type InnerPopulation<T> = Vec<T>;
+#[derive(Clone, Debug)]
 pub struct Population<T>
 where
-    T: Compare,
+    T: Compare + Show,
 {
     list: InnerPopulation<T>,
     capacity: usize,
@@ -17,19 +17,11 @@ where
 
 impl<T> Population<T>
 where
-    T: Compare,
+    T: Compare + Show + Clone,
 {
-    pub fn new_with_capacity(population_size: usize) -> Self {
-        let list = VecDeque::with_capacity(population_size);
-        Population {
-            list,
-            capacity: population_size,
-        }
-    }
-
-    pub fn new() -> Self {
-        let list = VecDeque::with_capacity(10);
-        Population { list, capacity: 10 }
+    pub fn with_capacity(capacity: usize) -> Self {
+        let list = Vec::with_capacity(capacity);
+        Population { list, capacity }
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
@@ -41,7 +33,7 @@ where
     }
 
     pub fn sort(&mut self) -> () {
-        self.list.make_contiguous().sort();
+        self.list.sort_by(|a, b| b.partial_cmp(a).unwrap());
     }
 
     pub fn first(&self) -> Option<&T> {
@@ -52,21 +44,12 @@ where
         self.list.get(self.list.len() - 1)
     }
 
-    pub fn middle(&self) -> Option<&T> {
-        self.list
-            .get(math::round::floor(self.list.len() as f64 / 2f64, 1) as usize)
+    pub fn push(&mut self, value: T) -> () {
+        self.list.push(value)
     }
 
-    pub fn push_front(&mut self, value: T) -> () {
-        self.list.push_front(value)
-    }
-
-    pub fn pop_front(&mut self) -> Option<T> {
-        self.list.pop_front()
-    }
-
-    pub fn push_back(&mut self, value: T) -> () {
-        self.list.push_back(value)
+    pub fn pop(&mut self) -> Option<T> {
+        self.list.pop()
     }
 
     pub fn len(&self) -> usize {
@@ -88,29 +71,33 @@ where
     pub fn iter_mut<'a>(&'a mut self) -> IterMut<T> {
         self.list.iter_mut()
     }
+
+    pub fn ndarray(&self) -> Array<T, Dim<[usize; 1]>> {
+        Array::from_vec(self.list.clone())
+    }
 }
 
 impl<T> IntoIterator for Population<T>
 where
-    T: Compare,
+    T: Compare + Show,
 {
     type Item = T;
 
     type IntoIter = IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.into_iter()
+        self.list.into_iter()
     }
 }
 
 impl<E> FromIterator<E> for Population<E>
 where
-    E: Compare,
+    E: Compare + Show + Clone,
 {
     fn from_iter<T: IntoIterator<Item = E>>(iter: T) -> Self {
-        let mut population = Population::new();
+        let mut population = Population::with_capacity(100);
         for elem in iter {
-            population.push_back(elem)
+            population.push(elem)
         }
         population
     }
