@@ -1,5 +1,8 @@
 use derive_new::new;
+use num::ToPrimitive;
+use ordered_float::OrderedFloat;
 use serde::Serialize;
+use smartcore::metrics::accuracy::Accuracy;
 
 use crate::{
     core::{
@@ -7,7 +10,6 @@ use crate::{
         program::{ExtensionParameters, Program},
         registers::Registers,
     },
-    measure::{accuracy::Accuracy, definitions::Metric},
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 
@@ -45,7 +47,7 @@ where
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
 
-        let mut fitness: Accuracy<Option<T::Actions>> = Accuracy::new();
+        let scores = vec![];
 
         for input in inputs {
             let mut registers = self.registers.clone();
@@ -55,15 +57,23 @@ where
             }
 
             let ties = registers.argmax();
-            let predicted_class = T::argmax(ties);
-            let correct_class = input.get_class();
+            let predicted_class = T::argmax(ties)
+                .map(|action| action.to_i32())
+                .unwrap()
+                .unwrap_or(-1);
+            let correct_class = input.get_class().to_i32().unwrap();
 
-            fitness.observe([predicted_class, Some(correct_class)]);
+            scores.push((predicted_class, correct_class));
 
             registers.reset();
         }
 
-        fitness.calculate()
+        let predicted: Vec<f32> = scores.iter().map(|score| score.0 as f32).collect();
+        let correct: Vec<f32> = scores.iter().map(|score| score.1 as f32).collect();
+
+        let fitness = (Accuracy {}).get_score(&predicted, &correct);
+
+        OrderedFloat(fitness)
     }
 
     fn eval_set_fitness(&mut self) -> FitnessScore {

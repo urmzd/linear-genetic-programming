@@ -6,12 +6,14 @@ use std::{
 use derive_new::new;
 use gym_rs::{core::ActionReward, utils::renderer::RenderMode};
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
+use itertools::Itertools;
 use lgp::{
     core::{
         algorithm::GeneticAlgorithm,
         characteristics::FitnessScore,
         instruction::{Mode, Modes},
         program::Program,
+        registers::RegisterValue,
     },
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
@@ -140,7 +142,10 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
         }
     }
 
-    fn get_state(&self) -> Vec<lgp::core::registers::RegisterValue> {}
+    fn get_state(&self) -> Vec<RegisterValue> {
+        let state: Vec<f64> = self.game.state.into();
+        state.iter().map(|x| OrderedFloat(*x as f32)).collect_vec()
+    }
 
     fn finish(&mut self) {
         // RENDER STUFF

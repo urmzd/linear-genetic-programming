@@ -3,9 +3,7 @@ use std::collections::{
     VecDeque,
 };
 
-use crate::{measure::benchmarks::Benchmark, utils::common_traits::Compare};
-
-use super::characteristics::{FitnessScore, Organism};
+use crate::utils::common_traits::Compare;
 
 type InnerPopulation<T> = VecDeque<T>;
 #[derive(Debug, Clone)]
@@ -115,24 +113,5 @@ where
             population.push_back(elem)
         }
         population
-    }
-}
-
-impl<'a, T> Benchmark for Population<T>
-where
-    T: Organism<'a>,
-{
-    type InputType = FitnessScore;
-
-    fn get_worst(&self) -> Option<Self::InputType> {
-        self.first().unwrap().get_fitness()
-    }
-
-    fn get_median(&self) -> Option<Self::InputType> {
-        self.middle().unwrap().get_fitness()
-    }
-
-    fn get_best(&self) -> Option<Self::InputType> {
-        self.last().unwrap().get_fitness()
     }
 }

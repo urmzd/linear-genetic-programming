@@ -120,9 +120,8 @@ where
             game.init();
 
             for instruction in &self.instructions {
-                let target_data = registers.clone();
-                // TODO: USE STATE AS READ ONLY REGISTERS
-                instruction.apply(&mut registers, &target_data);
+                let input = game.get_state();
+                instruction.apply(&mut registers, &input);
                 let possible_actions = registers.argmax();
                 let selected_action = T::argmax(possible_actions).unwrap();
                 let reward = game.act(selected_action);

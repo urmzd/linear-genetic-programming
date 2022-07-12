@@ -21,6 +21,12 @@ pub struct Registers {
     n_extras: usize,
 }
 
+impl From<Vec<RegisterValue>> for Registers {
+    fn from(data: Vec<RegisterValue>) -> Self {
+        Registers::new(data, 2, 0)
+    }
+}
+
 #[derive(Debug, Clone, new, Serialize)]
 pub struct RegisterGeneratorParameters {
     n_extra_action_registers: usize,

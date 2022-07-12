@@ -1,6 +1,6 @@
 use core::fmt;
 
-use num::FromPrimitive;
+use num::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
 use serde::Serialize;
@@ -50,7 +50,7 @@ pub type Inputs<InputType> = Vec<InputType>;
 
 pub trait ValidInput: Clone + Show
 where
-    Self::Actions: Clone + FromPrimitive + EnumCount,
+    Self::Actions: Clone + FromPrimitive + EnumCount + ToPrimitive,
 {
     type Actions;
 

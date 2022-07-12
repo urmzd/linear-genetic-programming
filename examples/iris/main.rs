@@ -12,8 +12,7 @@ use lgp::{
     extensions::classification::ClassificationParameters,
     utils::common_traits::ValidInput,
 };
-use set_up::{get_iris_content, ContentFilePair};
-use set_up::{IrisInput, IrisLgp};
+use set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
 use strum::EnumCount;
 
 #[tokio::main]
@@ -44,93 +43,24 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 }
 
 #[cfg(test)]
-mod test {
-
-    use std::error;
-    use strum::EnumCount;
-
+mod tests {
     use lgp::{
         core::{
             algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
-            characteristics::FitnessScore,
             instruction::InstructionGeneratorParameters,
             program::{Program, ProgramGeneratorParameters},
             registers::RegisterGeneratorParameters,
         },
-        extensions::classification::{ClassificationInput, ClassificationParameters},
-        measure::benchmarks::{Benchmark, ComplexityBenchmark},
-        utils::common_traits::ValidInput,
+        extensions::classification::ClassificationParameters,
+        measure::benchmarks::Benchmark,
+        utils::{common_traits::ValidInput, plots::plot_from_benchmarks},
     };
-
     use more_asserts::{assert_le, assert_lt};
-    use plotters::{
-        prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, LineSeries, PathElement},
-        style::{Color, IntoFont, BLACK, BLUE, GREEN, RED, WHITE},
-    };
     use pretty_assertions::{assert_eq, assert_ne};
+    use std::error;
+    use strum::EnumCount;
 
     use crate::set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
-
-    fn plot_from_benchmarks(
-        benchmarks: Vec<ComplexityBenchmark<Option<FitnessScore>>>,
-        plot_path: &str,
-    ) -> Result<(), Box<dyn error::Error>> {
-        let fitness_benchmarks: Vec<ComplexityBenchmark<f32>> = benchmarks
-            .into_iter()
-            .map(|benchmark| ComplexityBenchmark {
-                best: benchmark.best.unwrap().into_inner(),
-                worst: benchmark.worst.unwrap().into_inner(),
-                median: benchmark.median.unwrap().into_inner(),
-            })
-            .collect();
-        let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
-        root.fill(&WHITE)?;
-
-        let mut chart = ChartBuilder::on(&root)
-            .caption("Fitness Over Generations", ("sans-serif", 50).into_font())
-            .margin(5u32)
-            .x_label_area_size(30u32)
-            .y_label_area_size(30u32)
-            .build_cartesian_2d(0..fitness_benchmarks.len(), 0f32..1f32)?;
-
-        chart.configure_mesh().draw()?;
-
-        chart
-            .draw_series(LineSeries::new(
-                (0..fitness_benchmarks.len())
-                    .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().best)),
-                &RED,
-            ))?
-            .label("Best")
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
-
-        chart
-            .draw_series(LineSeries::new(
-                (0..fitness_benchmarks.len())
-                    .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().median)),
-                &GREEN,
-            ))?
-            .label("Median")
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
-
-        chart
-            .draw_series(LineSeries::new(
-                (0..fitness_benchmarks.len())
-                    .map(|x_i| (x_i, fitness_benchmarks.get(x_i).unwrap().worst)),
-                &BLUE,
-            ))?
-            .label("Worst")
-            .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
-
-        chart
-            .configure_series_labels()
-            .background_style(&WHITE.mix(0.8))
-            .border_style(&BLACK)
-            .draw()?;
-
-        root.present()?;
-        Ok(())
-    }
 
     // TODO: Update tests to include assertions about benchmark trends.
     #[tokio::test]
@@ -151,7 +81,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -195,7 +125,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -239,7 +169,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -283,7 +213,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -340,7 +270,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -382,7 +312,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
@@ -422,7 +352,7 @@ mod test {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ClassificationInput>::N_INPUTS),
+                        Some(<IrisInput as ValidInput>::N_INPUTS),
                     ),
                 },
                 gap: 0.5,
