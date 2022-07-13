@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 <MountainCarInput as ValidInput>::N_INPUTS,
             ),
             register_generator_parameters: RegisterGeneratorParameters::new(3),
-            other: ReinforcementLearningParameters::new(5, input),
+            other: ReinforcementLearningParameters::new(5, 200, input),
         },
     };
 
@@ -55,7 +55,7 @@ mod tests {
         extensions::reinforcement_learning::ReinforcementLearningParameters,
         utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
     };
-    use ndarray::{s, Array1, Array2};
+    use ndarray::{s, Array2};
 
     use crate::set_up::{MountainCarInput, MountainCarLgp};
     use strum::EnumCount;
@@ -75,7 +75,7 @@ mod tests {
             program_params: ProgramGeneratorParameters {
                 max_instructions: 100,
                 register_generator_parameters: RegisterGeneratorParameters::new(1),
-                other: ReinforcementLearningParameters::new(5, input),
+                other: ReinforcementLearningParameters::new(5, 200, input),
                 instruction_generator_parameters: InstructionGeneratorParameters::new(
                     <MountainCarInput as ValidInput>::Actions::COUNT,
                     <MountainCarInput as ValidInput>::N_INPUTS,
@@ -94,9 +94,9 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 let x = population.clone().into_ndarray();
-
                 x.assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
+
                 Ok(())
             }),
         )?;

@@ -1,5 +1,5 @@
 use core::fmt;
-use std::path::PathBuf;
+use std::{marker::PhantomData, path::PathBuf};
 
 use csv::ReaderBuilder;
 use more_asserts::{assert_ge, assert_le};
@@ -169,7 +169,7 @@ where
 
     fn execute<'b>(
         hyper_params: &'a HyperParameters<'a, Self::O>,
-        mut hooks: EventHooks<'a, Self::O>,
+        mut hooks: EventHooks<'b, 'a, Self::O>,
     ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
 
@@ -217,20 +217,21 @@ where
 
 pub type GpHook<'a, O> =
     &'a mut dyn FnMut(&mut Population<O>) -> Result<(), Box<dyn std::error::Error>>;
-pub struct EventHooks<'a, O>
+pub struct EventHooks<'a, 'b, O>
 where
-    O: Organism<'a>,
+    O: Organism<'b>,
 {
     pub after_init: Option<GpHook<'a, O>>,
     pub after_evaluate: Option<GpHook<'a, O>>,
     pub after_rank: Option<GpHook<'a, O>>,
     pub after_selection: Option<GpHook<'a, O>>,
     pub after_breed: Option<GpHook<'a, O>>,
+    o: PhantomData<&'b ()>,
 }
 
-impl<'a, O> EventHooks<'a, O>
+impl<'a, 'b, O> EventHooks<'a, 'b, O>
 where
-    O: Organism<'a>,
+    O: Organism<'b>,
 {
     pub fn with_after_init(self, f: GpHook<'a, O>) -> Self {
         Self {
@@ -261,9 +262,9 @@ where
     }
 }
 
-impl<'a, O> fmt::Debug for EventHooks<'a, O>
+impl<'a, 'b, O> fmt::Debug for EventHooks<'a, 'b, O>
 where
-    O: Organism<'a>,
+    O: Organism<'b>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EventHooks")
@@ -276,9 +277,9 @@ where
     }
 }
 
-impl<'a, O> Default for EventHooks<'a, O>
+impl<'a, 'b, O> Default for EventHooks<'a, 'b, O>
 where
-    O: Organism<'a>,
+    O: Organism<'b>,
 {
     fn default() -> Self {
         Self {
@@ -287,6 +288,7 @@ where
             after_rank: None,
             after_selection: None,
             after_breed: None,
+            o: PhantomData,
         }
     }
 }
@@ -306,7 +308,6 @@ mod tests {
             test::{TestInput, TestLgp, DEFAULT_INPUTS},
         },
     };
-    use ndarray::{s, Array1, Array2};
     use strum::EnumCount;
 
     use super::{EventHooks, GeneticAlgorithm, HyperParameters};
@@ -333,15 +334,10 @@ mod tests {
             },
         };
 
-        let v = Array1::from(vec![0f32; 100]);
-        let mut h = Array2::uninit((100, 100));
-
         TestLgp::execute(
             &hyper_params,
             EventHooks::default()
-                .with_after_init(&mut |p| {
-                    let l = p.clone().into_ndarray();
-                    l.assign_to(h.slice_mut(s![1, ..]));
+                .with_after_init(&mut |_p| {
                     received.borrow_mut().push(1);
                     Ok(())
                 })

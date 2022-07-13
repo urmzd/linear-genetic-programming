@@ -18,6 +18,7 @@ where
     T: ReinforcementLearningInput,
 {
     n_runs: usize,
+    max_episodes: usize,
     environment: T,
 }
 
@@ -111,17 +112,21 @@ where
         let mut scores = vec![];
         let ReinforcementLearningParameters {
             n_runs,
+            max_episodes,
             environment: mut game,
         } = self.other.clone();
+
         for _ in 0..n_runs {
-            let mut registers = self.registers.clone();
             let mut score = T::RewardValue::default();
 
             game.init();
 
-            for instruction in &self.instructions {
+            for _ in 0..max_episodes {
                 let input = game.get_state();
-                instruction.apply(&mut registers, &input);
+                let mut registers = self.registers.clone();
+                for instruction in &self.instructions {
+                    instruction.apply(&mut registers, &input);
+                }
                 let possible_actions = registers.argmax();
                 let selected_action = T::argmax(possible_actions).unwrap();
                 let reward = game.act(selected_action);
@@ -139,8 +144,6 @@ where
         }
 
         scores.sort();
-
-        // TODO: Switch over to median
         let median = scores.remove(n_runs / 2);
 
         median.into()
