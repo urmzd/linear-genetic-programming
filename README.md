@@ -22,7 +22,7 @@ cargo run --example <example_name>
 ### Classification (iris)
 
 ```rust
-//examples/iris/main.rs#L19-L44
+//examples/iris/main.rs#L19-L42
 
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
@@ -48,8 +48,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
-
-#[cfg(test)]
 ```
 
 ### Reinforcement Learning (mountain_car)
