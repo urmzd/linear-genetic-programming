@@ -77,13 +77,10 @@ where
         population
     }
 
-    fn evaluate(population: &mut Population<Self::O>) -> () {
+    fn rank(population: &mut Population<Self::O>) -> () {
         for individual in population.iter_mut() {
             individual.eval_set_fitness();
         }
-    }
-
-    fn rank(population: &mut Population<Self::O>) -> () {
         population.sort();
     }
 
@@ -180,7 +177,6 @@ where
 
         let EventHooks {
             after_init,
-            after_evaluate,
             after_rank,
             after_selection,
             after_breed,
@@ -195,30 +191,23 @@ where
 
         for _ in 0..hyper_params.max_generations {
             // Step 1: Evaluate Fitness
-            Self::evaluate(&mut population);
-            if let Some(hook) = after_evaluate {
-                (hook)(&mut population)?;
-            }
-
-            // Step 2: Sort
             Self::rank(&mut population);
             if let Some(hook) = after_rank {
                 (hook)(&mut population)?;
             }
 
-            // Step 3: Drop by Gap
+            // Step 2: Drop by Gap
             Self::apply_selection(&mut population, hyper_params.gap);
             if let Some(hook) = after_selection {
                 (hook)(&mut population)?;
             }
 
-            // Step 4: Crossover + Mutation
+            // Step 3: Crossover + Mutation
             Self::breed(
                 &mut population,
                 hyper_params.n_mutations,
                 hyper_params.n_crossovers,
             );
-
             if let Some(hook) = after_breed {
                 (hook)(&mut population)?;
             }
@@ -252,13 +241,6 @@ where
         }
     }
 
-    pub fn with_after_evaluate(self, f: GpHook<'a, O>) -> Self {
-        Self {
-            after_evaluate: Some(f),
-            ..self
-        }
-    }
-
     pub fn with_after_selection(self, f: GpHook<'a, O>) -> Self {
         Self {
             after_selection: Some(f),
@@ -273,7 +255,7 @@ where
         }
     }
 
-    pub fn with_after_breed<F>(self, f: GpHook<'a, O>) -> Self {
+    pub fn with_after_breed(self, f: GpHook<'a, O>) -> Self {
         Self {
             after_breed: Some(f),
             ..self
@@ -308,5 +290,73 @@ where
             after_selection: None,
             after_breed: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use crate::{
+        core::{
+            instruction::InstructionGeneratorParameters, program::ProgramGeneratorParameters,
+            registers::RegisterGeneratorParameters,
+        },
+        extensions::classification::ClassificationParameters,
+        utils::{
+            common_traits::ValidInput,
+            test::{TestInput, TestLgp, DEFAULT_INPUTS},
+        },
+    };
+    use strum::EnumCount;
+
+    use super::{EventHooks, GeneticAlgorithm, HyperParameters};
+
+    #[test]
+    fn given_lgp_instance_with_event_hooks_when_execute_then_closures_are_executed(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let received = Rc::new(RefCell::new(Vec::new()));
+        let inputs = &DEFAULT_INPUTS.to_vec();
+        let hyper_params = HyperParameters {
+            population_size: 10,
+            gap: 0.5,
+            n_mutations: 0.5,
+            n_crossovers: 0.5,
+            max_generations: 1,
+            program_params: ProgramGeneratorParameters {
+                max_instructions: 10,
+                instruction_generator_parameters: InstructionGeneratorParameters::new(
+                    <TestInput as ValidInput>::Actions::COUNT + 1,
+                    <TestInput as ValidInput>::N_INPUTS,
+                ),
+                register_generator_parameters: RegisterGeneratorParameters::new(1),
+                other: ClassificationParameters::new(inputs),
+            },
+        };
+
+        TestLgp::execute(
+            &hyper_params,
+            EventHooks::default()
+                .with_after_init(&mut |_p| {
+                    received.borrow_mut().push(1);
+                    Ok(())
+                })
+                .with_after_rank(&mut |_p| {
+                    received.borrow_mut().push(2);
+                    Ok(())
+                })
+                .with_after_selection(&mut |_p| {
+                    received.borrow_mut().push(3);
+                    Ok(())
+                })
+                .with_after_breed(&mut |_p| {
+                    received.borrow_mut().push(4);
+                    Ok(())
+                }),
+        )?;
+
+        pretty_assertions::assert_eq!(received.borrow().as_slice(), &[1, 2, 3, 4]);
+
+        Ok(())
     }
 }

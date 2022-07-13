@@ -1,11 +1,12 @@
-use ndarray::{Array, Dim};
+use ndarray::Array;
+use ndarray::Array1;
 
 use crate::utils::common_traits::Compare;
 use crate::utils::common_traits::Show;
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
 
-type InnerPopulation<T> = Vec<T>;
+pub type InnerPopulation<T> = Vec<T>;
 #[derive(Clone, Debug)]
 pub struct Population<T>
 where
@@ -72,8 +73,8 @@ where
         self.list.iter_mut()
     }
 
-    pub fn ndarray(&self) -> Array<T, Dim<[usize; 1]>> {
-        Array::from_vec(self.list.clone())
+    pub fn into_ndarray(self) -> Array1<T> {
+        Array::from_vec(self.list)
     }
 }
 

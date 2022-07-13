@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
-        let params = InstructionGeneratorParameters::new(5, Some(5));
+        let params = InstructionGeneratorParameters::new(5, 5);
         let instructions_a: Instructions<TestInput> =
             (0..5).map(|_| Instruction::generate(&params)).collect();
         let instructions_b: Instructions<TestInput> =
@@ -213,7 +213,7 @@ mod tests {
         ]
         .to_vec();
 
-        let instruction_params = InstructionGeneratorParameters::new(3, Some(4));
+        let instruction_params = InstructionGeneratorParameters::new(3, 4);
         let classification_params = ClassificationParameters::new(&inputs);
         let register_params = RegisterGeneratorParameters::new(2);
         let program_params = ProgramGeneratorParameters::new(

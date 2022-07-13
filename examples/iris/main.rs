@@ -6,7 +6,7 @@ use lgp::{
     core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         instruction::InstructionGeneratorParameters,
-        program::{Program, ProgramGeneratorParameters},
+        program::ProgramGeneratorParameters,
         registers::RegisterGeneratorParameters,
     },
     extensions::classification::ClassificationParameters,
@@ -20,25 +20,30 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
-    let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
-        HyperParameters {
-            population_size: 100,
-            max_generations: 100,
-            program_params: ProgramGeneratorParameters {
-                max_instructions: 100,
-                register_generator_parameters: RegisterGeneratorParameters::new(1),
-                other: ClassificationParameters::new(&inputs),
-                instruction_generator_parameters: InstructionGeneratorParameters::new(
-                    <IrisInput as ValidInput>::Actions::COUNT,
-                    Some(<IrisInput as ValidInput>::N_INPUTS),
-                ),
-            },
-            gap: 0.5,
-            n_mutations: 0.5,
-            n_crossovers: 0.5,
-        };
+    let hyper_params = HyperParameters {
+        population_size: 100,
+        max_generations: 100,
+        program_params: ProgramGeneratorParameters {
+            max_instructions: 100,
+            register_generator_parameters: RegisterGeneratorParameters::new(1),
+            other: ClassificationParameters::new(&inputs),
+            instruction_generator_parameters: InstructionGeneratorParameters::new(
+                <IrisInput as ValidInput>::Actions::COUNT,
+                <IrisInput as ValidInput>::N_INPUTS,
+            ),
+        },
+        gap: 0.5,
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
+    };
 
-    IrisLgp::execute(&hyper_params, EventHooks::default())?;
+    let mut x = vec![];
+    let hooks = EventHooks::default().with_after_rank(&mut |mut p| {
+        x.push(p.into_ndarray());
+        Ok(())
+    });
+
+    IrisLgp::execute(&hyper_params, hooks)?;
     Ok(())
 }
 
@@ -55,11 +60,11 @@ mod tests {
         utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
     };
     use more_asserts::{assert_le, assert_lt};
-    use ndarray::{aview1, s, Array2, Axis};
+    use ndarray::{aview1, s, Array, Array2, Axis, Dim};
     use ndarray_stats::{interpolate::Higher, QuantileExt};
     use noisy_float::prelude::n64;
     use pretty_assertions::{assert_eq, assert_ne};
-    use std::error;
+    use std::{error, mem::MaybeUninit};
     use strum::EnumCount;
 
     use crate::set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
@@ -83,7 +88,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -94,26 +99,28 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.5);
         assert_eq!(hyper_params.n_mutations, 0.5);
 
-        let mut uninit_populations =
-            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut uninit_populations: Array<
+            MaybeUninit<Program<ClassificationParameters<IrisInput>>>,
+            Dim<[usize; 2]>,
+        > = Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
         let mut generations: usize = 0;
 
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
-                    .ndarray()
+                    .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
             }),
         )?;
 
-        let init_populations = unsafe { uninit_populations.assume_init() };
+        // let init_populations = unsafe { uninit_populations.assume_init() };
 
         const PLOT_FILE_NAME: &'static str =
             "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        // plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
         Ok(())
     }
     #[tokio::test]
@@ -134,7 +141,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -153,7 +160,7 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
-                    .ndarray()
+                    .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
@@ -185,7 +192,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -204,7 +211,7 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
-                    .ndarray()
+                    .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
@@ -237,7 +244,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -257,7 +264,7 @@ mod tests {
             EventHooks::default().with_after_rank(&mut |population| {
                 let qs = &[n64(0.), n64(0.5), n64(1.)];
                 let benchmark = population
-                    .ndarray()
+                    .into_ndarray()
                     .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
                     .unwrap();
 
@@ -275,7 +282,7 @@ mod tests {
                     }
                 }
                 population
-                    .ndarray()
+                    .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
@@ -307,7 +314,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -317,7 +324,7 @@ mod tests {
 
         let mut population = IrisLgp::init_population(&hyper_params);
 
-        IrisLgp::evaluate(&mut population);
+        IrisLgp::rank(&mut population);
         IrisLgp::rank(&mut population);
         IrisLgp::apply_selection(&mut population, hyper_params.gap);
 
@@ -349,7 +356,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,
@@ -359,7 +366,7 @@ mod tests {
 
         let mut population = IrisLgp::init_population(&hyper_params);
 
-        IrisLgp::evaluate(&mut population);
+        IrisLgp::rank(&mut population);
         IrisLgp::rank(&mut population);
         IrisLgp::apply_selection(&mut population, hyper_params.gap);
 
@@ -389,7 +396,7 @@ mod tests {
                     other: ClassificationParameters::new(&inputs),
                     instruction_generator_parameters: InstructionGeneratorParameters::new(
                         <IrisInput as ValidInput>::Actions::COUNT,
-                        Some(<IrisInput as ValidInput>::N_INPUTS),
+                        <IrisInput as ValidInput>::N_INPUTS,
                     ),
                 },
                 gap: 0.5,

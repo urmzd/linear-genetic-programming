@@ -1,17 +1,22 @@
 // For testing purposes only (binary classification).
 
+use std::marker::PhantomData;
+
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
+use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
 use crate::{
     core::{
+        algorithm::GeneticAlgorithm,
         instruction::{Mode, Modes},
+        program::Program,
         registers::Registers,
     },
-    extensions::classification::ClassificationInput,
+    extensions::classification::{ClassificationInput, ClassificationParameters},
 };
 
 use super::{
@@ -24,7 +29,15 @@ pub struct TestInput(pub [usize; 5]);
 
 impl Into<Registers> for TestInput {
     fn into(self) -> Registers {
-        todo!()
+        Registers::new(
+            self.0
+                .to_vec()
+                .iter()
+                .map(|v| OrderedFloat(*v as f32))
+                .collect(),
+            2,
+            1,
+        )
     }
 }
 impl Compare for TestInput {}
@@ -59,3 +72,15 @@ impl ClassificationInput for TestInput {
         FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
     }
 }
+
+pub struct TestLgp<'a>(PhantomData<&'a ()>);
+impl<'a> GeneticAlgorithm<'a> for TestLgp<'a> {
+    type O = Program<'a, ClassificationParameters<'a, TestInput>>;
+}
+
+pub const DEFAULT_INPUTS: &'static [TestInput] = &[
+    TestInput([0; 5]),
+    TestInput([1; 5]),
+    TestInput([0, 0, 0, 1, 1]),
+    TestInput([0, 1, 1, 1, 1]),
+];

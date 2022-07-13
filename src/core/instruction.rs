@@ -29,7 +29,7 @@ where
     T: ValidInput,
 {
     pub n_registers: usize,
-    pub n_features: Option<usize>,
+    pub n_features: usize,
     marker: PhantomData<T>,
 }
 
@@ -71,11 +71,11 @@ where
 
         let mode = T::AVAILABLE_MODES.choose(&mut generator()).unwrap().clone();
 
-        let upper_bound_target_index = if mode == Mode::External {
-            n_inputs.unwrap()
+        let upper_bound_target_index = *(if mode == Mode::External {
+            n_inputs
         } else {
-            *n_registers
-        };
+            n_registers
+        });
         let target_index =
             UniformInt::<usize>::new(0, upper_bound_target_index).sample(&mut thread_rng());
 
