@@ -150,4 +150,8 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     fn finish(&mut self) {
         // RENDER STUFF
     }
+
+    fn reset(&mut self) {
+        self.game.reset();
+    }
 }

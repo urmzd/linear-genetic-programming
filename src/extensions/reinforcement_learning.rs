@@ -100,6 +100,7 @@ where
 
     fn init(&mut self);
     fn act(&mut self, action: Self::Actions) -> Reward<Self::RewardValue>;
+    fn reset(&mut self);
     fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
 }
@@ -138,10 +139,12 @@ where
                 }
             }
 
-            game.finish();
+            game.reset();
 
             scores.push(score)
         }
+
+        game.finish();
 
         scores.sort();
         let median = scores.remove(n_runs / 2);

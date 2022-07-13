@@ -51,7 +51,7 @@ mod tests {
             registers::RegisterGeneratorParameters,
         },
         extensions::classification::ClassificationParameters,
-        utils::{common_traits::ValidInput, median_heap, plots::plot_population_benchmarks},
+        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
     };
     use more_asserts::{assert_le, assert_lt};
     use ndarray::{aview1, s, Array, Array2, Axis, Dim};

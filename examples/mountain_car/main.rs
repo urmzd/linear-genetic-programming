@@ -70,8 +70,8 @@ mod tests {
         let hyper_params: HyperParameters<
             Program<ReinforcementLearningParameters<MountainCarInput>>,
         > = HyperParameters {
-            population_size: 100,
-            max_generations: 100,
+            population_size: 10,
+            max_generations: 2,
             program_params: ProgramGeneratorParameters {
                 max_instructions: 100,
                 register_generator_parameters: RegisterGeneratorParameters::new(1),
@@ -93,8 +93,8 @@ mod tests {
         MountainCarLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let x = population.clone().into_ndarray();
-                x.assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                let array = population.clone().into_ndarray();
+                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
 
                 Ok(())
