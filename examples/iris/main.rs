@@ -37,13 +37,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         n_crossovers: 0.5,
     };
 
-    let mut x = vec![];
-    let hooks = EventHooks::default().with_after_rank(&mut |mut p| {
-        x.push(p.into_ndarray());
-        Ok(())
-    });
-
-    IrisLgp::execute(&hyper_params, hooks)?;
+    IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
 
