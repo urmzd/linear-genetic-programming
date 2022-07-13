@@ -7,7 +7,6 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 ## Modules
 
 -   [Core](src/core/)
--   [Measurement Tools](src/measure/)
 -   [Extension](src/extensions/)
 -   [Utilities](src/utils/)
 
@@ -46,19 +45,17 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         n_crossovers: 0.5,
     };
 
-    let mut x = vec![];
-    let hooks = EventHooks::default().with_after_rank(&mut |mut p| {
-        x.push(p.into_ndarray());
-        Ok(())
-    });
+    IrisLgp::execute(&hyper_params, EventHooks::default())?;
+    Ok(())
+}
+
+#[cfg(test)]
 ```
 
 ### Reinforcement Learning (mountain_car)
 
 ```rust
-//examples/mountain_car/main.rs#L15-L36
-
-mod set_up;
+//examples/mountain_car/main.rs#L17-L41
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -80,6 +77,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             register_generator_parameters: RegisterGeneratorParameters::new(3),
             other: ReinforcementLearningParameters::new(5, 200, input),
         },
+    };
+
+    MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+    Ok(())
+}
 ```
 
 ## Building
