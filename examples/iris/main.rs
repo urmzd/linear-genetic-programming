@@ -252,24 +252,27 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.);
         assert_eq!(hyper_params.n_mutations, 0.);
 
-        let mut uninit_populations =
-            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
         let mut generations: usize = 0;
+
+        let mut vec_pops = vec![];
 
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
+                let array = population.clone().into_ndarray();
+
+                vec_pops.push(array);
+
+                let current_array = vec_pops.get_mut(generations).unwrap();
+
                 let qs = &[n64(0.), n64(0.5), n64(1.)];
-                let mut array = population.clone().into_ndarray();
-                let benchmark = array
+                let benchmark = current_array
                     .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
                     .unwrap();
 
                 let worst = benchmark.get([0]);
                 let median = benchmark.get([1]);
                 let best = benchmark.get([2]);
-
-                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
 
                 if worst == median && median == best {
                 } else {
@@ -280,10 +283,16 @@ mod tests {
                         return Err("Generations exceeded expect convergence time.")?;
                     }
                 }
-                generations += 1;
                 Ok(())
             }),
         )?;
+
+        let mut uninit_populations = Array2::uninit((generations, hyper_params.population_size));
+
+        (0..generations).for_each(|g_i| {
+            let array = vec_pops.get(g_i).unwrap();
+            array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
+        });
 
         let init_populations = unsafe { uninit_populations.assume_init() };
 
