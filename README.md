@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 <MountainCarInput as ValidInput>::N_INPUTS,
             ),
             register_generator_parameters: RegisterGeneratorParameters::new(3),
-            other: ReinforcementLearningParameters::new(5, input),
+            other: ReinforcementLearningParameters::new(5, 200, input),
         },
 ```
 
