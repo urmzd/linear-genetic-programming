@@ -109,6 +109,7 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
+                    .clone()
                     .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
@@ -116,11 +117,11 @@ mod tests {
             }),
         )?;
 
-        // let init_populations = unsafe { uninit_populations.assume_init() };
+        let init_populations = unsafe { uninit_populations.assume_init() };
 
         const PLOT_FILE_NAME: &'static str =
             "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
-        // plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
         Ok(())
     }
     #[tokio::test]
@@ -160,6 +161,7 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
+                    .clone()
                     .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
@@ -211,6 +213,7 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 population
+                    .clone()
                     .into_ndarray()
                     .assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
@@ -263,8 +266,8 @@ mod tests {
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 let qs = &[n64(0.), n64(0.5), n64(1.)];
-                let benchmark = population
-                    .into_ndarray()
+                let mut array = population.clone().into_ndarray();
+                let benchmark = array
                     .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
                     .unwrap();
 
@@ -281,9 +284,7 @@ mod tests {
                         return Err("Generations exceeded expect convergence time.")?;
                     }
                 }
-                population
-                    .into_ndarray()
-                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
             }),
