@@ -269,6 +269,8 @@ mod tests {
                 let median = benchmark.get([1]);
                 let best = benchmark.get([2]);
 
+                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
+
                 if worst == median && median == best {
                 } else {
                     generations += 1;
@@ -278,7 +280,6 @@ mod tests {
                         return Err("Generations exceeded expect convergence time.")?;
                     }
                 }
-                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
                 generations += 1;
                 Ok(())
             }),
