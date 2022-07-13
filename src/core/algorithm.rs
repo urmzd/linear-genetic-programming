@@ -86,8 +86,7 @@ where
 
     fn apply_selection(population: &mut Population<Self::O>, gap: f32) -> () {
         assert!(gap >= 0f32 && gap <= 1f32);
-
-        assert_le!(population.first(), population.last());
+        assert_le!(population.last(), population.first());
 
         let pop_len = population.len();
 
@@ -99,16 +98,15 @@ where
     }
 
     fn breed(population: &mut Population<Self::O>, n_mutations: f32, n_crossovers: f32) -> () {
-        let pop_cap = population.capacity();
-        let pop_len = population.len();
-        let mut remaining_size: usize = pop_cap - pop_len;
-
         assert_ge!(OrderedFloat(n_mutations), OrderedFloat(0f32));
         assert_ge!(OrderedFloat(n_crossovers), OrderedFloat(0f32));
         assert_le!(OrderedFloat(n_crossovers + n_mutations), OrderedFloat(1f32));
         assert_le!(OrderedFloat(n_mutations), OrderedFloat(1f32));
         assert_le!(OrderedFloat(n_crossovers), OrderedFloat(1f32));
 
+        let pop_cap = population.capacity();
+        let pop_len = population.len();
+        let mut remaining_size: usize = pop_cap - pop_len;
         let mut n_mutations_todo = ((n_mutations * remaining_size as f32) as f64).floor() as usize;
         let mut n_crossovers_todo =
             ((n_crossovers * remaining_size as f32) as f64).floor() as usize;
@@ -308,6 +306,7 @@ mod tests {
             test::{TestInput, TestLgp, DEFAULT_INPUTS},
         },
     };
+    use ndarray::{s, Array1, Array2};
     use strum::EnumCount;
 
     use super::{EventHooks, GeneticAlgorithm, HyperParameters};
@@ -334,10 +333,15 @@ mod tests {
             },
         };
 
+        let v = Array1::from(vec![0f32; 100]);
+        let mut h = Array2::uninit((100, 100));
+
         TestLgp::execute(
             &hyper_params,
             EventHooks::default()
-                .with_after_init(&mut |_p| {
+                .with_after_init(&mut |p| {
+                    let l = p.clone().into_ndarray();
+                    l.assign_to(h.slice_mut(s![1, ..]));
                     received.borrow_mut().push(1);
                     Ok(())
                 })

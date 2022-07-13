@@ -53,8 +53,9 @@ mod tests {
             registers::RegisterGeneratorParameters,
         },
         extensions::reinforcement_learning::ReinforcementLearningParameters,
-        utils::common_traits::ValidInput,
+        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
     };
+    use ndarray::{s, Array1, Array2};
 
     use crate::set_up::{MountainCarInput, MountainCarLgp};
     use strum::EnumCount;
@@ -85,31 +86,25 @@ mod tests {
             n_crossovers: 0.5,
         };
 
-        let mut v = vec![];
-
-        // let mut uninit_populations =
-        //     Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
+        let mut uninit_populations =
+            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
         let mut generations: usize = 0;
 
         MountainCarLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let x = population.clone();
-                v.push(x);
+                let x = population.clone().into_ndarray();
 
-                // let x = population.first().map(|p| p.clone());
-
-                // x.assign_to(uninit_populations.slice_mut(s![generations, ..]));
-                // generations += 1;
+                x.assign_to(uninit_populations.slice_mut(s![generations, ..]));
+                generations += 1;
                 Ok(())
             }),
         )?;
 
-        // let init_populations = unsafe { uninit_populations.assume_init() };
+        let init_populations = unsafe { uninit_populations.assume_init() };
 
-        // debug!("Population: {:?}", init_populations);
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/mountain_car.png";
-        // plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
         Ok(())
     }
 }

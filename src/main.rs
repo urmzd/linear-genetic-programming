@@ -1,7 +1,7 @@
 use ndarray::{s, Array, Array1};
 
 fn main() {
-    let mut x = Array1::from(vec![1; 10]);
+    let x = Array1::from(vec![1; 10]);
 
     let mut y = Array::uninit((100, 10));
 
