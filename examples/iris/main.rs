@@ -51,7 +51,7 @@ mod tests {
             registers::RegisterGeneratorParameters,
         },
         extensions::classification::ClassificationParameters,
-        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
+        utils::{common_traits::ValidInput, median_heap, plots::plot_population_benchmarks},
     };
     use more_asserts::{assert_le, assert_lt};
     use ndarray::{aview1, s, Array, Array2, Axis, Dim};
@@ -256,6 +256,10 @@ mod tests {
 
         let mut vec_pops = vec![];
 
+        let mut best = None;
+        let mut median = None;
+        let mut worst = None;
+
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
@@ -270,22 +274,19 @@ mod tests {
                     .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
                     .unwrap();
 
-                let worst = benchmark.get([0]);
-                let median = benchmark.get([1]);
-                let best = benchmark.get([2]);
+                worst = benchmark.get([0]).map(|v| v.clone());
+                median = benchmark.get([1]).map(|v| v.clone());
+                best = benchmark.get([2]).map(|v| v.clone());
 
-                if worst == median && median == best {
-                } else {
-                    generations += 1;
-
-                    if generations > hyper_params.max_generations {
-                        // TODO: Create concrete error type; SNAFU or Failure?
-                        return Err("Generations exceeded expect convergence time.")?;
-                    }
-                }
+                generations += 1;
                 Ok(())
             }),
         )?;
+
+        if worst != median || median != best {
+            // TODO: Create concrete error type; SNAFU or Failure?
+            return Err("Generations exceeded expect convergence time.")?;
+        }
 
         let mut uninit_populations = Array2::uninit((generations, hyper_params.population_size));
 
