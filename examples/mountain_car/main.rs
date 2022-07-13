@@ -71,7 +71,7 @@ mod tests {
             Program<ReinforcementLearningParameters<MountainCarInput>>,
         > = HyperParameters {
             population_size: 10,
-            max_generations: 2,
+            max_generations: 10,
             program_params: ProgramGeneratorParameters {
                 max_instructions: 100,
                 register_generator_parameters: RegisterGeneratorParameters::new(1),

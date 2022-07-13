@@ -233,8 +233,8 @@ mod tests {
 
         let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
-                population_size: 100,
-                max_generations: 100,
+                population_size: 10,
+                max_generations: 10,
                 program_params: ProgramGeneratorParameters {
                     max_instructions: 100,
                     register_generator_parameters: RegisterGeneratorParameters::new(1),
@@ -284,24 +284,26 @@ mod tests {
         )?;
 
         if worst != median || median != best {
+            println!("LOL");
             // TODO: Create concrete error type; SNAFU or Failure?
-            return Err("Generations exceeded expect convergence time.")?;
+            Err("Generations exceeded expect convergence time.")?
+        } else {
+            let mut uninit_populations =
+                Array2::uninit((generations, hyper_params.population_size));
+
+            (0..generations).for_each(|g_i| {
+                let array = vec_pops.get(g_i).unwrap();
+                array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
+            });
+
+            let init_populations = unsafe { uninit_populations.assume_init() };
+
+            // TODO: Pull the graph section out into a seperate function.
+            const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
+            plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+
+            Ok(())
         }
-
-        let mut uninit_populations = Array2::uninit((generations, hyper_params.population_size));
-
-        (0..generations).for_each(|g_i| {
-            let array = vec_pops.get(g_i).unwrap();
-            array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
-        });
-
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
-        // TODO: Pull the graph section out into a seperate function.
-        const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
-
-        Ok(())
     }
 
     #[tokio::test]

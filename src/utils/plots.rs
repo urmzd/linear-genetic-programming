@@ -1,8 +1,8 @@
 use std::{error, ops::Range};
 
-use ndarray::{Array, Axis, Dim};
+use ndarray::{aview1, Array, Axis, Dim};
 use ndarray_stats::{interpolate, QuantileExt};
-use noisy_float::prelude::N64;
+use noisy_float::prelude::n64;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, LineSeries, PathElement},
     style::{Color, IntoFont, BLACK, BLUE, GREEN, RED, WHITE},
@@ -32,29 +32,41 @@ where
 
     chart.configure_mesh().draw()?;
 
-    let best: Vec<(usize, f32)> = populations
-        .quantile_axis_mut(Axis(0), N64::unchecked_new(1.), &interpolate::Higher)
-        .unwrap()
-        .indexed_iter()
-        .into_iter()
-        .map(|(x_i, x)| (x_i, x.get_fitness().unwrap().into_inner()))
-        .collect();
+    let quantiles = populations
+        .quantiles_axis_mut(
+            Axis(0),
+            &aview1(&[n64(0.), n64(0.5), n64(1.)]),
+            &interpolate::Higher,
+        )
+        .unwrap();
 
-    let median: Vec<(usize, f32)> = populations
-        .quantile_axis_mut(Axis(0), N64::unchecked_new(0.5), &interpolate::Higher)
-        .unwrap()
-        .indexed_iter()
-        .into_iter()
-        .map(|(x_i, x)| (x_i, x.get_fitness().unwrap().into_inner()))
-        .collect();
+    let mut worst = vec![];
+    let mut median = vec![];
+    let mut best = vec![];
 
-    let worst: Vec<(usize, f32)> = populations
-        .quantile_axis_mut(Axis(0), N64::unchecked_new(0.), &interpolate::Higher)
-        .unwrap()
-        .indexed_iter()
-        .into_iter()
-        .map(|(x_i, x)| (x_i, x.get_fitness().unwrap().into_inner()))
-        .collect();
+    quantiles.axis_iter(Axis(0)).enumerate().for_each(|(i, b)| {
+        let mut b_vec = b.to_vec();
+        let (best_p, median_p, worst_p) = (
+            b_vec
+                .pop()
+                .and_then(|p| p.get_fitness())
+                .map(|f| f.into_inner())
+                .unwrap(),
+            b_vec
+                .pop()
+                .and_then(|p| p.get_fitness())
+                .map(|f| f.into_inner())
+                .unwrap(),
+            b_vec
+                .pop()
+                .and_then(|p| p.get_fitness())
+                .map(|f| f.into_inner())
+                .unwrap(),
+        );
+        worst.push((i, worst_p));
+        median.push((i, median_p));
+        best.push((i, best_p));
+    });
 
     chart
         .draw_series(LineSeries::new(best, &RED))?
