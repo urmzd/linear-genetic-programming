@@ -86,15 +86,14 @@ where
     type InputType = T;
 }
 
+pub trait FitReward:
+    Default + Add<Self> + AddAssign<Self> + Copy + PartialOrd + Ord + Into<FitnessScore>
+{
+}
+
 pub trait ReinforcementLearningInput: ValidInput
 where
-    Self::RewardValue: Default
-        + Add<Self::RewardValue>
-        + AddAssign<Self::RewardValue>
-        + Copy
-        + PartialOrd
-        + Ord
-        + Into<FitnessScore>,
+    Self::RewardValue: FitReward,
 {
     type RewardValue;
 
@@ -139,14 +138,13 @@ where
                 }
             }
 
+            scores.push(score);
             game.reset();
-
-            scores.push(score)
         }
 
+        scores.sort();
         game.finish();
 
-        scores.sort();
         let median = scores.remove(n_runs / 2);
 
         median.into()

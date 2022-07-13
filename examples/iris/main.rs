@@ -115,7 +115,7 @@ mod tests {
 
         const PLOT_FILE_NAME: &'static str =
             "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
         Ok(())
     }
     #[tokio::test]
@@ -166,7 +166,7 @@ mod tests {
         let init_populations = unsafe { uninit_populations.assume_init() };
 
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
         Ok(())
     }
 
@@ -218,7 +218,7 @@ mod tests {
         let init_populations = unsafe { uninit_populations.assume_init() };
 
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
 
         Ok(())
     }
@@ -299,7 +299,7 @@ mod tests {
 
         // TODO: Pull the graph section out into a seperate function.
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
 
         Ok(())
     }

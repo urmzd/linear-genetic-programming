@@ -1,10 +1,7 @@
-use std::error;
+use std::{error, ops::Range};
 
 use ndarray::{Array, Axis, Dim};
-use ndarray_stats::{
-    interpolate::{self},
-    QuantileExt,
-};
+use ndarray_stats::{interpolate, QuantileExt};
 use noisy_float::prelude::N64;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, LineSeries, PathElement},
@@ -13,10 +10,14 @@ use plotters::{
 
 use crate::core::characteristics::Fitness;
 
-pub fn plot_population_benchmarks<T: Fitness + Clone + Ord>(
+pub fn plot_population_benchmarks<T>(
     mut populations: Array<T, Dim<[usize; 2]>>,
     plot_path: &str,
-) -> Result<(), Box<dyn error::Error>> {
+    y_range: Range<f32>,
+) -> Result<(), Box<dyn error::Error>>
+where
+    T: Fitness + Clone + Ord,
+{
     let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
     root.fill(&WHITE)?;
 
@@ -27,7 +28,7 @@ pub fn plot_population_benchmarks<T: Fitness + Clone + Ord>(
         .margin(5u32)
         .x_label_area_size(30u32)
         .y_label_area_size(30u32)
-        .build_cartesian_2d(0..n_benchmarks, 0f32..1f32)?;
+        .build_cartesian_2d(0..n_benchmarks, y_range)?;
 
     chart.configure_mesh().draw()?;
 

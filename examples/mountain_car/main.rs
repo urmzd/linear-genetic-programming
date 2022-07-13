@@ -104,7 +104,7 @@ mod tests {
         let init_populations = unsafe { uninit_populations.assume_init() };
 
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/mountain_car.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME)?;
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, -200f32..0f32)?;
         Ok(())
     }
 }

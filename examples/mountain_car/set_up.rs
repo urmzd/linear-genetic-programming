@@ -16,7 +16,7 @@ use lgp::{
         registers::RegisterValue,
     },
     extensions::reinforcement_learning::{
-        ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
+        FitReward, ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
     utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
 };
@@ -121,6 +121,8 @@ impl Div<usize> for MountainCarRewardValue {
         OrderedFloat((self.0 / OrderedFloat(rhs as f64)).into_inner() as f32)
     }
 }
+
+impl FitReward for MountainCarRewardValue {}
 
 impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     type RewardValue = MountainCarRewardValue;
