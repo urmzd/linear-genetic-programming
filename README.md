@@ -6,9 +6,9 @@ A framework for implementing algorithms involving Linear Genetic Programming.
 
 ## Modules
 
--   [Core](src/core/)
--   [Extension](src/extensions/)
--   [Utilities](src/utils/)
+- [Core](src/core/)
+- [Extension](src/extensions/)
+- [Utilities](src/utils/)
 
 ## Examples
 
@@ -22,8 +22,11 @@ cargo run --example <example_name>
 ### Classification (iris)
 
 ```rust
-//examples/iris/main.rs#L19-L42
+//examples/iris/main.rs#L16-L37
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn error::Error>> {
+    let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
     let hyper_params = HyperParameters {
@@ -31,7 +34,7 @@ cargo run --example <example_name>
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<IrisInput>::from(1),
+            InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
@@ -43,18 +46,15 @@ cargo run --example <example_name>
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use lgp::{
-        core::{
 ```
 
 ### Reinforcement Learning (mountain_car)
 
 ```rust
-//examples/mountain_car/main.rs#L17-L41
+//examples/mountain_car/main.rs#L15-L37
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let game = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(game);
 
@@ -66,28 +66,24 @@ mod tests {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<MountainCarInput>::from(1),
+            InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
     MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use gym_rs::{
-        envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode,
 ```
 
 ## Building
 
 Requirements:
 
--   Cargo
--   Stable Rust
+- Cargo
+- Stable Rust
 
 ## Contributions
 

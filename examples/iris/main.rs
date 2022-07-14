@@ -11,7 +11,7 @@ use lgp::{
     },
     extensions::classification::ClassificationParameters,
 };
-use set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
+use set_up::{get_iris_content, ContentFilePair, IrisLgp};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<IrisInput>::from(1),
+            InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),

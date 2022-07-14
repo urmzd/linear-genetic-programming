@@ -1,19 +1,14 @@
-use std::{thread, time::Duration};
-
 use gym_rs::{envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode};
 use lgp::{
     core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters},
-        characteristics::{Fitness, Generate},
         instruction::InstructionGeneratorParameters,
-        program::{Program, ProgramGeneratorParameters},
+        program::ProgramGeneratorParameters,
         registers::RegisterGeneratorParameters,
     },
-    extensions::reinforcement_learning::{
-        ReinforcementLearningInput, ReinforcementLearningParameters,
-    },
+    extensions::reinforcement_learning::ReinforcementLearningParameters,
 };
-use set_up::{MountainCarActions, MountainCarInput, MountainCarLgp};
+use set_up::{MountainCarInput, MountainCarLgp};
 
 mod set_up;
 
