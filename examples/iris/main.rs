@@ -23,15 +23,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let hyper_params = HyperParameters {
         population_size: 100,
         max_generations: 100,
-        program_params: ProgramGeneratorParameters {
-            max_instructions: 100,
-            register_generator_parameters: RegisterGeneratorParameters::new(1),
-            other: ClassificationParameters::new(&inputs),
-            instruction_generator_parameters: InstructionGeneratorParameters::new(
-                <IrisInput as ValidInput>::Actions::COUNT,
-                <IrisInput as ValidInput>::N_INPUTS,
-            ),
-        },
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            RegisterGeneratorParameters::new(1),
+            ClassificationParameters::new(&inputs),
+            InstructionGeneratorParameters::<IrisInput>::from(),
+        ),
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
@@ -76,15 +73,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.5,
@@ -130,15 +124,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.,
@@ -182,15 +173,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
@@ -235,15 +223,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.,
@@ -315,15 +300,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
@@ -357,15 +339,13 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
@@ -397,15 +377,12 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-                program_params: ProgramGeneratorParameters {
-                    max_instructions: 100,
-                    register_generator_parameters: RegisterGeneratorParameters::new(1),
-                    other: ClassificationParameters::new(&inputs),
-                    instruction_generator_parameters: InstructionGeneratorParameters::new(
-                        <IrisInput as ValidInput>::Actions::COUNT,
-                        <IrisInput as ValidInput>::N_INPUTS,
-                    ),
-                },
+                program_params: ProgramGeneratorParameters::new(
+                    100,
+                    RegisterGeneratorParameters::new(1),
+                    ClassificationParameters::new(&inputs),
+                    InstructionGeneratorParameters::<IrisInput>::from(),
+                ),
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,

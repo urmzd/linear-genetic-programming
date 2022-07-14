@@ -10,7 +10,7 @@ use std::fmt::Formatter;
 use std::marker::PhantomData;
 use strum::EnumCount;
 
-use crate::utils::common_traits::{AnyExecutable, Show, ValidInput};
+use crate::utils::common_traits::{AnyExecutable, Inputs, Show, ValidInput};
 use crate::utils::random::generator;
 
 use super::characteristics::{Generate, Mutate};
@@ -22,15 +22,27 @@ pub enum Mode {
     Internal = 1,
 }
 
-impl<'b, T> Show for InstructionGeneratorParameters<T> where T: Show + ValidInput {}
+impl<'a, T> Show for InstructionGeneratorParameters<'a, T> where T: Show + ValidInput {}
 #[derive(Clone, Debug, Serialize, new)]
-pub struct InstructionGeneratorParameters<T>
+pub struct InstructionGeneratorParameters<'a, T>
 where
     T: ValidInput,
 {
     pub n_registers: usize,
     pub n_features: usize,
-    marker: PhantomData<T>,
+    marker: PhantomData<&'a T>,
+}
+
+impl<'a, T> InstructionGeneratorParameters<'a, T>
+where
+    T: ValidInput,
+{
+    pub fn from() -> Self {
+        InstructionGeneratorParameters::new(
+            <T as ValidInput>::Actions::COUNT,
+            <T as ValidInput>::N_INPUTS,
+        )
+    }
 }
 
 pub type Modes = &'static [Mode];
@@ -41,7 +53,7 @@ impl Mode {
     pub const EXTERNAL_ONLY: Modes = &[Mode::External];
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Serialize)]
 pub struct Instruction<'a, T>
 where
     T: ValidInput,
@@ -51,14 +63,29 @@ where
     mode: Mode,
     #[serde(skip_serializing)]
     executable: AnyExecutable,
-    parameters_used: &'a InstructionGeneratorParameters<T>,
+    parameters_used: &'a InstructionGeneratorParameters<'a, T>,
+}
+
+impl<'a, T> Clone for Instruction<'a, T>
+where
+    T: ValidInput,
+{
+    fn clone(&self) -> Self {
+        Self {
+            source_index: self.source_index.clone(),
+            target_index: self.target_index.clone(),
+            mode: self.mode.clone(),
+            executable: self.executable.clone(),
+            parameters_used: &self.parameters_used,
+        }
+    }
 }
 
 impl<'a, T> Generate<'a> for Instruction<'a, T>
 where
     T: ValidInput,
 {
-    type GeneratorParameters = InstructionGeneratorParameters<T>;
+    type GeneratorParameters = InstructionGeneratorParameters<'a, T>;
 
     fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
         let InstructionGeneratorParameters {
@@ -157,18 +184,20 @@ impl<'b, T> Show for Instruction<'b, T> where T: ValidInput {}
 impl<'b, T> Instruction<'b, T>
 where
     T: ValidInput,
+    &'b Registers<'b>: From<&'b T>,
 {
-    fn get_data(&self, registers: &Registers, data: &(impl Into<Registers> + Clone)) -> Registers {
-        let target_data: Registers = match self.mode {
-            Mode::Internal => registers.clone(),
-            Mode::External => data.clone().into(),
+    fn get_target_data(&self, registers: &'b Registers, data: &'b T) -> &'b Registers {
+        let target_data: &Registers = match self.mode {
+            Mode::Internal => registers,
+            Mode::External => data.into(),
         };
 
         target_data
     }
 
-    pub fn apply(&self, registers: &mut Registers, input: &(impl Into<Registers> + Clone)) {
-        let data = self.get_data(registers, input);
+    pub fn apply(&self, registers: &'b mut Registers, input: &'b T) {
+        let cloned_registers = registers.clone();
+        let data = self.get_target_data(&cloned_registers, input);
         let target_slice = data.get_slice(self.target_index, None);
         let source_slice = registers.get_mut_slice(self.source_index, None);
         (self.executable.get_fn())(source_slice, target_slice);

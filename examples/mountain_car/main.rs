@@ -16,24 +16,21 @@ mod set_up;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let game = MountainCarEnv::new(RenderMode::None, None);
-    let input = MountainCarInput::new(game);
+    let mut game = MountainCarEnv::new(RenderMode::Human, None);
+    let input = MountainCarInput::new(&mut game);
 
     let hyper_params = HyperParameters {
-        population_size: 10,
+        population_size: 1,
         gap: 0.5,
-        n_mutations: 0.5,
         n_crossovers: 0.5,
-        max_generations: 5,
-        program_params: ProgramGeneratorParameters {
-            max_instructions: 200,
-            instruction_generator_parameters: InstructionGeneratorParameters::new(
-                <MountainCarInput as ValidInput>::Actions::COUNT,
-                <MountainCarInput as ValidInput>::N_INPUTS,
-            ),
-            register_generator_parameters: RegisterGeneratorParameters::new(3),
-            other: ReinforcementLearningParameters::new(5, 200, input),
-        },
+        n_mutations: 0.5,
+        max_generations: 1,
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            RegisterGeneratorParameters::new(1),
+            ClassificationParameters::new(&inputs),
+            InstructionGeneratorParameters::<IrisInput>::from(),
+        ),
     };
 
     MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
@@ -64,23 +61,20 @@ mod tests {
     async fn run_test() -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
-        let game = MountainCarEnv::new(RenderMode::Human, None);
-        let input = MountainCarInput::new(game);
+        let mut game = MountainCarEnv::new(RenderMode::Human, None);
+        let input = MountainCarInput::new(&mut game);
 
         let hyper_params: HyperParameters<
             Program<ReinforcementLearningParameters<MountainCarInput>>,
         > = HyperParameters {
             population_size: 1,
             max_generations: 1,
-            program_params: ProgramGeneratorParameters {
-                max_instructions: 100,
-                register_generator_parameters: RegisterGeneratorParameters::new(1),
-                other: ReinforcementLearningParameters::new(5, 200, input),
-                instruction_generator_parameters: InstructionGeneratorParameters::new(
-                    <MountainCarInput as ValidInput>::Actions::COUNT,
-                    <MountainCarInput as ValidInput>::N_INPUTS,
-                ),
-            },
+            program_params: ProgramGeneratorParameters::new(
+                100,
+                RegisterGeneratorParameters::new(1),
+                ClassificationParameters::new(&inputs),
+                InstructionGeneratorParameters::<IrisInput>::from(),
+            ),
             gap: 0.5,
             n_mutations: 0.5,
             n_crossovers: 0.5,

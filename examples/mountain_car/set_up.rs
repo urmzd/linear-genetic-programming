@@ -41,15 +41,7 @@ impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
 
 #[derive(Debug, Serialize, new)]
 pub struct MountainCarInput<'a> {
-    game: MountainCarEnv<'a>,
-}
-
-impl<'a> Clone for MountainCarInput<'a> {
-    fn clone(&self) -> Self {
-        Self {
-            game: MountainCarEnv::new(RenderMode::None, None),
-        }
-    }
+    game: &'a mut MountainCarEnv<'a>,
 }
 
 impl<'a> Ord for MountainCarInput<'a> {
@@ -150,7 +142,7 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     }
 
     fn finish(&mut self) {
-        // RENDER STUFF
+        self.game.close();
     }
 
     fn reset(&mut self) {

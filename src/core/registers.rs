@@ -3,6 +3,7 @@ use std::{
     ops::Range,
 };
 
+use ndarray::Order;
 use strum::EnumCount;
 
 use derive_new::new;
@@ -15,16 +16,15 @@ use crate::utils::common_traits::ValidInput;
 pub type RegisterValue = OrderedFloat<f32>;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new)]
-pub struct Registers {
-    data: Vec<RegisterValue>,
+pub struct Registers<'a> {
+    data: Vec<MaybeBorrowed<'a, RegisterValue>>,
     n_outputs: usize,
     n_extras: usize,
 }
 
-impl From<Vec<RegisterValue>> for Registers {
-    fn from(data: Vec<RegisterValue>) -> Self {
-        Registers::new(data, 2, 0)
-    }
+pub enum MaybeBorrowed<'a, T> {
+    Borrowed(&'a T),
+    Owned(T),
 }
 
 #[derive(Debug, Clone, new, Serialize)]
@@ -32,7 +32,7 @@ pub struct RegisterGeneratorParameters {
     n_extra_action_registers: usize,
 }
 
-impl Registers {
+impl<'a> Registers<'a> {
     pub fn generate<T: ValidInput>(parameters: &RegisterGeneratorParameters) -> Self {
         let RegisterGeneratorParameters {
             n_extra_action_registers,
@@ -48,8 +48,11 @@ impl Registers {
     pub fn reset(&mut self) -> &mut Self {
         let Registers { data, .. } = self;
 
-        for index in 0..data.len() {
-            data[index] = OrderedFloat(0f32);
+        for value in data.as_mut_slice() {
+            *value = match value {
+                MaybeBorrowed::Borrowed(_) => panic!("CANNOT RESET REGISTERS WITH BORROWED VALUES"),
+                MaybeBorrowed::Owned(_) => MaybeBorrowed::Owned(OrderedFloat(0f32)),
+            }
         }
 
         self

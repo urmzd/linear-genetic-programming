@@ -323,15 +323,15 @@ mod tests {
             n_mutations: 0.5,
             n_crossovers: 0.5,
             max_generations: 1,
-            program_params: ProgramGeneratorParameters {
-                max_instructions: 10,
-                instruction_generator_parameters: InstructionGeneratorParameters::new(
+            program_params: ProgramGeneratorParameters::new(
+                10,
+                InstructionGeneratorParameters::new(
                     <TestInput as ValidInput>::Actions::COUNT + 1,
                     <TestInput as ValidInput>::N_INPUTS,
                 ),
-                register_generator_parameters: RegisterGeneratorParameters::new(1),
-                other: ClassificationParameters::new(inputs),
-            },
+                RegisterGeneratorParameters::new(1),
+                ClassificationParameters::new(inputs),
+            ),
         };
 
         TestLgp::execute(

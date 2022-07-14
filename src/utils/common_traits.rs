@@ -7,7 +7,10 @@ use serde::Serialize;
 use strum::EnumCount;
 
 use crate::{
-    core::{instruction::Modes, registers::RegisterValue},
+    core::{
+        instruction::Modes,
+        registers::{RegisterValue, Registers},
+    },
     executable, executables,
 };
 
@@ -48,9 +51,10 @@ pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Clone + Show
+pub trait ValidInput: Show
 where
     Self::Actions: Clone + FromPrimitive + EnumCount + ToPrimitive,
+    for<'a> Registers<'a>: From<&'a Self>,
 {
     type Actions;
 

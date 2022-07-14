@@ -1,5 +1,9 @@
-use std::ops::{Add, AddAssign};
+use std::{
+    marker::PhantomData,
+    ops::{Add, AddAssign},
+};
 
+use derivative::Derivative;
 use derive_new::new;
 use serde::Serialize;
 
@@ -12,47 +16,16 @@ use crate::{
     utils::common_traits::{Compare, Show, ValidInput},
 };
 
-#[derive(Debug, Clone, new, Serialize)]
+#[derive(Debug, Clone, new, Serialize, Derivative)]
+#[derivative(PartialEq, Eq, PartialOrd, Ord)]
 pub struct ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
 {
     n_runs: usize,
     max_episodes: usize,
+    #[derivative(PartialEq = "ignore", PartialOrd = "ignore")]
     environment: T,
-}
-
-impl<T> PartialEq for ReinforcementLearningParameters<T>
-where
-    T: ReinforcementLearningInput + PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.n_runs == other.n_runs && self.environment == other.environment
-    }
-}
-
-impl<T> PartialOrd for ReinforcementLearningParameters<T>
-where
-    T: ReinforcementLearningInput + PartialOrd,
-{
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match self.n_runs.partial_cmp(&other.n_runs) {
-            Some(core::cmp::Ordering::Equal) => {}
-            ord => return ord,
-        }
-        self.environment.partial_cmp(&other.environment)
-    }
-}
-
-impl<T> Eq for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Eq {}
-
-impl<T> Ord for ReinforcementLearningParameters<T>
-where
-    T: ReinforcementLearningInput + Ord,
-{
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.n_runs.cmp(&other.n_runs)
-    }
 }
 
 pub enum Reward<RewardValue> {
@@ -79,7 +52,7 @@ where
     }
 }
 
-impl<T> ExtensionParameters for ReinforcementLearningParameters<T>
+impl<'a, T> ExtensionParameters<'a> for ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
 {
@@ -114,14 +87,15 @@ where
             n_runs,
             max_episodes,
             environment: mut game,
+            ..
         } = self.other.clone();
 
-        for _ in 0..n_runs {
+        game.init();
+
+        for _ in 0..*n_runs {
             let mut score = T::RewardValue::default();
 
-            game.init();
-
-            for _ in 0..max_episodes {
+            for _ in 0..*max_episodes {
                 let input = game.get_state();
                 let mut registers = self.registers.clone();
                 for instruction in &self.instructions {
@@ -163,5 +137,8 @@ impl<'a, T> Organism<'a> for Program<'a, ReinforcementLearningParameters<T>> whe
     T: ReinforcementLearningInput + Compare + Show
 {
 }
-impl<T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Show {}
-impl<T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Compare {}
+impl<'a, T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Show {}
+impl<'a, T> Compare for ReinforcementLearningParameters<T> where
+    T: ReinforcementLearningInput + Compare
+{
+}
