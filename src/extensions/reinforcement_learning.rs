@@ -80,20 +80,19 @@ where
 {
     fn eval_fitness(&self) -> crate::core::characteristics::FitnessScore {
         let mut scores = vec![];
-        let x = self.problem_parameters.clone();
-        // let ReinforcementLearningParameters {
-        //     n_runs,
-        //     max_episodes,
-        //     environment,
-        //     ..
-        // } = self.problem_parameters.clone();
+        let ReinforcementLearningParameters {
+            n_runs,
+            max_episodes,
+            mut environment,
+            ..
+        } = self.problem_parameters.clone();
 
         environment.init();
 
-        for _ in 0..*n_runs {
+        for _ in 0..n_runs {
             let mut score = T::RewardValue::default();
 
-            for _ in 0..*max_episodes {
+            for _ in 0..max_episodes {
                 let mut registers = self.registers.clone();
                 for instruction in &self.instructions {
                     instruction.apply(&mut registers, &environment);

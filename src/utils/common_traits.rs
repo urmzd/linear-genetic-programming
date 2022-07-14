@@ -53,7 +53,7 @@ pub trait Show: fmt::Debug + Serialize {}
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Show
+pub trait ValidInput: Show + Clone
 where
     Self::Actions: Clone + FromPrimitive + EnumCount + ToPrimitive,
     for<'a> Registers<'a>: From<&'a Self>,

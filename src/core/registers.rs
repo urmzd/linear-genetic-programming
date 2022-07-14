@@ -23,12 +23,18 @@ pub struct Registers<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new, Hash)]
-pub enum MaybeBorrowed<'a, T> {
+pub enum MaybeBorrowed<'a, T>
+where
+    T: Clone,
+{
     Borrowed(&'a T),
     Owned(T),
 }
 
-impl<'a, T> MaybeBorrowed<'a, T> {
+impl<'a, T> MaybeBorrowed<'a, T>
+where
+    T: Clone,
+{
     pub fn is_owned(&self) -> bool {
         match self {
             MaybeBorrowed::Borrowed(_) => false,
@@ -36,11 +42,26 @@ impl<'a, T> MaybeBorrowed<'a, T> {
         }
     }
 
+    pub fn get_borrowed(&self) -> Option<&'a T> {
+        match self {
+            MaybeBorrowed::Borrowed(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn get_owned(&self) -> Option<T> {
+        match self {
+            MaybeBorrowed::Owned(value) => Some(value.clone()),
+            _ => None,
+        }
+    }
+
     pub fn get(&self) -> T {
         match self {
-            MaybeBorrowed::Borrowed(value) => **value,
-            MaybeBorrowed::Owned(value) => *value,
+            MaybeBorrowed::Owned(value) => value,
+            MaybeBorrowed::Borrowed(value) => value,
         }
+        .clone()
     }
 }
 
@@ -124,7 +145,7 @@ impl<'a> Registers<'a> {
     }
 
     pub fn argmax(&self) -> Vec<usize> {
-        let mut arg_lookup: HashMap<MaybeBorrowed<'a, RegisterValue>, HashSet<usize>> =
+        let mut arg_lookup: HashMap<&MaybeBorrowed<'a, RegisterValue>, HashSet<usize>> =
             HashMap::new();
 
         let Registers {
@@ -136,7 +157,7 @@ impl<'a> Registers<'a> {
             if arg_lookup.contains_key(value) {
                 arg_lookup.get_mut(value).unwrap().insert(index);
             } else {
-                arg_lookup.insert(*data.get(index).unwrap(), HashSet::from([index]));
+                arg_lookup.insert(data.get(index).unwrap(), HashSet::from([index]));
             }
         }
 

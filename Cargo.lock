@@ -587,7 +587,7 @@ checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
 [[package]]
 name = "gym-rs"
 version = "0.2.1"
-source = "git+https://github.com/urmzd/gym-rs#7aa1665c7efeaf187f53af1da7f6b1bed8701837"
+source = "git+https://github.com/urmzd/gym-rs#983c982ebd7e1bf67898120accd70c100590048f"
 dependencies = [
  "derivative",
  "derive-new",
@@ -596,6 +596,8 @@ dependencies = [
  "log",
  "nalgebra",
  "num 0.3.1",
+ "num-traits",
+ "ordered-float",
  "plotters",
  "pretty_env_logger",
  "rand 0.7.3",
