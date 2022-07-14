@@ -31,7 +31,7 @@ cargo run --example <example_name>
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<IrisInput>::from(),
+            InstructionGeneratorParameters::<IrisInput>::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
@@ -66,7 +66,7 @@ mod tests {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<MountainCarInput>::from(),
+            InstructionGeneratorParameters::<MountainCarInput>::from(1),
             RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 200, input),
         ),
