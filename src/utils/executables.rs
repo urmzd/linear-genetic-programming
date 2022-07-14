@@ -1,41 +1,25 @@
-use std::fmt;
-
 use ordered_float::OrderedFloat;
 
-use crate::{
-    core::registers::{MaybeBorrowed, RegisterValue},
-    executable, executables,
-};
+use crate::core::registers::RegisterValue;
 
-#[derive(Clone)]
-pub struct AnyExecutable(pub &'static str, pub InternalFn);
+pub type Op = fn(a: RegisterValue, b: RegisterValue) -> RegisterValue;
 
-impl AnyExecutable {
-    pub fn get_name(&self) -> &'static str {
-        &self.0
-    }
+pub type Executables = &'static [Op];
 
-    pub fn get_fn(&self) -> InternalFn {
-        self.1
-    }
+pub const DEFAULT_EXECUTABLES: Executables = &[add, subtract, multiply, divide];
+
+pub fn add(a: RegisterValue, b: RegisterValue) -> RegisterValue {
+    a + b
 }
 
-type InternalFn = for<'r, 's> fn(
-    &'r mut [MaybeBorrowed<RegisterValue>],
-    &'s [MaybeBorrowed<RegisterValue>],
-) -> &'r [MaybeBorrowed<'r, RegisterValue>];
-
-impl fmt::Debug for AnyExecutable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("AnyExecutable").field(&self.0).finish()
-    }
+pub fn subtract(a: RegisterValue, b: RegisterValue) -> RegisterValue {
+    a - b
 }
 
-pub type Executables = &'static [AnyExecutable];
+pub fn multiply(a: RegisterValue, b: RegisterValue) -> RegisterValue {
+    a * b
+}
 
-executable!(add, +);
-executable!(subtract, -);
-executable!(divide, /, OrderedFloat(2f32));
-executable!(multiply, *);
-
-pub const DEFAULT_EXECUTABLES: Executables = executables!(add, subtract, divide, multiply);
+pub fn divide(a: RegisterValue, _b: RegisterValue) -> RegisterValue {
+    a / OrderedFloat(2f32)
+}

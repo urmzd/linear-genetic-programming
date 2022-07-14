@@ -36,7 +36,7 @@ where
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.problem_parameters.inputs;
 
-        let mut scores = vec![];
+        let mut pred_truth_array = vec![];
 
         for input in inputs {
             let mut registers = self.registers.clone();
@@ -51,13 +51,19 @@ where
                 .unwrap_or(-1);
             let correct_class = input.get_class().to_i32().unwrap();
 
-            scores.push((predicted_class, correct_class));
+            pred_truth_array.push((predicted_class, correct_class));
 
             registers.reset();
         }
 
-        let predicted: Vec<f32> = scores.iter().map(|score| score.0 as f32).collect();
-        let correct: Vec<f32> = scores.iter().map(|score| score.1 as f32).collect();
+        let predicted: Vec<f32> = pred_truth_array
+            .iter()
+            .map(|score| score.0 as f32)
+            .collect();
+        let correct: Vec<f32> = pred_truth_array
+            .iter()
+            .map(|score| score.1 as f32)
+            .collect();
 
         let fitness = (Accuracy {}).get_score(&predicted, &correct);
 

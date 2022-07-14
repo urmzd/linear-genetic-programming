@@ -10,7 +10,7 @@ use std::fmt::Formatter;
 use std::marker::PhantomData;
 use strum::EnumCount;
 
-use crate::utils::executables::AnyExecutable;
+use crate::utils::executables::Op;
 use crate::utils::random::generator;
 
 use super::characteristics::{Generate, Mutate, Show};
@@ -63,7 +63,7 @@ where
     target_index: usize,
     mode: Mode,
     #[serde(skip_serializing)]
-    executable: AnyExecutable,
+    executable: Op,
     parameters_used: &'a InstructionGeneratorParameters<'a, T>,
 }
 
@@ -132,7 +132,7 @@ where
         self.source_index == other.source_index
             && self.target_index == other.target_index
             && self.mode == other.mode
-            && self.executable.get_fn() as usize == other.executable.get_fn() as usize
+            && self.executable as usize == other.executable as usize
     }
 }
 
@@ -186,9 +186,9 @@ impl<'b, T> Instruction<'b, T>
 where
     T: ValidInput,
 {
-    fn get_target_data(&self, registers: &'b Registers, data: &'b T) -> Registers<'b> {
-        let target_data: Registers<'b> = match self.mode {
-            Mode::Internal => registers.clone(),
+    fn get_target_data(&self, registers: Registers, data: &'b T) -> Registers {
+        let target_data: Registers = match self.mode {
+            Mode::Internal => registers,
             Mode::External => data.into(),
         };
 
@@ -197,9 +197,10 @@ where
 
     pub fn apply(&self, registers: &'b mut Registers, input: &'b T) {
         let cloned_registers = registers.clone();
-        let data = self.get_target_data(&cloned_registers, input);
-        let target_slice = data.as_slice(self.target_index, None);
-        let source_slice = registers.as_mut_slice(self.source_index, None);
-        (self.executable.get_fn())(source_slice, target_slice);
+        let data = self.get_target_data(cloned_registers, input);
+        let target_value = data.get_owned(self.target_index);
+        let source_value = registers.get_owned(self.target_index);
+        let new_target_value = (self.executable)(source_value, target_value);
+        registers.update(self.target_index, new_target_value);
     }
 }

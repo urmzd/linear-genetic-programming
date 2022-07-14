@@ -7,7 +7,7 @@ use crate::utils::{executables::Executables, random::generator};
 use super::{
     characteristics::Show,
     instruction::Modes,
-    registers::{MaybeBorrowed, RegisterValue, Registers},
+    registers::{RegisterValue, Registers},
 };
 
 pub type Inputs<InputType> = Vec<InputType>;
@@ -15,7 +15,7 @@ pub type Inputs<InputType> = Vec<InputType>;
 pub trait ValidInput: Show + Clone
 where
     Self::Actions: Clone + FromPrimitive + EnumCount + ToPrimitive,
-    for<'a> Registers<'a>: From<&'a Self>,
+    for<'a> Registers: From<&'a Self>,
 {
     type Actions;
 
@@ -31,13 +31,9 @@ where
     fn as_register_values(&self) -> Vec<RegisterValue>;
 }
 
-impl<'a, T: ValidInput> From<&'a T> for Registers<'a> {
+impl<'a, T: ValidInput> From<&'a T> for Registers {
     fn from(input: &'a T) -> Self {
-        let ref_data: Vec<MaybeBorrowed<RegisterValue>> = input
-            .as_register_values()
-            .iter()
-            .map(|v| MaybeBorrowed::Owned(*v))
-            .collect();
-        Registers::new(ref_data, 2, 0, true)
+        let ref_data: Vec<RegisterValue> = input.as_register_values().iter().map(|v| *v).collect();
+        Registers::new(ref_data, 2, 0)
     }
 }

@@ -1,12 +1,8 @@
-use std::{
-    collections::{HashMap, HashSet},
-    ops::Range,
-};
+use std::collections::{HashMap, HashSet};
 
 use strum::EnumCount;
 
 use derive_new::new;
-use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 
@@ -15,88 +11,38 @@ use super::inputs::ValidInput;
 pub type RegisterValue = OrderedFloat<f32>;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new)]
-pub struct Registers<'a> {
-    data: Vec<MaybeBorrowed<'a, RegisterValue>>,
+pub struct Registers {
+    data: Vec<RegisterValue>,
     n_outputs: usize,
     n_extras: usize,
-    frozen: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new, Hash)]
-pub enum MaybeBorrowed<'a, T>
-where
-    T: Clone,
-{
-    Borrowed(&'a T),
-    Owned(T),
-}
-
-impl<'a, T> MaybeBorrowed<'a, T>
-where
-    T: Clone,
-{
-    pub fn is_owned(&self) -> bool {
-        match self {
-            MaybeBorrowed::Borrowed(_) => false,
-            MaybeBorrowed::Owned(_) => true,
-        }
-    }
-
-    pub fn get_borrowed(&self) -> Option<&'a T> {
-        match self {
-            MaybeBorrowed::Borrowed(value) => Some(value),
-            _ => None,
-        }
-    }
-
-    pub fn get_owned(&self) -> Option<T> {
-        match self {
-            MaybeBorrowed::Owned(value) => Some(value.clone()),
-            _ => None,
-        }
-    }
-
-    pub fn get(&self) -> T {
-        match self {
-            MaybeBorrowed::Owned(value) => value,
-            MaybeBorrowed::Borrowed(value) => value,
-        }
-        .clone()
-    }
 }
 
 #[derive(Debug, Clone, new, Serialize)]
 pub struct RegisterGeneratorParameters {
-    n_extra_action_registers: usize,
+    n_extras: usize,
 }
 
-impl<'a> Registers<'a> {
+impl Registers {
     pub fn generate<T: ValidInput>(parameters: &RegisterGeneratorParameters) -> Self {
-        let RegisterGeneratorParameters {
-            n_extra_action_registers,
-        } = parameters;
+        let RegisterGeneratorParameters { n_extras } = parameters.clone();
 
-        Registers::new(
-            vec![
-                MaybeBorrowed::Owned(OrderedFloat(0.));
-                T::Actions::COUNT + *n_extra_action_registers
-            ],
-            *n_extra_action_registers,
-            T::Actions::COUNT,
-            false,
-        )
+        let n_outputs = T::Actions::COUNT;
+        let data = vec![OrderedFloat(0.); n_outputs + n_extras];
+
+        Registers::new(data, n_outputs, n_extras)
     }
 
-    pub fn reset(&mut self) -> &mut Self {
-        if !self.frozen {
-            let Registers { data, .. } = self;
-            for value in data.as_mut_slice() {
-                if value.is_owned() {
-                    *value = MaybeBorrowed::Owned(OrderedFloat(0f32))
-                }
-            }
+    pub fn reset(&mut self) {
+        let Registers { data, .. } = self;
+        for value in data.as_mut_slice() {
+            *value = OrderedFloat(0.)
         }
-        self
+    }
+
+    pub fn reset_clone(&self) -> Self {
+        let mut registers = self.clone();
+        registers.reset();
+        registers
     }
 
     pub fn len(&self) -> usize {
@@ -104,49 +50,20 @@ impl<'a> Registers<'a> {
     }
 
     pub fn update(&mut self, index: usize, value: RegisterValue) {
-        if !self.frozen {
-            let Registers { data, .. } = self;
-            data[index] = MaybeBorrowed::Owned(value);
-        }
+        let Registers { data, .. } = self;
+        data[index] = value;
     }
 
-    pub fn get(&self, index: usize) -> &MaybeBorrowed<RegisterValue> {
+    pub fn get(&self, index: usize) -> &RegisterValue {
         self.data.get(index).unwrap()
     }
 
-    pub fn as_mut_slice<'b>(
-        &'b mut self,
-        start: usize,
-        end: Option<usize>,
-    ) -> &'b mut [MaybeBorrowed<'a, RegisterValue>] {
-        let range = Range {
-            start,
-            end: end.unwrap_or(start + 1),
-        };
-
-        assert_le!(range.end, self.data.len());
-
-        &mut self.data[range]
-    }
-
-    pub fn as_slice(
-        &'a self,
-        start: usize,
-        end: Option<usize>,
-    ) -> &'a [MaybeBorrowed<RegisterValue>] {
-        let range = Range {
-            start,
-            end: end.unwrap_or(start + 1),
-        };
-
-        assert_le!(range.end, self.data.len());
-
-        &self.data[range]
+    pub fn get_owned(&self, index: usize) -> RegisterValue {
+        self.data.get(index).map(|v| v.clone()).unwrap()
     }
 
     pub fn argmax(&self) -> Vec<usize> {
-        let mut arg_lookup: HashMap<&MaybeBorrowed<'a, RegisterValue>, HashSet<usize>> =
-            HashMap::new();
+        let mut arg_lookup: HashMap<&RegisterValue, HashSet<usize>> = HashMap::new();
 
         let Registers {
             data, n_outputs, ..
@@ -157,7 +74,8 @@ impl<'a> Registers<'a> {
             if arg_lookup.contains_key(value) {
                 arg_lookup.get_mut(value).unwrap().insert(index);
             } else {
-                arg_lookup.insert(data.get(index).unwrap(), HashSet::from([index]));
+                let new_set = HashSet::from([index]);
+                arg_lookup.insert(value, new_set);
             }
         }
 

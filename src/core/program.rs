@@ -43,7 +43,7 @@ where
     T: ExtensionParameters<'a>,
 {
     pub instructions: Instructions<'a, T::InputType>,
-    pub registers: Registers<'a>,
+    pub registers: Registers,
     pub fitness: Option<FitnessScore>,
     pub problem_parameters: &'a T,
 }
@@ -174,14 +174,14 @@ where
             problem_parameters: self.problem_parameters,
             instructions: child_a_instructions,
             fitness: None,
-            registers: self.registers.clone().reset().to_owned(),
+            registers: self.registers.reset_clone(),
         };
 
         let program_b = Program {
             problem_parameters: self.problem_parameters,
             instructions: child_b_instructions,
             fitness: None,
-            registers: self.registers.clone().reset().to_owned(),
+            registers: self.registers.reset_clone(),
         };
 
         [program_a, program_b]

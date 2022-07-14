@@ -32,6 +32,7 @@ ndarray = { version = "0.15", features = ["std", "serde"] }
 noisy_float = { version = "0.2.0" }
 ndarray-stats = "0.5"
 itertools = "0.10"
+derive_more = { version="0.99" }
 
 [dev-dependencies]
 pretty_assertions = { version= "1.2"}
