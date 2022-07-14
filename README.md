@@ -55,6 +55,11 @@ mod tests {
 ```rust
 //examples/mountain_car/main.rs#L17-L41
 
+
+mod set_up;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let game = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(game);
 
@@ -66,20 +71,15 @@ mod tests {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<MountainCarInput>::from(1),
+            InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
     MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
-    Ok(())
-}
 
-#[cfg(test)]
-mod tests {
-    use gym_rs::{
-        envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode,
+    Ok(())
 ```
 
 ## Building
