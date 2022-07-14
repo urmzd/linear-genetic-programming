@@ -323,7 +323,7 @@ mod tests {
             max_generations: 1,
             program_params: ProgramGeneratorParameters::new(
                 10,
-                InstructionGeneratorParameters::<TestInput>::from(),
+                InstructionGeneratorParameters::<TestInput>::from(1),
                 RegisterGeneratorParameters::new(1),
                 ClassificationParameters::new(&inputs),
             ),

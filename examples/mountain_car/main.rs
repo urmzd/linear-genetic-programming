@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<MountainCarInput>::from(),
+            InstructionGeneratorParameters::<MountainCarInput>::from(1),
             RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 200, input),
         ),
@@ -69,7 +69,7 @@ mod tests {
             max_generations: 1,
             program_params: ProgramGeneratorParameters::new(
                 100,
-                InstructionGeneratorParameters::<MountainCarInput>::from(),
+                InstructionGeneratorParameters::<MountainCarInput>::from(1),
                 RegisterGeneratorParameters::new(1),
                 ReinforcementLearningParameters::new(5, 200, input),
             ),

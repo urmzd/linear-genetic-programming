@@ -2,7 +2,7 @@ use derive_new::new;
 use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::prelude::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use serde::Serialize;
 use std::fmt;
 use std::fmt::Debug;
@@ -38,9 +38,9 @@ impl<'a, T> InstructionGeneratorParameters<'a, T>
 where
     T: ValidInput,
 {
-    pub fn from() -> Self {
+    pub fn from(n_extras: usize) -> Self {
         InstructionGeneratorParameters::new(
-            <T as ValidInput>::Actions::COUNT,
+            <T as ValidInput>::Actions::COUNT + n_extras,
             <T as ValidInput>::N_INPUTS,
         )
     }
@@ -95,9 +95,14 @@ where
             ..
         } = parameters;
 
-        let source_index = UniformInt::<usize>::new(0, n_registers).sample(&mut generator());
+        let current_generator = &mut generator();
 
-        let mode = T::AVAILABLE_MODES.choose(&mut generator()).unwrap().clone();
+        let source_index = UniformInt::<usize>::new(0, n_registers).sample(current_generator);
+
+        let mode = T::AVAILABLE_MODES
+            .choose(current_generator)
+            .unwrap()
+            .clone();
 
         let upper_bound_target_index = *(if mode == Mode::External {
             n_inputs
@@ -105,10 +110,10 @@ where
             n_registers
         });
         let target_index =
-            UniformInt::<usize>::new(0, upper_bound_target_index).sample(&mut thread_rng());
+            UniformInt::<usize>::new(0, upper_bound_target_index).sample(current_generator);
 
         let exec = T::AVAILABLE_EXECUTABLES
-            .choose(&mut generator())
+            .choose(current_generator)
             .unwrap()
             .to_owned();
 
@@ -199,8 +204,8 @@ where
         let cloned_registers = registers.clone();
         let data = self.get_target_data(cloned_registers, input);
         let target_value = data.get_owned(self.target_index);
-        let source_value = registers.get_owned(self.target_index);
-        let new_target_value = (self.executable)(source_value, target_value);
-        registers.update(self.target_index, new_target_value);
+        let source_value = registers.get_owned(self.source_index);
+        let new_source_value = (self.executable)(source_value, target_value);
+        registers.update(self.source_index, new_source_value);
     }
 }

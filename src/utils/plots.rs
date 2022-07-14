@@ -1,11 +1,13 @@
 use std::{error, fmt, ops::Range};
 
+use itertools::Itertools;
 use ndarray::{aview1, Array, Axis, Dim};
 use ndarray_stats::{interpolate, QuantileExt};
 use noisy_float::prelude::n64;
+use ordered_float::OrderedFloat;
 use plotters::{
-    prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, LineSeries, PathElement},
-    style::{Color, IntoFont, Palette, Palette99, BLACK, WHITE},
+    prelude::{BitMapBackend, ChartBuilder, ErrorBar, IntoDrawingArea},
+    style::{colors, IntoFont, WHITE},
 };
 
 use crate::core::characteristics::Fitness;
@@ -35,21 +37,16 @@ where
     let quantiles = populations
         .quantiles_axis_mut(
             Axis(0),
-            &aview1(&[n64(0.), n64(0.5), n64(1.)]),
+            &aview1(&[n64(1.), n64(0.5), n64(0.)]),
             &interpolate::Higher,
         )
         .unwrap();
 
-    let mut worst = vec![];
-    let mut median = vec![];
-    let mut best = vec![];
-
-    quantiles
+    let benchmarks = quantiles
         .axis_iter(Axis(1))
-        .enumerate()
-        .for_each(|(index, b)| {
+        .map(|b| {
             let mut b_vec = b.to_vec();
-            let (best_p, median_p, worst_p) = (
+            let benchmark = (
                 b_vec
                     .pop()
                     .and_then(|p| p.get_fitness())
@@ -66,30 +63,22 @@ where
                     .map(|f| f.into_inner())
                     .unwrap(),
             );
-            worst.push((index, worst_p));
-            median.push((index, median_p));
-            best.push((index, best_p));
-        });
 
-    [("WORST", worst), ("MEDIAN", median), ("BEST", best)]
-        .iter()
-        .enumerate()
-        .for_each(|(index, (label, metric))| {
-            let color = Palette99::pick(index).mix(0.9);
-            let legend = move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color);
-
-            chart
-                .draw_series(LineSeries::new(metric.clone(), color.stroke_width(3)))
-                .unwrap()
-                .label(label.clone())
-                .legend(legend);
-        });
+            benchmark
+        })
+        .sorted_by_key(|(w, _m, _b)| OrderedFloat(*w))
+        .collect_vec();
 
     chart
-        .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
-        .draw()?;
+        .draw_series(
+            benchmarks
+                .iter()
+                .enumerate()
+                .map(|(index, (worst, median, best))| {
+                    ErrorBar::new_vertical(index, *worst, *median, *best, colors::BLUE, 10)
+                }),
+        )
+        .unwrap();
 
     root.present()?;
     Ok(())

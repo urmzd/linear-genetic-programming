@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<IrisInput>::from(),
+            InstructionGeneratorParameters::<IrisInput>::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
@@ -72,7 +72,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -123,7 +123,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -172,7 +172,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -222,7 +222,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -265,26 +265,25 @@ mod tests {
             }),
         )?;
 
+        let mut uninit_populations = Array2::uninit((generations, hyper_params.population_size));
+
+        (0..generations).for_each(|g_i| {
+            let array = vec_pops.get(g_i).unwrap();
+            array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
+        });
+
+        let init_populations = unsafe { uninit_populations.assume_init() };
+
+        // TODO: Pull the graph section out into a seperate function.
+        const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
+        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+
         if worst != median || median != best {
             // TODO: Create concrete error type; SNAFU or Failure?
-            Err("Generations exceeded expect convergence time.")?
-        } else {
-            let mut uninit_populations =
-                Array2::uninit((generations, hyper_params.population_size));
-
-            (0..generations).for_each(|g_i| {
-                let array = vec_pops.get(g_i).unwrap();
-                array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
-            });
-
-            let init_populations = unsafe { uninit_populations.assume_init() };
-
-            // TODO: Pull the graph section out into a seperate function.
-            const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-            plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
-
-            Ok(())
+            panic!("Generations exceeded expect convergence time.")
         }
+
+        Ok(())
     }
 
     #[tokio::test]
@@ -299,7 +298,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -339,7 +338,7 @@ mod tests {
 
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
@@ -376,7 +375,7 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(),
+                    InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),

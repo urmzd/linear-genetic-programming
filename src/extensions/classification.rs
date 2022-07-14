@@ -38,9 +38,8 @@ where
 
         let mut pred_truth_array = vec![];
 
+        let mut registers = self.registers.clone();
         for input in inputs {
-            let mut registers = self.registers.clone();
-
             for instruction in &self.instructions {
                 instruction.apply(&mut registers, input);
             }
