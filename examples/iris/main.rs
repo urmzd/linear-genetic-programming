@@ -233,8 +233,8 @@ mod tests {
 
         let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
-                population_size: 10,
-                max_generations: 10,
+                population_size: 100,
+                max_generations: 100,
                 program_params: ProgramGeneratorParameters {
                     max_instructions: 100,
                     register_generator_parameters: RegisterGeneratorParameters::new(1),
@@ -284,7 +284,6 @@ mod tests {
         )?;
 
         if worst != median || median != best {
-            println!("LOL");
             // TODO: Create concrete error type; SNAFU or Failure?
             Err("Generations exceeded expect convergence time.")?
         } else {

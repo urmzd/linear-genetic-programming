@@ -780,9 +780,6 @@ mod tests {
         let e12 = [1, 2, 8, 9, 10];
         let e21 = [6, 7, 3, 4, 5];
 
-        println!("{:?}", l1);
-        println!("{:?}", l2);
-
         itertools::assert_equal(l1, e12);
         itertools::assert_equal(l2, e21);
     }

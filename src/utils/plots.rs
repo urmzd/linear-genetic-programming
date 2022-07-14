@@ -1,11 +1,11 @@
-use std::{error, ops::Range};
+use std::{error, fmt, ops::Range};
 
 use ndarray::{aview1, Array, Axis, Dim};
 use ndarray_stats::{interpolate, QuantileExt};
 use noisy_float::prelude::n64;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, IntoDrawingArea, LineSeries, PathElement},
-    style::{Color, IntoFont, BLACK, BLUE, GREEN, RED, WHITE},
+    style::{Color, IntoFont, Palette, Palette99, BLACK, WHITE},
 };
 
 use crate::core::characteristics::Fitness;
@@ -16,7 +16,7 @@ pub fn plot_population_benchmarks<T>(
     y_range: Range<f32>,
 ) -> Result<(), Box<dyn error::Error>>
 where
-    T: Fitness + Clone + Ord,
+    T: Fitness + Clone + Ord + fmt::Debug,
 {
     let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
     root.fill(&WHITE)?;
@@ -44,44 +44,46 @@ where
     let mut median = vec![];
     let mut best = vec![];
 
-    quantiles.axis_iter(Axis(0)).enumerate().for_each(|(i, b)| {
-        let mut b_vec = b.to_vec();
-        let (best_p, median_p, worst_p) = (
-            b_vec
-                .pop()
-                .and_then(|p| p.get_fitness())
-                .map(|f| f.into_inner())
-                .unwrap(),
-            b_vec
-                .pop()
-                .and_then(|p| p.get_fitness())
-                .map(|f| f.into_inner())
-                .unwrap(),
-            b_vec
-                .pop()
-                .and_then(|p| p.get_fitness())
-                .map(|f| f.into_inner())
-                .unwrap(),
-        );
-        worst.push((i, worst_p));
-        median.push((i, median_p));
-        best.push((i, best_p));
-    });
+    quantiles
+        .axis_iter(Axis(1))
+        .enumerate()
+        .for_each(|(index, b)| {
+            let mut b_vec = b.to_vec();
+            let (best_p, median_p, worst_p) = (
+                b_vec
+                    .pop()
+                    .and_then(|p| p.get_fitness())
+                    .map(|f| f.into_inner())
+                    .unwrap(),
+                b_vec
+                    .pop()
+                    .and_then(|p| p.get_fitness())
+                    .map(|f| f.into_inner())
+                    .unwrap(),
+                b_vec
+                    .pop()
+                    .and_then(|p| p.get_fitness())
+                    .map(|f| f.into_inner())
+                    .unwrap(),
+            );
+            worst.push((index, worst_p));
+            median.push((index, median_p));
+            best.push((index, best_p));
+        });
 
-    chart
-        .draw_series(LineSeries::new(best, &RED))?
-        .label("Best")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+    [("WORST", worst), ("MEDIAN", median), ("BEST", best)]
+        .iter()
+        .enumerate()
+        .for_each(|(index, (label, metric))| {
+            let color = Palette99::pick(index).mix(0.9);
+            let legend = move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color);
 
-    chart
-        .draw_series(LineSeries::new(median, &GREEN))?
-        .label("Median")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
-
-    chart
-        .draw_series(LineSeries::new(worst, &BLUE))?
-        .label("Worst")
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
+            chart
+                .draw_series(LineSeries::new(metric.clone(), color.stroke_width(3)))
+                .unwrap()
+                .label(label.clone())
+                .legend(legend);
+        });
 
     chart
         .configure_series_labels()

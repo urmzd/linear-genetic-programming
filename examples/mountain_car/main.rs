@@ -64,14 +64,14 @@ mod tests {
     async fn run_test() -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
-        let game = MountainCarEnv::new(RenderMode::None, None);
+        let game = MountainCarEnv::new(RenderMode::Human, None);
         let input = MountainCarInput::new(game);
 
         let hyper_params: HyperParameters<
             Program<ReinforcementLearningParameters<MountainCarInput>>,
         > = HyperParameters {
-            population_size: 10,
-            max_generations: 10,
+            population_size: 1,
+            max_generations: 1,
             program_params: ProgramGeneratorParameters {
                 max_instructions: 100,
                 register_generator_parameters: RegisterGeneratorParameters::new(1),
