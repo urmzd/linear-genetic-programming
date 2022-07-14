@@ -11,7 +11,6 @@ use lgp::{
         algorithm::{GeneticAlgorithm, Loader},
         characteristics::{Compare, Show},
         inputs::ValidInput,
-        instruction::{Mode, Modes},
         program::Program,
         registers::RegisterValue,
     },
@@ -107,7 +106,6 @@ impl ValidInput for IrisInput {
     type Actions = IrisClass;
 
     const AVAILABLE_EXECUTABLES: Executables = IRIS_EXECUTABLES;
-    const AVAILABLE_MODES: Modes = Mode::ALL;
 
     const N_INPUTS: usize = 4;
 

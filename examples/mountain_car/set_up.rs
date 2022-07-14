@@ -11,7 +11,6 @@ use lgp::{
         algorithm::GeneticAlgorithm,
         characteristics::{Compare, FitnessScore, Show},
         inputs::ValidInput,
-        instruction::{Mode, Modes},
         program::Program,
         registers::RegisterValue,
     },
@@ -27,7 +26,7 @@ use serde::Serialize;
 use strum::{Display, EnumCount};
 
 #[derive(Debug, Clone, Display, Eq, PartialEq, EnumCount, FromPrimitive, ToPrimitive)]
-pub enum Actions {
+pub enum MountainCarActions {
     AccelerateLeft = 0,
     Pause = 1,
     AccelerateRight = 2,
@@ -68,13 +67,11 @@ impl<'a> Show for MountainCarInput<'a> {}
 impl<'a> Compare for MountainCarInput<'a> {}
 
 impl<'a> ValidInput for MountainCarInput<'a> {
-    type Actions = Actions;
+    type Actions = MountainCarActions;
 
     const N_INPUTS: usize = 2;
 
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
-
-    const AVAILABLE_MODES: Modes = Mode::INTERNAL_ONLY;
 
     fn as_register_values(&self) -> Vec<RegisterValue> {
         let state = self.get_state();

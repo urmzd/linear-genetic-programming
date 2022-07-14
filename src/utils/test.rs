@@ -18,7 +18,6 @@ use crate::{
         algorithm::GeneticAlgorithm,
         characteristics::{Compare, Show},
         inputs::ValidInput,
-        instruction::{Mode, Modes},
         program::Program,
         registers::RegisterValue,
     },
@@ -56,8 +55,6 @@ impl ValidInput for TestInput {
     }
 
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
-
-    const AVAILABLE_MODES: Modes = Mode::ALL;
 
     fn as_register_values(&self) -> Vec<RegisterValue> {
         [self.0[0], self.0[1], self.0[2], self.0[3]].to_vec()

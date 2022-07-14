@@ -1,14 +1,19 @@
+use std::{thread, time::Duration};
+
 use gym_rs::{envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode};
 use lgp::{
     core::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters},
+        characteristics::{Fitness, Generate},
         instruction::InstructionGeneratorParameters,
-        program::ProgramGeneratorParameters,
+        program::{Program, ProgramGeneratorParameters},
         registers::RegisterGeneratorParameters,
     },
-    extensions::reinforcement_learning::ReinforcementLearningParameters,
+    extensions::reinforcement_learning::{
+        ReinforcementLearningInput, ReinforcementLearningParameters,
+    },
 };
-use set_up::{MountainCarInput, MountainCarLgp};
+use set_up::{MountainCarActions, MountainCarInput, MountainCarLgp};
 
 mod set_up;
 
@@ -25,13 +30,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::<MountainCarInput>::from(1),
+            InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
     MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+
     Ok(())
 }
 
@@ -58,18 +64,18 @@ mod tests {
     async fn run_test() -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
-        let game = MountainCarEnv::new(RenderMode::Human, None);
+        let game = MountainCarEnv::new(RenderMode::None, None);
         let input = MountainCarInput::new(game);
 
         let hyper_params = HyperParameters {
-            population_size: 1,
+            population_size: 10,
             gap: 0.5,
             n_crossovers: 0.5,
             n_mutations: 0.5,
-            max_generations: 1,
+            max_generations: 100,
             program_params: ProgramGeneratorParameters::new(
                 100,
-                InstructionGeneratorParameters::<MountainCarInput>::from(1),
+                InstructionGeneratorParameters::from(1),
                 RegisterGeneratorParameters::new(1),
                 ReinforcementLearningParameters::new(5, 200, input),
             ),

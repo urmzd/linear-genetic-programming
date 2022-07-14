@@ -1,4 +1,5 @@
 use derive_new::new;
+use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::prelude::SliceRandom;
@@ -46,14 +47,6 @@ where
     }
 }
 
-pub type Modes = &'static [Mode];
-
-impl Mode {
-    pub const ALL: Modes = &[Mode::Internal, Mode::External];
-    pub const INTERNAL_ONLY: Modes = &[Mode::Internal];
-    pub const EXTERNAL_ONLY: Modes = &[Mode::External];
-}
-
 #[derive(Serialize)]
 pub struct Instruction<'a, T>
 where
@@ -99,10 +92,10 @@ where
 
         let source_index = UniformInt::<usize>::new(0, n_registers).sample(current_generator);
 
-        let mode = T::AVAILABLE_MODES
-            .choose(current_generator)
-            .unwrap()
-            .clone();
+        let mode = FromPrimitive::from_usize(
+            UniformInt::<usize>::new_inclusive(0, 1).sample(current_generator),
+        )
+        .unwrap();
 
         let upper_bound_target_index = *(if mode == Mode::External {
             n_inputs

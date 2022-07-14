@@ -6,7 +6,6 @@ use crate::utils::{executables::Executables, random::generator};
 
 use super::{
     characteristics::Show,
-    instruction::Modes,
     registers::{RegisterValue, Registers},
 };
 
@@ -22,7 +21,6 @@ where
     const N_INPUTS: usize;
 
     const AVAILABLE_EXECUTABLES: Executables;
-    const AVAILABLE_MODES: Modes;
 
     fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
