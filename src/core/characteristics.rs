@@ -1,4 +1,6 @@
-use crate::utils::common_traits::{Compare, Show};
+use std::fmt;
+
+use serde::Serialize;
 
 use super::registers::RegisterValue;
 
@@ -29,3 +31,6 @@ pub trait Organism<'a>:
     Fitness + Generate<'a> + Compare + Show + Sized + Clone + Mutate + Breed
 {
 }
+
+pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd<V> + Ord {}
+pub trait Show: fmt::Debug + Serialize {}

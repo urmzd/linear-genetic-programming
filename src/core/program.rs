@@ -1,9 +1,6 @@
 use std::{fmt::Display, marker::PhantomData};
 
-use crate::utils::{
-    common_traits::{Compare, Show, ValidInput},
-    random::generator,
-};
+use crate::utils::random::generator;
 use derive_new::new;
 use rand::{
     distributions::Uniform,
@@ -12,7 +9,8 @@ use rand::{
 use serde::Serialize;
 
 use super::{
-    characteristics::{Breed, FitnessScore, Generate, Mutate},
+    characteristics::{Breed, Compare, FitnessScore, Generate, Mutate, Show},
+    inputs::ValidInput,
     instruction::{Instruction, InstructionGeneratorParameters},
     instructions::Instructions,
     registers::{RegisterGeneratorParameters, Registers},

@@ -10,7 +10,7 @@ use more_asserts::assert_le;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 
-use crate::utils::common_traits::ValidInput;
+use super::inputs::ValidInput;
 
 pub type RegisterValue = OrderedFloat<f32>;
 

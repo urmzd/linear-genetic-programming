@@ -9,14 +9,12 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     core::characteristics::{Breed, Fitness, Generate},
-    utils::{
-        common_traits::{Inputs, ValidInput},
-        random::generator,
-    },
+    utils::random::generator,
 };
 
 use super::{
     characteristics::{Mutate, Organism},
+    inputs::{Inputs, ValidInput},
     population::Population,
 };
 
@@ -304,13 +302,11 @@ mod tests {
         },
         extensions::classification::ClassificationParameters,
         utils::{
-            common_traits::ValidInput,
             random::generator,
             test::{TestInput, TestLgp},
         },
     };
     use rand::{distributions::Standard, Rng};
-    use strum::EnumCount;
 
     use super::{EventHooks, GeneticAlgorithm, HyperParameters};
 
@@ -327,10 +323,7 @@ mod tests {
             max_generations: 1,
             program_params: ProgramGeneratorParameters::new(
                 10,
-                InstructionGeneratorParameters::new(
-                    <TestInput as ValidInput>::Actions::COUNT + 1,
-                    <TestInput as ValidInput>::N_INPUTS,
-                ),
+                InstructionGeneratorParameters::<TestInput>::from(),
                 RegisterGeneratorParameters::new(1),
                 ClassificationParameters::new(&inputs),
             ),

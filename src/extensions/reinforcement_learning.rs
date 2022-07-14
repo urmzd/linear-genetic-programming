@@ -4,13 +4,11 @@ use derivative::Derivative;
 use derive_new::new;
 use serde::Serialize;
 
-use crate::{
-    core::{
-        characteristics::{Fitness, FitnessScore, Organism},
-        program::{ExtensionParameters, Program},
-        registers::RegisterValue,
-    },
-    utils::common_traits::{Compare, Show, ValidInput},
+use crate::core::{
+    characteristics::{Compare, Fitness, FitnessScore, Organism, Show},
+    inputs::ValidInput,
+    program::{ExtensionParameters, Program},
+    registers::RegisterValue,
 };
 
 #[derive(Debug, Serialize, Derivative, new)]

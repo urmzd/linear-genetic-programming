@@ -9,12 +9,14 @@ use strum::EnumCount;
 use lgp::{
     core::{
         algorithm::{GeneticAlgorithm, Loader},
+        characteristics::{Compare, Show},
+        inputs::ValidInput,
         instruction::{Mode, Modes},
         program::Program,
-        registers::{RegisterValue, Registers},
+        registers::RegisterValue,
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
-    utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
+    utils::executables::{Executables, DEFAULT_EXECUTABLES},
 };
 
 use std::error;
@@ -116,19 +118,14 @@ impl ValidInput for IrisInput {
             return FromPrimitive::from_usize(ties.pop().unwrap());
         }
     }
-}
 
-impl From<IrisInput> for Registers {
-    fn from(input: IrisInput) -> Self {
-        Registers::new(
-            vec![
-                input.sepal_length,
-                input.sepal_width,
-                input.petal_length,
-                input.petal_width,
-            ],
-            3,
-            4,
-        )
+    fn as_register_values(&self) -> Vec<RegisterValue> {
+        [
+            self.sepal_length,
+            self.sepal_width,
+            self.petal_length,
+            self.petal_width,
+        ]
+        .to_vec()
     }
 }

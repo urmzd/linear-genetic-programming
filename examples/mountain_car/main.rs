@@ -7,17 +7,15 @@ use lgp::{
         registers::RegisterGeneratorParameters,
     },
     extensions::reinforcement_learning::ReinforcementLearningParameters,
-    utils::common_traits::ValidInput,
 };
 use set_up::{MountainCarInput, MountainCarLgp};
-use strum::EnumCount;
 
 mod set_up;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut game = MountainCarEnv::new(RenderMode::Human, None);
-    let input = MountainCarInput::new(&mut game);
+    let game = MountainCarEnv::new(RenderMode::Human, None);
+    let input = MountainCarInput::new(game);
 
     let hyper_params = HyperParameters {
         population_size: 1,
@@ -27,9 +25,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
+            InstructionGeneratorParameters::<MountainCarInput>::from(),
             RegisterGeneratorParameters::new(1),
-            ClassificationParameters::new(&inputs),
-            InstructionGeneratorParameters::<IrisInput>::from(),
+            ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
@@ -46,38 +44,35 @@ mod tests {
         core::{
             algorithm::{EventHooks, GeneticAlgorithm, HyperParameters},
             instruction::InstructionGeneratorParameters,
-            program::{Program, ProgramGeneratorParameters},
+            program::ProgramGeneratorParameters,
             registers::RegisterGeneratorParameters,
         },
         extensions::reinforcement_learning::ReinforcementLearningParameters,
-        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
+        utils::plots::plot_population_benchmarks,
     };
     use ndarray::{s, Array2};
 
     use crate::set_up::{MountainCarInput, MountainCarLgp};
-    use strum::EnumCount;
 
     #[tokio::test]
     async fn run_test() -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
-        let mut game = MountainCarEnv::new(RenderMode::Human, None);
-        let input = MountainCarInput::new(&mut game);
+        let game = MountainCarEnv::new(RenderMode::Human, None);
+        let input = MountainCarInput::new(game);
 
-        let hyper_params: HyperParameters<
-            Program<ReinforcementLearningParameters<MountainCarInput>>,
-        > = HyperParameters {
+        let hyper_params = HyperParameters {
             population_size: 1,
+            gap: 0.5,
+            n_crossovers: 0.5,
+            n_mutations: 0.5,
             max_generations: 1,
             program_params: ProgramGeneratorParameters::new(
                 100,
+                InstructionGeneratorParameters::<MountainCarInput>::from(),
                 RegisterGeneratorParameters::new(1),
-                ClassificationParameters::new(&inputs),
-                InstructionGeneratorParameters::<IrisInput>::from(),
+                ReinforcementLearningParameters::new(5, 200, input),
             ),
-            gap: 0.5,
-            n_mutations: 0.5,
-            n_crossovers: 0.5,
         };
 
         let mut uninit_populations =

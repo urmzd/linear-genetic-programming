@@ -10,10 +10,11 @@ use std::fmt::Formatter;
 use std::marker::PhantomData;
 use strum::EnumCount;
 
-use crate::utils::common_traits::{AnyExecutable, Show, ValidInput};
+use crate::utils::executables::AnyExecutable;
 use crate::utils::random::generator;
 
-use super::characteristics::{Generate, Mutate};
+use super::characteristics::{Generate, Mutate, Show};
+use super::inputs::ValidInput;
 use super::registers::Registers;
 
 #[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]

@@ -16,6 +16,8 @@ use strum::EnumCount;
 use crate::{
     core::{
         algorithm::GeneticAlgorithm,
+        characteristics::{Compare, Show},
+        inputs::ValidInput,
         instruction::{Mode, Modes},
         program::Program,
         registers::RegisterValue,
@@ -24,7 +26,7 @@ use crate::{
 };
 
 use super::{
-    common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
+    executables::{Executables, DEFAULT_EXECUTABLES},
     random::generator,
 };
 
@@ -57,8 +59,8 @@ impl ValidInput for TestInput {
 
     const AVAILABLE_MODES: Modes = Mode::ALL;
 
-    fn as_register_values(&self) -> Vec<&RegisterValue> {
-        vec![&self.0[0], &self.0[1], &self.0[2], &self.0[3]]
+    fn as_register_values(&self) -> Vec<RegisterValue> {
+        [self.0[0], self.0[1], self.0[2], self.0[3]].to_vec()
     }
 }
 

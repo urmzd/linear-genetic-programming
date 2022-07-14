@@ -10,10 +10,8 @@ use lgp::{
         registers::RegisterGeneratorParameters,
     },
     extensions::classification::ClassificationParameters,
-    utils::common_traits::ValidInput,
 };
 use set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
-use strum::EnumCount;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
@@ -25,9 +23,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
+            InstructionGeneratorParameters::<IrisInput>::from(),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
-            InstructionGeneratorParameters::<IrisInput>::from(),
         ),
         gap: 0.5,
         n_mutations: 0.5,
@@ -48,7 +46,7 @@ mod tests {
             registers::RegisterGeneratorParameters,
         },
         extensions::classification::ClassificationParameters,
-        utils::{common_traits::ValidInput, plots::plot_population_benchmarks},
+        utils::plots::plot_population_benchmarks,
     };
     use more_asserts::{assert_le, assert_lt};
     use ndarray::{aview1, s, Array, Array2, Axis, Dim};
@@ -56,7 +54,6 @@ mod tests {
     use noisy_float::prelude::n64;
     use pretty_assertions::{assert_eq, assert_ne};
     use std::{error, mem::MaybeUninit};
-    use strum::EnumCount;
 
     use crate::set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
 
@@ -75,9 +72,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.5,
@@ -126,9 +123,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.5,
@@ -175,9 +172,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.,
@@ -225,9 +222,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.,
@@ -302,9 +299,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.,
@@ -342,9 +339,9 @@ mod tests {
 
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.,
@@ -379,9 +376,9 @@ mod tests {
                 max_generations: 100,
                 program_params: ProgramGeneratorParameters::new(
                     100,
+                    InstructionGeneratorParameters::<IrisInput>::from(),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
-                    InstructionGeneratorParameters::<IrisInput>::from(),
                 ),
                 gap: 0.5,
                 n_mutations: 0.,

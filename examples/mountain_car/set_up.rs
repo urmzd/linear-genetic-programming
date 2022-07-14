@@ -4,13 +4,13 @@ use std::{
 };
 
 use derive_new::new;
-use gym_rs::{core::ActionReward, utils::renderer::RenderMode};
+use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
-use itertools::Itertools;
 use lgp::{
     core::{
         algorithm::GeneticAlgorithm,
-        characteristics::FitnessScore,
+        characteristics::{Compare, FitnessScore, Show},
+        inputs::ValidInput,
         instruction::{Mode, Modes},
         program::Program,
         registers::RegisterValue,
@@ -18,7 +18,7 @@ use lgp::{
     extensions::reinforcement_learning::{
         FitReward, ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
-    utils::common_traits::{Compare, Executables, Show, ValidInput, DEFAULT_EXECUTABLES},
+    utils::executables::{Executables, DEFAULT_EXECUTABLES},
 };
 use num::NumCast;
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -39,9 +39,9 @@ impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
     type O = Program<'a, ReinforcementLearningParameters<MountainCarInput<'a>>>;
 }
 
-#[derive(Debug, Serialize, new)]
+#[derive(Debug, Serialize, new, Clone)]
 pub struct MountainCarInput<'a> {
-    game: &'a mut MountainCarEnv<'a>,
+    game: MountainCarEnv<'a>,
 }
 
 impl<'a> Ord for MountainCarInput<'a> {
@@ -75,6 +75,11 @@ impl<'a> ValidInput for MountainCarInput<'a> {
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
     const AVAILABLE_MODES: Modes = Mode::INTERNAL_ONLY;
+
+    fn as_register_values(&self) -> Vec<RegisterValue> {
+        let state = self.get_state();
+        state
+    }
 }
 
 impl From<MountainCarRewardValue> for FitnessScore {
@@ -130,15 +135,17 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
         let transformed_action = NumCast::from(action).unwrap();
         let ActionReward { reward, done, .. } = self.game.step(transformed_action);
         if done {
-            Reward::Terminal(MountainCarRewardValue(OrderedFloat(reward)))
+            Reward::Terminal(MountainCarRewardValue(reward))
         } else {
-            Reward::Continue(MountainCarRewardValue(OrderedFloat(reward)))
+            Reward::Continue(MountainCarRewardValue(reward))
         }
     }
 
     fn get_state(&self) -> Vec<RegisterValue> {
-        let state: Vec<f64> = self.game.state.into();
-        state.iter().map(|x| OrderedFloat(*x as f32)).collect_vec()
+        let state = &self.game.state;
+        [state.position, state.velocity]
+            .map(|v| OrderedFloat(v.into_inner() as f32))
+            .to_vec()
     }
 
     fn finish(&mut self) {

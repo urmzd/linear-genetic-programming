@@ -4,12 +4,10 @@ use ordered_float::OrderedFloat;
 use serde::Serialize;
 use smartcore::metrics::accuracy::Accuracy;
 
-use crate::{
-    core::{
-        characteristics::{Fitness, FitnessScore, Organism},
-        program::{ExtensionParameters, Program},
-    },
-    utils::common_traits::{Compare, Inputs, Show, ValidInput},
+use crate::core::{
+    characteristics::{Compare, Fitness, FitnessScore, Organism, Show},
+    inputs::{Inputs, ValidInput},
+    program::{ExtensionParameters, Program},
 };
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
