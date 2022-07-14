@@ -5,7 +5,11 @@ use std::marker::PhantomData;
 use derive_new::new;
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
-use rand::prelude::SliceRandom;
+use ordered_float::OrderedFloat;
+use rand::{
+    distributions::Standard,
+    prelude::{Distribution, SliceRandom},
+};
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
@@ -14,6 +18,7 @@ use crate::{
         algorithm::GeneticAlgorithm,
         instruction::{Mode, Modes},
         program::Program,
+        registers::RegisterValue,
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
 };
@@ -24,10 +29,10 @@ use super::{
 };
 
 #[derive(PartialEq, PartialOrd, Ord, Eq, Clone, Debug, Serialize, Deserialize, new)]
-pub struct TestInput<'a>(pub [usize; 5], PhantomData<&'a ()>);
+pub struct TestInput(pub [OrderedFloat<f32>; 5]);
 
-impl<'a> Compare for TestInput<'a> {}
-impl<'a> Show for TestInput<'a> {}
+impl Compare for TestInput {}
+impl Show for TestInput {}
 
 #[derive(
     Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount, num_derive::ToPrimitive,
@@ -39,7 +44,7 @@ pub enum TestRepresent {
 
 impl Compare for TestRepresent {}
 
-impl<'a> ValidInput for TestInput<'a> {
+impl ValidInput for TestInput {
     type Actions = TestRepresent;
 
     const N_INPUTS: usize = 4;
@@ -52,28 +57,31 @@ impl<'a> ValidInput for TestInput<'a> {
 
     const AVAILABLE_MODES: Modes = Mode::ALL;
 
-    fn ref_registers(&self) -> Vec<&f32> {
-        (vec![self.0[0], self.0[1], self.0[2], self.0[3]])
-            .iter()
-            .map(|v| &((*v) as f32))
-            .collect()
+    fn as_register_values(&self) -> Vec<&RegisterValue> {
+        vec![&self.0[0], &self.0[1], &self.0[2], &self.0[3]]
     }
 }
 
-impl<'a> ClassificationInput for TestInput<'a> {
+impl ClassificationInput for TestInput {
     fn get_class(&self) -> TestRepresent {
-        FromPrimitive::from_usize(self.0[Self::N_INPUTS]).unwrap()
+        FromPrimitive::from_usize(self.0[Self::N_INPUTS].into_inner().floor() as usize).unwrap()
     }
 }
 
 pub struct TestLgp<'a>(PhantomData<&'a ()>);
 impl<'a> GeneticAlgorithm<'a> for TestLgp<'a> {
-    type O = Program<'a, ClassificationParameters<'a, TestInput<'a>>>;
+    type O = Program<'a, ClassificationParameters<'a, TestInput>>;
 }
 
-pub const DEFAULT_INPUTS: &'static [TestInput] = &[
-    TestInput::new([0; 5]),
-    TestInput::new([1; 5]),
-    TestInput::new([0, 0, 0, 1, 1]),
-    TestInput::new([0, 1, 1, 1, 1]),
-];
+impl Default for TestInput {
+    fn default() -> Self {
+        TestInput::new([0; 5].map(|v| OrderedFloat(v as f32)))
+    }
+}
+
+impl Distribution<TestInput> for Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> TestInput {
+        let data = [0; 5].map(|_| OrderedFloat(rng.gen_range::<usize, _>(0..=1) as f32));
+        TestInput(data)
+    }
+}

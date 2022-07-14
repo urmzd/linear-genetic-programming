@@ -36,7 +36,7 @@ where
     T: ClassificationInput,
 {
     fn eval_fitness(&self) -> FitnessScore {
-        let inputs = self.other.inputs;
+        let inputs = self.problem_parameters.inputs;
 
         let mut scores = vec![];
 

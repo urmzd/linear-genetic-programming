@@ -305,9 +305,11 @@ mod tests {
         extensions::classification::ClassificationParameters,
         utils::{
             common_traits::ValidInput,
-            test::{TestInput, TestLgp, DEFAULT_INPUTS},
+            random::generator,
+            test::{TestInput, TestLgp},
         },
     };
+    use rand::{distributions::Standard, Rng};
     use strum::EnumCount;
 
     use super::{EventHooks, GeneticAlgorithm, HyperParameters};
@@ -315,8 +317,8 @@ mod tests {
     #[test]
     fn given_lgp_instance_with_event_hooks_when_execute_then_closures_are_executed(
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let inputs = [0; 5].map(|_| generator().sample(Standard)).to_vec();
         let received = Rc::new(RefCell::new(Vec::new()));
-        let inputs = &DEFAULT_INPUTS.to_vec();
         let hyper_params = HyperParameters {
             population_size: 10,
             gap: 0.5,
@@ -330,7 +332,7 @@ mod tests {
                     <TestInput as ValidInput>::N_INPUTS,
                 ),
                 RegisterGeneratorParameters::new(1),
-                ClassificationParameters::new(inputs),
+                ClassificationParameters::new(&inputs),
             ),
         };
 

@@ -13,8 +13,8 @@ use crate::{
     utils::common_traits::{Compare, Show, ValidInput},
 };
 
-#[derive(Debug, Clone, new, Serialize, Derivative)]
-#[derivative(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Serialize, Derivative, new)]
+#[derivative(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
@@ -80,27 +80,27 @@ where
 {
     fn eval_fitness(&self) -> crate::core::characteristics::FitnessScore {
         let mut scores = vec![];
-        let ReinforcementLearningParameters {
-            n_runs,
-            max_episodes,
-            environment: mut game,
-            ..
-        } = self.other.clone();
+        let x = self.problem_parameters.clone();
+        // let ReinforcementLearningParameters {
+        //     n_runs,
+        //     max_episodes,
+        //     environment,
+        //     ..
+        // } = self.problem_parameters.clone();
 
-        game.init();
+        environment.init();
 
         for _ in 0..*n_runs {
             let mut score = T::RewardValue::default();
 
             for _ in 0..*max_episodes {
-                let input = game.get_state();
                 let mut registers = self.registers.clone();
                 for instruction in &self.instructions {
-                    instruction.apply(&mut registers, &input);
+                    instruction.apply(&mut registers, &environment);
                 }
                 let possible_actions = registers.argmax();
                 let selected_action = T::argmax(possible_actions).unwrap();
-                let reward = game.act(selected_action);
+                let reward = environment.act(selected_action);
 
                 score += reward.get_reward_value();
 
@@ -110,11 +110,11 @@ where
             }
 
             scores.push(score);
-            game.reset();
+            environment.reset();
         }
 
         scores.sort();
-        game.finish();
+        environment.finish();
 
         let median = scores.remove(n_runs / 2);
 

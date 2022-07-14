@@ -1,11 +1,11 @@
 #[macro_export]
 macro_rules! executable {
     ( $fn_name: ident,  $op: tt, $val: expr) => {
-        fn $fn_name<'r>(registers: &'r mut [RegisterValue], data: &[RegisterValue]) -> &'r [RegisterValue] {
+        fn $fn_name<'r>(registers: &'r mut [MaybeBorrowed<RegisterValue>], data: &[MaybeBorrowed<RegisterValue>]) -> &'r [MaybeBorrowed<'r, RegisterValue>] {
             assert_eq!(registers.len(), data.len());
 
             for index in 0..registers.len() {
-                registers[index] = registers[index] $op $val
+                registers[index] = MaybeBorrowed::Owned(registers[index].get() $op $val)
             }
 
             return registers;
@@ -13,11 +13,11 @@ macro_rules! executable {
     };
 
     ( $fn_name: ident, $op: tt) => {
-        fn $fn_name<'r>(registers: &'r mut [RegisterValue], data: &[RegisterValue]) -> &'r [RegisterValue] {
+        fn $fn_name<'r>(registers: &'r mut [MaybeBorrowed<RegisterValue>], data: &[MaybeBorrowed<RegisterValue>]) -> &'r [MaybeBorrowed<'r, RegisterValue>] {
             assert_eq!(registers.len(), data.len());
 
             for index in 0..registers.len() {
-                registers[index] = registers[index] $op data[index]
+                registers[index] = MaybeBorrowed::Owned(registers[index].get() $op data[index].get())
             }
 
             return registers;

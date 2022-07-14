@@ -47,8 +47,7 @@ where
     pub instructions: Instructions<'a, T::InputType>,
     pub registers: Registers<'a>,
     pub fitness: Option<FitnessScore>,
-    // Problem specific parameters
-    pub other: &'a T,
+    pub problem_parameters: &'a T,
 }
 
 impl<'a, T> Clone for Program<'a, T>
@@ -60,7 +59,7 @@ where
             instructions: self.instructions.clone(),
             registers: self.registers.clone(),
             fitness: self.fitness.clone(),
-            other: &self.other,
+            problem_parameters: &self.problem_parameters,
         }
     }
 }
@@ -131,7 +130,7 @@ where
         Program {
             instructions,
             registers,
-            other,
+            problem_parameters: other,
             fitness: None,
         }
     }
@@ -174,14 +173,14 @@ where
             self.instructions.two_point_crossover(&mate.instructions);
 
         let program_a = Program {
-            other: self.other,
+            problem_parameters: self.problem_parameters,
             instructions: child_a_instructions,
             fitness: None,
             registers: self.registers.clone().reset().to_owned(),
         };
 
         let program_b = Program {
-            other: self.other,
+            problem_parameters: self.problem_parameters,
             instructions: child_b_instructions,
             fitness: None,
             registers: self.registers.clone().reset().to_owned(),
@@ -193,9 +192,12 @@ where
 
 #[cfg(test)]
 mod tests {
+    use rand::{distributions::Standard, Rng};
+
     use crate::{
         core::instruction::InstructionGeneratorParameters,
-        extensions::classification::ClassificationParameters, utils::test::TestInput,
+        extensions::classification::ClassificationParameters, utils::random::generator,
+        utils::test::TestInput,
     };
 
     use super::*;
@@ -221,13 +223,7 @@ mod tests {
 
     #[test]
     fn given_programs_when_two_point_crossover_then_two_children_are_produced() {
-        let inputs = [
-            TestInput::new([0; 5]),
-            TestInput::new([1; 5]),
-            TestInput::new([0, 0, 0, 1, 0]),
-            TestInput::new([1, 0, 1, 1, 1]),
-        ]
-        .to_vec();
+        let inputs: Vec<TestInput> = [0; 5].map(|_| generator().sample(Standard)).to_vec();
 
         let instruction_params = InstructionGeneratorParameters::new(3, 4);
         let classification_params = ClassificationParameters::new(&inputs);

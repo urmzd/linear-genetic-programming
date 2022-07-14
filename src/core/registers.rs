@@ -35,6 +35,13 @@ impl<'a, T> MaybeBorrowed<'a, T> {
             MaybeBorrowed::Owned(_) => true,
         }
     }
+
+    pub fn get(&self) -> T {
+        match self {
+            MaybeBorrowed::Borrowed(value) => **value,
+            MaybeBorrowed::Owned(value) => *value,
+        }
+    }
 }
 
 #[derive(Debug, Clone, new, Serialize)]

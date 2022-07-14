@@ -1,6 +1,5 @@
 use core::fmt;
 
-use itertools::Itertools;
 use num::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
@@ -33,7 +32,7 @@ impl AnyExecutable {
 type InternalFn = for<'r, 's> fn(
     &'r mut [MaybeBorrowed<RegisterValue>],
     &'s [MaybeBorrowed<RegisterValue>],
-) -> &'r [RegisterValue];
+) -> &'r [MaybeBorrowed<'r, RegisterValue>];
 
 impl fmt::Debug for AnyExecutable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -70,16 +69,16 @@ where
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
     }
 
-    fn ref_registers(&self) -> Vec<&f32>;
+    fn as_register_values(&self) -> Vec<&RegisterValue>;
 }
 
 impl<'a, T: ValidInput> From<&'a T> for Registers<'a> {
     fn from(input: &'a T) -> Self {
-        let ref_data = input
-            .ref_registers()
+        let ref_data: Vec<MaybeBorrowed<RegisterValue>> = input
+            .as_register_values()
             .iter()
-            .map(|v| MaybeBorrowed::Borrowed(v))
-            .collect_vec();
+            .map(|v| MaybeBorrowed::Borrowed(*v))
+            .collect();
         Registers::new(ref_data, 2, 0, true)
     }
 }
