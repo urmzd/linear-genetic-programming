@@ -778,6 +778,12 @@ checksum = "879d54834c8c76457ef4293a689b2a8c59b076067ad77b15efafbb05f92a592b"
 
 [[package]]
 name = "itertools"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bde6dfa1dea0a161d7473ae973fb071f33b5cd7bac3defb47bb05fbe8f8b377"
+
+[[package]]
+name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
@@ -826,7 +832,8 @@ dependencies = [
  "derivative",
  "derive-new",
  "gym-rs",
- "itertools",
+ "itertools 0.1.10",
+ "itertools 0.10.3",
  "lazy_static",
  "libmath",
  "log",
@@ -1023,7 +1030,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22877ad014bafa2f7dcfa5d556b0c7a52b0546cc98061a1ebef6d1834957b069"
 dependencies = [
  "indexmap",
- "itertools",
+ "itertools 0.10.3",
  "ndarray",
  "noisy_float",
  "num-integer",

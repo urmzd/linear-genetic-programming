@@ -5,7 +5,6 @@ use std::marker::PhantomData;
 use derive_new::new;
 use num::FromPrimitive;
 use num_derive::FromPrimitive;
-use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -15,7 +14,6 @@ use crate::{
         algorithm::GeneticAlgorithm,
         instruction::{Mode, Modes},
         program::Program,
-        registers::Registers,
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
 };
@@ -28,19 +26,6 @@ use super::{
 #[derive(PartialEq, PartialOrd, Ord, Eq, Clone, Debug, Serialize, Deserialize, new)]
 pub struct TestInput<'a>(pub [usize; 5], PhantomData<&'a ()>);
 
-impl<'a> Into<Registers<'a>> for TestInput<'a> {
-    fn into(self) -> Registers<'a> {
-        Registers::new(
-            self.0
-                .to_vec()
-                .iter()
-                .map(|v| OrderedFloat(*v as f32))
-                .collect(),
-            2,
-            1,
-        )
-    }
-}
 impl<'a> Compare for TestInput<'a> {}
 impl<'a> Show for TestInput<'a> {}
 
@@ -66,6 +51,13 @@ impl<'a> ValidInput for TestInput<'a> {
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
     const AVAILABLE_MODES: Modes = Mode::ALL;
+
+    fn ref_registers(&self) -> Vec<&f32> {
+        (vec![self.0[0], self.0[1], self.0[2], self.0[3]])
+            .iter()
+            .map(|v| &((*v) as f32))
+            .collect()
+    }
 }
 
 impl<'a> ClassificationInput for TestInput<'a> {

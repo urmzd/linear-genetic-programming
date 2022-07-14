@@ -8,36 +8,32 @@ use crate::{
     core::{
         characteristics::{Fitness, FitnessScore, Organism},
         program::{ExtensionParameters, Program},
-        registers::Registers,
     },
     utils::common_traits::{Compare, Inputs, Show, ValidInput},
 };
 
-use std::hash::Hash;
-
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
 pub struct ClassificationParameters<'a, InputType>
 where
-    InputType: ClassificationInput<'a>,
+    InputType: ClassificationInput,
 {
     inputs: &'a Inputs<InputType>,
 }
 
 impl<'a, T> ExtensionParameters<'a> for ClassificationParameters<'a, T>
 where
-    T: ClassificationInput<'a>,
+    T: ClassificationInput,
 {
     type InputType = T;
 }
 
-pub trait ClassificationInput<'a>: ValidInput + Into<Registers<'a>> + Compare {
+pub trait ClassificationInput: ValidInput + Compare + Sized {
     fn get_class(&self) -> Self::Actions;
 }
 
 impl<'a, T> Fitness for Program<'a, ClassificationParameters<'a, T>>
 where
-    T: ClassificationInput<'a>,
-    <T as ValidInput>::Actions: Hash + Compare,
+    T: ClassificationInput,
 {
     fn eval_fitness(&self) -> FitnessScore {
         let inputs = self.other.inputs;
@@ -80,8 +76,8 @@ where
 }
 
 impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>> where
-    T: ClassificationInput<'a>
+    T: ClassificationInput
 {
 }
-impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput<'a> {}
-impl<'a, T> Compare for ClassificationParameters<'a, T> where T: ClassificationInput<'a> {}
+impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput {}
+impl<'a, T> Compare for ClassificationParameters<'a, T> where T: ClassificationInput {}

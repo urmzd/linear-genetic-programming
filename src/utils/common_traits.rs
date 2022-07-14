@@ -1,5 +1,6 @@
 use core::fmt;
 
+use itertools::Itertools;
 use num::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
@@ -9,7 +10,7 @@ use strum::EnumCount;
 use crate::{
     core::{
         instruction::Modes,
-        registers::{RegisterValue, Registers},
+        registers::{MaybeBorrowed, RegisterValue, Registers},
     },
     executable, executables,
 };
@@ -29,8 +30,10 @@ impl AnyExecutable {
     }
 }
 
-type InternalFn =
-    for<'r, 's> fn(&'r mut [RegisterValue], &'s [RegisterValue]) -> &'r [RegisterValue];
+type InternalFn = for<'r, 's> fn(
+    &'r mut [MaybeBorrowed<RegisterValue>],
+    &'s [MaybeBorrowed<RegisterValue>],
+) -> &'r [RegisterValue];
 
 impl fmt::Debug for AnyExecutable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,5 +68,18 @@ where
 
     fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
+    }
+
+    fn ref_registers(&self) -> Vec<&f32>;
+}
+
+impl<'a, T: ValidInput> From<&'a T> for Registers<'a> {
+    fn from(input: &'a T) -> Self {
+        let ref_data = input
+            .ref_registers()
+            .iter()
+            .map(|v| MaybeBorrowed::Borrowed(v))
+            .collect_vec();
+        Registers::new(ref_data, 2, 0, true)
     }
 }

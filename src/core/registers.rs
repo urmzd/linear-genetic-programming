@@ -3,7 +3,6 @@ use std::{
     ops::Range,
 };
 
-use ndarray::Order;
 use strum::EnumCount;
 
 use derive_new::new;
@@ -20,11 +19,22 @@ pub struct Registers<'a> {
     data: Vec<MaybeBorrowed<'a, RegisterValue>>,
     n_outputs: usize,
     n_extras: usize,
+    frozen: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, new, Hash)]
 pub enum MaybeBorrowed<'a, T> {
     Borrowed(&'a T),
     Owned(T),
+}
+
+impl<'a, T> MaybeBorrowed<'a, T> {
+    pub fn is_owned(&self) -> bool {
+        match self {
+            MaybeBorrowed::Borrowed(_) => false,
+            MaybeBorrowed::Owned(_) => true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, new, Serialize)]
@@ -38,23 +48,26 @@ impl<'a> Registers<'a> {
             n_extra_action_registers,
         } = parameters;
 
-        Registers {
-            data: vec![OrderedFloat(0.); T::Actions::COUNT + *n_extra_action_registers],
-            n_extras: *n_extra_action_registers,
-            n_outputs: T::Actions::COUNT,
-        }
+        Registers::new(
+            vec![
+                MaybeBorrowed::Owned(OrderedFloat(0.));
+                T::Actions::COUNT + *n_extra_action_registers
+            ],
+            *n_extra_action_registers,
+            T::Actions::COUNT,
+            false,
+        )
     }
 
     pub fn reset(&mut self) -> &mut Self {
-        let Registers { data, .. } = self;
-
-        for value in data.as_mut_slice() {
-            *value = match value {
-                MaybeBorrowed::Borrowed(_) => panic!("CANNOT RESET REGISTERS WITH BORROWED VALUES"),
-                MaybeBorrowed::Owned(_) => MaybeBorrowed::Owned(OrderedFloat(0f32)),
+        if !self.frozen {
+            let Registers { data, .. } = self;
+            for value in data.as_mut_slice() {
+                if value.is_owned() {
+                    *value = MaybeBorrowed::Owned(OrderedFloat(0f32))
+                }
             }
         }
-
         self
     }
 
@@ -62,16 +75,22 @@ impl<'a> Registers<'a> {
         self.n_extras + self.n_outputs
     }
 
-    pub fn update(&mut self, index: usize, value: RegisterValue) -> () {
-        let Registers { data, .. } = self;
-        data[index] = value
+    pub fn update(&mut self, index: usize, value: RegisterValue) {
+        if !self.frozen {
+            let Registers { data, .. } = self;
+            data[index] = MaybeBorrowed::Owned(value);
+        }
     }
 
-    pub fn get(&self, index: usize) -> RegisterValue {
-        self.data[index]
+    pub fn get(&self, index: usize) -> &MaybeBorrowed<RegisterValue> {
+        self.data.get(index).unwrap()
     }
 
-    pub fn get_mut_slice(&mut self, start: usize, end: Option<usize>) -> &mut [RegisterValue] {
+    pub fn as_mut_slice<'b>(
+        &'b mut self,
+        start: usize,
+        end: Option<usize>,
+    ) -> &'b mut [MaybeBorrowed<'a, RegisterValue>] {
         let range = Range {
             start,
             end: end.unwrap_or(start + 1),
@@ -82,7 +101,11 @@ impl<'a> Registers<'a> {
         &mut self.data[range]
     }
 
-    pub fn get_slice(&self, start: usize, end: Option<usize>) -> &[RegisterValue] {
+    pub fn as_slice(
+        &'a self,
+        start: usize,
+        end: Option<usize>,
+    ) -> &'a [MaybeBorrowed<RegisterValue>] {
         let range = Range {
             start,
             end: end.unwrap_or(start + 1),
@@ -94,7 +117,8 @@ impl<'a> Registers<'a> {
     }
 
     pub fn argmax(&self) -> Vec<usize> {
-        let mut arg_lookup: HashMap<RegisterValue, HashSet<usize>> = HashMap::new();
+        let mut arg_lookup: HashMap<MaybeBorrowed<'a, RegisterValue>, HashSet<usize>> =
+            HashMap::new();
 
         let Registers {
             data, n_outputs, ..

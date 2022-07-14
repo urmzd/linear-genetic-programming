@@ -31,6 +31,7 @@ smartcore = "0.2"
 ndarray = { version = "0.15", features = ["std", "serde"] }
 noisy_float = { version = "0.2.0" }
 ndarray-stats = "0.5"
+itertools = "0.1"
 
 [dev-dependencies]
 pretty_assertions = { version= "1.2"}

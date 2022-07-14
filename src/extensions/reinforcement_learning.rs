@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    ops::{Add, AddAssign},
-};
+use std::ops::{Add, AddAssign};
 
 use derivative::Derivative;
 use derive_new::new;
@@ -64,7 +61,7 @@ pub trait FitReward:
 {
 }
 
-pub trait ReinforcementLearningInput: ValidInput
+pub trait ReinforcementLearningInput: ValidInput + Sized
 where
     Self::RewardValue: FitReward,
 {

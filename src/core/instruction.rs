@@ -10,7 +10,7 @@ use std::fmt::Formatter;
 use std::marker::PhantomData;
 use strum::EnumCount;
 
-use crate::utils::common_traits::{AnyExecutable, Inputs, Show, ValidInput};
+use crate::utils::common_traits::{AnyExecutable, Show, ValidInput};
 use crate::utils::random::generator;
 
 use super::characteristics::{Generate, Mutate};
@@ -184,11 +184,10 @@ impl<'b, T> Show for Instruction<'b, T> where T: ValidInput {}
 impl<'b, T> Instruction<'b, T>
 where
     T: ValidInput,
-    &'b Registers<'b>: From<&'b T>,
 {
-    fn get_target_data(&self, registers: &'b Registers, data: &'b T) -> &'b Registers {
-        let target_data: &Registers = match self.mode {
-            Mode::Internal => registers,
+    fn get_target_data(&self, registers: &'b Registers, data: &'b T) -> Registers<'b> {
+        let target_data: Registers<'b> = match self.mode {
+            Mode::Internal => registers.clone(),
             Mode::External => data.into(),
         };
 
@@ -198,8 +197,8 @@ where
     pub fn apply(&self, registers: &'b mut Registers, input: &'b T) {
         let cloned_registers = registers.clone();
         let data = self.get_target_data(&cloned_registers, input);
-        let target_slice = data.get_slice(self.target_index, None);
-        let source_slice = registers.get_mut_slice(self.source_index, None);
+        let target_slice = data.as_slice(self.target_index, None);
+        let source_slice = registers.as_mut_slice(self.source_index, None);
         (self.executable.get_fn())(source_slice, target_slice);
     }
 }
