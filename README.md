@@ -24,8 +24,6 @@ cargo run --example <example_name>
 ```rust
 //examples/iris/main.rs#L19-L42
 
-async fn main() -> Result<(), Box<dyn error::Error>> {
-    let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
     let hyper_params = HyperParameters {
@@ -33,9 +31,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         max_generations: 100,
         program_params: ProgramGeneratorParameters::new(
             100,
+            InstructionGeneratorParameters::<IrisInput>::from(),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
-            InstructionGeneratorParameters::<IrisInput>::from(),
         ),
         gap: 0.5,
         n_mutations: 0.5,
@@ -48,6 +46,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
 #[cfg(test)]
 mod tests {
+    use lgp::{
+        core::{
 ```
 
 ### Reinforcement Learning (mountain_car)
@@ -55,10 +55,8 @@ mod tests {
 ```rust
 //examples/mountain_car/main.rs#L17-L41
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut game = MountainCarEnv::new(RenderMode::Human, None);
-    let input = MountainCarInput::new(&mut game);
+    let game = MountainCarEnv::new(RenderMode::Human, None);
+    let input = MountainCarInput::new(game);
 
     let hyper_params = HyperParameters {
         population_size: 1,
@@ -68,9 +66,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_generations: 1,
         program_params: ProgramGeneratorParameters::new(
             100,
+            InstructionGeneratorParameters::<MountainCarInput>::from(),
             RegisterGeneratorParameters::new(1),
-            ClassificationParameters::new(&inputs),
-            InstructionGeneratorParameters::<IrisInput>::from(),
+            ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
@@ -80,6 +78,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 mod tests {
+    use gym_rs::{
+        envs::classical_control::mountain_car::MountainCarEnv, utils::renderer::RenderMode,
 ```
 
 ## Building
