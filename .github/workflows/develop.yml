@@ -6,6 +6,7 @@ on:
       - "tests/**.rs"
       - "examples/**.rs"
       - ".github/**.yml"
+      - "cargo.toml"
 jobs:
   embed_code:
     name: Embed Code
