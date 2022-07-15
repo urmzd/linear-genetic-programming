@@ -34,7 +34,7 @@ jobs:
           toolchain: stable
           override: true
           default: true
-      - run: xvfb-run cargo run --example=mountain_car
+      - run: xvfb-run cargo test
       - uses: actions/upload-artifact@v3
         with:
           name: plots
