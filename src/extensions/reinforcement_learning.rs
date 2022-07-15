@@ -118,7 +118,7 @@ where
         median.into()
     }
 
-    fn eval_set_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
+    fn get_or_eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
         *self.fitness.get_or_insert(self.eval_fitness())
     }
 

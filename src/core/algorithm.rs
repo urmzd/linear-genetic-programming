@@ -77,7 +77,7 @@ where
 
     fn rank(population: &mut Population<Self::O>) {
         for individual in population.iter_mut() {
-            individual.eval_set_fitness();
+            individual.get_or_eval_fitness();
         }
         population.sort();
     }
