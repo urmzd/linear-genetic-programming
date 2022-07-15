@@ -49,11 +49,8 @@ mod tests {
         utils::plots::plot_population_benchmarks,
     };
     use more_asserts::{assert_le, assert_lt};
-    use ndarray::{aview1, s, Array, Array2, Axis, Dim};
-    use ndarray_stats::{interpolate::Higher, QuantileExt};
-    use noisy_float::prelude::n64;
     use pretty_assertions::{assert_eq, assert_ne};
-    use std::{error, mem::MaybeUninit};
+    use std::error;
 
     use crate::set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
 
@@ -84,29 +81,19 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.5);
         assert_eq!(hyper_params.n_mutations, 0.5);
 
-        let mut uninit_populations: Array<
-            MaybeUninit<Program<ClassificationParameters<IrisInput>>>,
-            Dim<[usize; 2]>,
-        > = Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
-        let mut generations: usize = 0;
+        let mut populations = vec![];
 
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                population
-                    .clone()
-                    .into_ndarray()
-                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
-                generations += 1;
+                populations.push(population.clone());
                 Ok(())
             }),
         )?;
 
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
         const PLOT_FILE_NAME: &'static str =
             "./assets/tests/plots/lgp_with_mutate_crossover_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+        plot_population_benchmarks(populations, PLOT_FILE_NAME, 0f32..1f32)?;
         Ok(())
     }
     #[tokio::test]
@@ -135,26 +122,18 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.);
         assert_eq!(hyper_params.n_mutations, 0.5);
 
-        let mut uninit_populations =
-            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
-        let mut generations: usize = 0;
+        let mut populations = vec![];
 
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                population
-                    .clone()
-                    .into_ndarray()
-                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
-                generations += 1;
+                populations.push(population.clone());
                 Ok(())
             }),
         )?;
 
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_mutate_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+        plot_population_benchmarks(populations, PLOT_FILE_NAME, 0f32..1f32)?;
         Ok(())
     }
 
@@ -184,26 +163,18 @@ mod tests {
         assert_eq!(hyper_params.n_crossovers, 0.5);
         assert_eq!(hyper_params.n_mutations, 0.);
 
-        let mut uninit_populations =
-            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
-        let mut generations: usize = 0;
+        let mut populations = vec![];
 
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                population
-                    .clone()
-                    .into_ndarray()
-                    .assign_to(uninit_populations.slice_mut(s![generations, ..]));
-                generations += 1;
+                populations.push(population.clone());
                 Ok(())
             }),
         )?;
 
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_with_crossover_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+        plot_population_benchmarks(populations, PLOT_FILE_NAME, 0f32..1f32)?;
 
         Ok(())
     }
@@ -236,7 +207,7 @@ mod tests {
 
         let mut generations: usize = 0;
 
-        let mut vec_pops = vec![];
+        let mut populations = vec![];
 
         let mut best = None;
         let mut median = None;
@@ -245,38 +216,20 @@ mod tests {
         IrisLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let array = population.clone().into_ndarray();
+                populations.push(population.clone());
 
-                vec_pops.push(array);
-
-                let current_array = vec_pops.get_mut(generations).unwrap();
-
-                let qs = &[n64(0.), n64(0.5), n64(1.)];
-                let benchmark = current_array
-                    .quantiles_axis_mut(Axis(0), &aview1(qs), &Higher)
-                    .unwrap();
-
-                worst = benchmark.get([0]).map(|v| v.clone());
-                median = benchmark.get([1]).map(|v| v.clone());
-                best = benchmark.get([2]).map(|v| v.clone());
+                worst = population.last().map(|v| v.clone());
+                median = population.middle().map(|v| v.clone());
+                best = population.first().map(|v| v.clone());
 
                 generations += 1;
                 Ok(())
             }),
         )?;
 
-        let mut uninit_populations = Array2::uninit((generations, hyper_params.population_size));
-
-        (0..generations).for_each(|g_i| {
-            let array = vec_pops.get(g_i).unwrap();
-            array.assign_to(uninit_populations.slice_mut(s![g_i, ..]))
-        });
-
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
         // TODO: Pull the graph section out into a seperate function.
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/lgp_smoke_test.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, 0f32..1f32)?;
+        plot_population_benchmarks(populations, PLOT_FILE_NAME, 0f32..1f32)?;
 
         if worst != median || median != best {
             // TODO: Create concrete error type; SNAFU or Failure?

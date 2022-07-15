@@ -28,9 +28,6 @@ derive-new = "0.5"
 derivative = "2.2.0"
 plotters = "0.3.1"
 smartcore = "0.2"
-ndarray = { version = "0.15", features = ["std", "serde"] }
-noisy_float = { version = "0.2.0" }
-ndarray-stats = "0.5"
 itertools = "0.10"
 derive_more = { version="0.99" }
 

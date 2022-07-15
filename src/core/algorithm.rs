@@ -75,14 +75,14 @@ where
         population
     }
 
-    fn rank(population: &mut Population<Self::O>) -> () {
+    fn rank(population: &mut Population<Self::O>) {
         for individual in population.iter_mut() {
             individual.eval_set_fitness();
         }
         population.sort();
     }
 
-    fn apply_selection(population: &mut Population<Self::O>, gap: f32) -> () {
+    fn apply_selection(population: &mut Population<Self::O>, gap: f32) {
         assert!(gap >= 0f32 && gap <= 1f32);
         assert_le!(population.last(), population.first());
 
@@ -95,7 +95,7 @@ where
         }
     }
 
-    fn breed(population: &mut Population<Self::O>, n_mutations: f32, n_crossovers: f32) -> () {
+    fn breed(population: &mut Population<Self::O>, n_mutations: f32, n_crossovers: f32) {
         assert_ge!(OrderedFloat(n_mutations), OrderedFloat(0f32));
         assert_ge!(OrderedFloat(n_crossovers), OrderedFloat(0f32));
         assert_le!(OrderedFloat(n_crossovers + n_mutations), OrderedFloat(1f32));
@@ -111,6 +111,8 @@ where
 
         assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
 
+        let mut children = vec![];
+
         // Crossover + Mutation
         while (n_crossovers_todo + n_mutations_todo) > 0 {
             if let [parent_a, parent_b] = population
@@ -118,8 +120,6 @@ where
                 .choose_multiple(&mut generator(), 2)
                 .as_slice()
             {
-                let mut child_a = None;
-                let mut child_b = None;
                 if n_crossovers_todo > 0 {
                     let crossover_child = parent_a
                         .two_point_crossover(parent_b)
@@ -127,10 +127,9 @@ where
                         .unwrap()
                         .to_owned();
 
-                    child_a = Some(crossover_child);
-
                     remaining_size -= 1;
                     n_crossovers_todo -= 1;
+                    children.push(crossover_child)
                 }
 
                 if n_mutations_todo > 0 {
@@ -139,18 +138,10 @@ where
 
                     let mutation_child = selected_parent.map(|parent| parent.mutate()).unwrap();
 
-                    child_b = Some(mutation_child);
-
                     remaining_size -= 1;
                     n_mutations_todo -= 1;
-                }
 
-                if child_a.is_some() {
-                    population.push(child_a.unwrap())
-                }
-
-                if child_b.is_some() {
-                    population.push(child_b.unwrap())
+                    children.push(mutation_child)
                 }
             };
         }
@@ -163,6 +154,8 @@ where
         {
             population.push(individual)
         }
+
+        population.extend(children)
     }
 
     fn execute<'b>(

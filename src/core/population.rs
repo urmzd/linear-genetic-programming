@@ -1,6 +1,3 @@
-use ndarray::Array;
-use ndarray::Array1;
-
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
 
@@ -11,10 +8,21 @@ pub type InnerPopulation<T> = Vec<T>;
 #[derive(Clone, Debug)]
 pub struct Population<T>
 where
-    T: Compare + Show,
+    T: Compare + Show + Clone,
 {
     list: InnerPopulation<T>,
     capacity: usize,
+}
+
+impl<V> Extend<V> for Population<V>
+where
+    V: Show + Compare + Clone,
+{
+    fn extend<T: IntoIterator<Item = V>>(&mut self, iter: T) {
+        for element in iter {
+            self.push(element)
+        }
+    }
 }
 
 impl<T> Population<T>
@@ -40,6 +48,10 @@ where
 
     pub fn first(&self) -> Option<&T> {
         self.list.get(0)
+    }
+
+    pub fn middle(&self) -> Option<&T> {
+        self.list.get(self.list.len() / 2)
     }
 
     pub fn last(&self) -> Option<&T> {
@@ -73,15 +85,11 @@ where
     pub fn iter_mut<'a>(&'a mut self) -> IterMut<T> {
         self.list.iter_mut()
     }
-
-    pub fn into_ndarray(self) -> Array1<T> {
-        Array::from_vec(self.list)
-    }
 }
 
 impl<T> IntoIterator for Population<T>
 where
-    T: Compare + Show,
+    T: Compare + Show + Clone,
 {
     type Item = T;
 

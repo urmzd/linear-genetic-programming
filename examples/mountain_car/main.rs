@@ -51,7 +51,6 @@ mod tests {
         extensions::reinforcement_learning::ReinforcementLearningParameters,
         utils::plots::plot_population_benchmarks,
     };
-    use ndarray::{s, Array2};
 
     use crate::set_up::{MountainCarInput, MountainCarLgp};
 
@@ -76,25 +75,19 @@ mod tests {
             ),
         };
 
-        let mut uninit_populations =
-            Array2::uninit((hyper_params.max_generations, hyper_params.population_size));
-        let mut generations: usize = 0;
+        let mut populations = vec![];
 
         MountainCarLgp::execute(
             &hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
-                let array = population.clone().into_ndarray();
-                array.assign_to(uninit_populations.slice_mut(s![generations, ..]));
-                generations += 1;
+                populations.push(population.clone());
 
                 Ok(())
             }),
         )?;
 
-        let init_populations = unsafe { uninit_populations.assume_init() };
-
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/mountain_car.png";
-        plot_population_benchmarks(init_populations, PLOT_FILE_NAME, -200f32..0f32)?;
+        plot_population_benchmarks(populations, PLOT_FILE_NAME, -200f32..0f32)?;
         Ok(())
     }
 }
