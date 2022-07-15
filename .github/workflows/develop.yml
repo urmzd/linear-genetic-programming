@@ -28,16 +28,14 @@ jobs:
     steps:
       - run: mkdir -p ./assets/tests/plots
       - run: sudo apt install libsdl2-gfx-dev -y
+      - run: sudo apt install xvfb xvfb-run
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
           default: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-targets
+      - run: xvfb-run cargo test
       - uses: actions/upload-artifact@v3
         with:
           name: plots
