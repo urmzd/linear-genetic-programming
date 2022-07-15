@@ -123,7 +123,7 @@ where
     }
 
     fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
-        Some(self.eval_fitness())
+        self.fitness
     }
 }
 

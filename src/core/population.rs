@@ -47,15 +47,16 @@ where
     }
 
     pub fn first(&self) -> Option<&T> {
-        self.list.get(0)
+        self.list.first()
     }
 
     pub fn middle(&self) -> Option<&T> {
-        self.list.get(self.list.len() / 2)
+        let middle_index = (((self.list.len() - 1) as f64) / 2.).floor() as usize;
+        self.list.get(middle_index)
     }
 
     pub fn last(&self) -> Option<&T> {
-        self.list.get(self.list.len() - 1)
+        self.list.last()
     }
 
     pub fn push(&mut self, value: T) -> () {
