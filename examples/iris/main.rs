@@ -21,15 +21,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let hyper_params = HyperParameters {
         population_size: 100,
         max_generations: 100,
+        gap: 0.5,
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
-        gap: 0.5,
-        n_mutations: 0.5,
-        n_crossovers: 0.5,
     };
 
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
@@ -68,17 +68,17 @@ mod tests {
 
         let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
-                population_size: 100,
+                population_size: 5,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.5,
+                n_crossovers: 0.5,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.5,
-                n_crossovers: 0.5,
             };
 
         assert_eq!(hyper_params.n_crossovers, 0.5);
@@ -121,15 +121,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.5,
+                n_crossovers: 0.,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.5,
-                n_crossovers: 0.,
             };
 
         assert_eq!(hyper_params.n_crossovers, 0.);
@@ -170,15 +170,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.5,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.,
-                n_crossovers: 0.5,
             };
 
         assert_eq!(hyper_params.n_crossovers, 0.5);
@@ -220,15 +220,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.,
-                n_crossovers: 0.,
             };
 
         assert_eq!(hyper_params.n_crossovers, 0.);
@@ -296,15 +296,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.5,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.,
-                n_crossovers: 0.5,
             };
 
         let mut population = IrisLgp::init_population(&hyper_params);
@@ -335,16 +335,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
-
+                gap: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.5,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.,
-                n_crossovers: 0.5,
             };
 
         let mut population = IrisLgp::init_population(&hyper_params);
@@ -373,15 +372,15 @@ mod tests {
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
+                gap: 0.5,
+                n_mutations: 0.,
+                n_crossovers: 0.5,
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
                     RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
-                gap: 0.5,
-                n_mutations: 0.,
-                n_crossovers: 0.5,
             };
 
         let population = IrisLgp::init_population(&hyper_params);

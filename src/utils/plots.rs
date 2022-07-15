@@ -4,7 +4,6 @@ use itertools::Itertools;
 use ndarray::{aview1, Array, Axis, Dim};
 use ndarray_stats::{interpolate, QuantileExt};
 use noisy_float::prelude::n64;
-use ordered_float::OrderedFloat;
 use plotters::{
     prelude::{BitMapBackend, ChartBuilder, ErrorBar, IntoDrawingArea},
     style::{colors, IntoFont, WHITE},
@@ -23,7 +22,8 @@ where
     let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
     root.fill(&WHITE)?;
 
-    let n_benchmarks = populations.shape()[0];
+    let shape = populations.shape();
+    let n_benchmarks = shape[0];
 
     let mut chart = ChartBuilder::on(&root)
         .caption("Fitness Over Generations", ("sans-serif", 50).into_font())
@@ -34,40 +34,26 @@ where
 
     chart.configure_mesh().draw()?;
 
-    let quantiles = populations
-        .quantiles_axis_mut(
-            Axis(0),
-            &aview1(&[n64(1.), n64(0.5), n64(0.)]),
-            &interpolate::Higher,
-        )
-        .unwrap();
-
-    let benchmarks = quantiles
-        .axis_iter(Axis(1))
-        .map(|b| {
-            let mut b_vec = b.to_vec();
-            let benchmark = (
-                b_vec
-                    .pop()
-                    .and_then(|p| p.get_fitness())
-                    .map(|f| f.into_inner())
-                    .unwrap(),
-                b_vec
-                    .pop()
-                    .and_then(|p| p.get_fitness())
-                    .map(|f| f.into_inner())
-                    .unwrap(),
-                b_vec
-                    .pop()
-                    .and_then(|p| p.get_fitness())
-                    .map(|f| f.into_inner())
-                    .unwrap(),
-            );
-
-            benchmark
-        })
-        .sorted_by_key(|(w, _m, _b)| OrderedFloat(*w))
-        .collect_vec();
+    let benchmarks: Vec<(f32, f32, f32)> = {
+        let mut v = Vec::with_capacity(n_benchmarks);
+        for mut population in populations.rows_mut() {
+            let quantile_arr = [n64(1.), n64(0.5), n64(0.)];
+            let quantiles = aview1(&quantile_arr);
+            let values = population
+                .quantiles_axis_mut(Axis(0), &quantiles, &interpolate::Higher)
+                .unwrap();
+            let value_tuples = values
+                .to_vec()
+                .into_iter()
+                .map(|program| program.get_fitness().unwrap())
+                .sorted()
+                .map(|fitness| fitness.into_inner())
+                .collect_tuple()
+                .unwrap();
+            v.push(value_tuples);
+        }
+        v
+    };
 
     chart
         .draw_series(
