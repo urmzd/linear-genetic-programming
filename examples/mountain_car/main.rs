@@ -62,7 +62,7 @@ mod tests {
         let input = MountainCarInput::new(game);
 
         let hyper_params = HyperParameters {
-            population_size: 10,
+            population_size: 100,
             gap: 0.5,
             n_crossovers: 0.5,
             n_mutations: 0.5,
