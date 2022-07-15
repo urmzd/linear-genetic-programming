@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: mkdir -p ./assets/tests/plots
-      - run: sudo apt install libsdl2-gfx-dev xvfb xvfb-run -y
+      - run: sudo apt install libsdl2-gfx-dev xvfb -y
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
