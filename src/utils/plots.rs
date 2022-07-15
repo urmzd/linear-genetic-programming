@@ -45,9 +45,7 @@ where
             let value_tuples = values
                 .to_vec()
                 .into_iter()
-                .map(|program| program.get_fitness().unwrap())
-                .sorted()
-                .map(|fitness| fitness.into_inner())
+                .map(|program| program.get_fitness().unwrap().into_inner())
                 .collect_tuple()
                 .unwrap();
             v.push(value_tuples);
@@ -60,7 +58,7 @@ where
             benchmarks
                 .iter()
                 .enumerate()
-                .map(|(index, (worst, median, best))| {
+                .map(|(index, (best, median, worst))| {
                     ErrorBar::new_vertical(index, *worst, *median, *best, colors::BLUE, 10)
                 }),
         )
