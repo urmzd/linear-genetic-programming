@@ -122,7 +122,7 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     type RewardValue = MountainCarRewardValue;
 
     fn init(&mut self) {
-        self.game.reset();
+        self.game.reset(None, false, None);
     }
 
     fn act(
@@ -150,6 +150,6 @@ impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
     }
 
     fn reset(&mut self) {
-        self.game.reset();
+        self.game.reset(None, false, None);
     }
 }
