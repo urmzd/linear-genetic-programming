@@ -32,15 +32,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let hyper_params = HyperParameters {
         population_size: 100,
         max_generations: 100,
+        gap: 0.5,
+        n_mutations: 0.5,
+        n_crossovers: 0.5,
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
-        gap: 0.5,
-        n_mutations: 0.5,
-        n_crossovers: 0.5,
     };
 
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
