@@ -633,6 +633,24 @@ mod tests {
     use super::{LinkedList, Node};
 
     #[test]
+    fn given_lists_when_swap_single_element_then_lists_are_mutated() {
+        let a1 = [1, 2, 3, 4, 5];
+        let a2 = [6, 7, 8, 9, 10];
+        let mut l1 = LinkedList::new();
+        let mut l2 = LinkedList::new();
+        l1.extend(a1);
+        l2.extend(a2);
+
+        let mut c1 = l1.cursor_mut();
+        let mut c2 = l2.cursor_mut();
+
+        c1.swap(&mut c2, 2, 3, Some(3), Some(4));
+
+        itertools::assert_equal(l1, [1, 2, 9, 4, 5]);
+        itertools::assert_equal(l2, [6, 7, 8, 3, 10]);
+    }
+
+    #[test]
     fn given_a_list_of_elems_when_extended_then_linked_list_is_fill_with_elements() {
         let elements = [1, 2, 3, 4, 5];
         let mut linked_list = LinkedList::new();

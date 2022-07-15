@@ -204,12 +204,19 @@ mod tests {
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
         let params = InstructionGeneratorParameters::new(5, 5);
         let instructions_a: Instructions<TestInput> =
-            (0..5).map(|_| Instruction::generate(&params)).collect();
+            (0..10).map(|_| Instruction::generate(&params)).collect();
         let instructions_b: Instructions<TestInput> =
-            (0..5).map(|_| Instruction::generate(&params)).collect();
+            (0..10).map(|_| Instruction::generate(&params)).collect();
 
-        let children = instructions_a.two_point_crossover(&instructions_b);
-        assert_eq!(children.len(), 2);
+        let [child_a, child_b] = instructions_a.two_point_crossover(&instructions_b);
+
+        assert_ne!(child_a, child_b);
+
+        assert_ne!(instructions_a, child_a);
+        assert_ne!(instructions_a, child_b);
+
+        assert_ne!(instructions_b, child_a);
+        assert_ne!(instructions_b, child_b);
     }
 
     #[test]
