@@ -589,7 +589,7 @@ checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
 [[package]]
 name = "gym-rs"
 version = "0.2.1"
-source = "git+https://github.com/urmzd/gym-rs#a0eb8223d4092f74b19ac08878ca3cebf76e5dcc"
+source = "git+https://github.com/urmzd/gym-rs#cffca5642221bf52f89072bde46bee5101dda22c"
 dependencies = [
  "derivative",
  "derive-new",
