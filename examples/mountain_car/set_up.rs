@@ -34,7 +34,7 @@ impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
 
 #[derive(Debug, Serialize, new, Clone)]
 pub struct MountainCarInput<'a> {
-    game: MountainCarEnv<'a>,
+    environment: MountainCarEnv<'a>,
 }
 
 impl Show for MountainCarInput<'_> {}
@@ -54,12 +54,12 @@ impl ValidInput for MountainCarInput<'_> {
 
 impl ReinforcementLearningInput for MountainCarInput<'_> {
     fn init(&mut self) {
-        self.game.reset(None, false, None);
+        self.environment.reset(None, false, None);
     }
 
     fn act(&mut self, action: Self::Actions) -> lgp::extensions::reinforcement_learning::Reward {
         let transformed_action = NumCast::from(action).unwrap();
-        let ActionReward { reward, done, .. } = self.game.step(transformed_action);
+        let ActionReward { reward, done, .. } = self.environment.step(transformed_action);
         let reward_f32 = OrderedFloat(reward.into_inner() as f32);
         if done {
             Reward::Terminal(reward_f32)
@@ -69,17 +69,17 @@ impl ReinforcementLearningInput for MountainCarInput<'_> {
     }
 
     fn get_state(&self) -> Vec<RegisterValue> {
-        let state = &self.game.state;
+        let state = &self.environment.state;
         [state.position, state.velocity]
             .map(|v| OrderedFloat(v.into_inner() as f32))
             .to_vec()
     }
 
     fn finish(&mut self) {
-        self.game.close();
+        self.environment.close();
     }
 
     fn reset(&mut self) {
-        self.game.reset(None, false, None);
+        self.environment.reset(None, false, None);
     }
 }

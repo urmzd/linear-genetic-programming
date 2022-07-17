@@ -13,8 +13,8 @@ use set_up::{MountainCarInput, MountainCarLgp};
 mod set_up;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let game = MountainCarEnv::new(RenderMode::Human, None);
-    let input = MountainCarInput::new(game);
+    let environment = MountainCarEnv::new(RenderMode::Human, None);
+    let input = MountainCarInput::new(environment);
 
     let hyper_params = HyperParameters {
         population_size: 1,
@@ -58,8 +58,8 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
-        let game = MountainCarEnv::new(RenderMode::None, None);
-        let input = MountainCarInput::new(game);
+        let environment = MountainCarEnv::new(RenderMode::None, None);
+        let input = MountainCarInput::new(environment);
 
         let hyper_params = HyperParameters {
             population_size: 100,

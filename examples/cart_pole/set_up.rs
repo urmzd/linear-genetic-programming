@@ -27,7 +27,7 @@ pub struct CartPoleLgp<'a>(PhantomData<&'a ()>);
 
 #[derive(Clone, Debug, Serialize, new)]
 pub struct CartPoleInput<'a> {
-    game: CartPoleEnv<'a>,
+    environment: CartPoleEnv<'a>,
 }
 
 impl<'a> ValidInput for CartPoleInput<'a> {
@@ -46,13 +46,13 @@ impl Show for CartPoleInput<'_> {}
 
 impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
     fn init(&mut self) {
-        self.game.reset(None, false, None);
+        self.environment.reset(None, false, None);
     }
 
     fn act(&mut self, action: Self::Actions) -> lgp::extensions::reinforcement_learning::Reward {
         let discrete_action: usize =
             ToPrimitive::to_usize(&action).expect("Value to be derived from action.");
-        let action_reward = self.game.step(discrete_action);
+        let action_reward = self.environment.step(discrete_action);
         let reward = OrderedFloat(action_reward.reward.into_inner() as f32);
 
         if action_reward.done {
@@ -63,11 +63,11 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
     }
 
     fn reset(&mut self) {
-        self.game.reset(None, false, None);
+        self.environment.reset(None, false, None);
     }
 
     fn get_state(&self) -> Vec<lgp::core::registers::RegisterValue> {
-        let state = self.game.state;
+        let state = self.environment.state;
         let state_vec: Vec<_> = state.into();
 
         state_vec
@@ -77,7 +77,7 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
     }
 
     fn finish(&mut self) {
-        self.game.close()
+        self.environment.close()
     }
 }
 

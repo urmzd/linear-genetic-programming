@@ -13,8 +13,8 @@ use set_up::{CartPoleInput, CartPoleLgp};
 mod set_up;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let game = CartPoleEnv::new(RenderMode::Human);
-    let input = CartPoleInput::new(game);
+    let environment = CartPoleEnv::new(RenderMode::Human);
+    let input = CartPoleInput::new(environment);
 
     let hyper_params = HyperParameters {
         population_size: 1,
