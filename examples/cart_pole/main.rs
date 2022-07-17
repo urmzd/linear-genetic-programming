@@ -47,9 +47,7 @@ mod tests {
             program::ProgramGeneratorParameters,
             registers::RegisterGeneratorParameters,
         },
-        extensions::reinforcement_learning::{
-            ReinforcementLearningInput, ReinforcementLearningParameters,
-        },
+        extensions::reinforcement_learning::ReinforcementLearningParameters,
         utils::plots::plot_population_benchmarks,
     };
 
