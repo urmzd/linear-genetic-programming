@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             100,
             InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
-            ReinforcementLearningParameters::new(5, 200, input),
+            ReinforcementLearningParameters::new(5, 500, input),
         ),
     };
 
