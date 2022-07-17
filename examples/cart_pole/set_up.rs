@@ -56,9 +56,9 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
         let reward = OrderedFloat(action_reward.reward.into_inner() as f32);
 
         if action_reward.done {
-            Reward::Continue(reward)
-        } else {
             Reward::Terminal(reward)
+        } else {
+            Reward::Continue(reward)
         }
     }
 
