@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use derive_new::new;
 use gym_rs::{core::Env, envs::classical_control::cartpole::CartPoleEnv};
 use lgp::{
     core::{
@@ -24,7 +25,7 @@ pub enum CartPoleActions {
 
 pub struct CartPoleLgp<'a>(PhantomData<&'a ()>);
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, new)]
 pub struct CartPoleInput<'a> {
     game: CartPoleEnv<'a>,
 }

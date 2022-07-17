@@ -19,7 +19,9 @@ cargo build --example <example_name>
 cargo run --example <example_name>
 ```
 
-### Classification (iris)
+### Classification
+
+#### iris
 
 ```rust
 //examples/iris/main.rs#L16-L37
@@ -48,10 +50,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 }
 ```
 
-### Reinforcement Learning (mountain_car)
+### Reinforcement Learning
+
+#### mountain_car
 
 ```rust
-//examples/mountain_car/main.rs#L15-L37
+//examples/mountain_car/main.rs#L15-L36
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -76,6 +80,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+```
+
+#### cart_pole
+
+```rust
+//examples/cart_pole/main.rs#L15-L36
+
 ```
 
 ## Building

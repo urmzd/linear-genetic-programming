@@ -12,8 +12,7 @@ use set_up::{MountainCarInput, MountainCarLgp};
 
 mod set_up;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let game = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(game);
 
