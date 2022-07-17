@@ -53,8 +53,9 @@ mod tests {
 
     use crate::set_up::{MountainCarInput, MountainCarLgp};
 
-    #[tokio::test]
-    async fn run_test() -> Result<(), Box<dyn std::error::Error>> {
+    #[test]
+    fn given_mountain_car_example_when_lgp_executed_then_task_is_solved(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         MountainCarLgp::init_env();
 
         let game = MountainCarEnv::new(RenderMode::None, None);
@@ -78,11 +79,8 @@ mod tests {
 
         MountainCarLgp::execute(
             &hyper_params,
-            EventHooks::default().with_after_rank(&mut |population| {
-                populations.push(population.clone());
-
-                Ok(())
-            }),
+            EventHooks::default()
+                .with_after_rank(&mut |population| Ok(populations.push(population.clone()))),
         )?;
 
         const PLOT_FILE_NAME: &'static str = "./assets/tests/plots/mountain_car.png";
