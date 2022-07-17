@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = CartPoleInput::new(environment);
 
     let hyper_params = HyperParameters {
-        population_size: 1,
+        population_size: 1000,
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
