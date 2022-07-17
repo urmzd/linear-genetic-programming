@@ -19,7 +19,7 @@ where
 {
     n_runs: usize,
     max_episodes: usize,
-    #[derivative(PartialEq = "ignore", PartialOrd = "ignore")]
+    #[derivative(PartialEq = "ignore", PartialOrd = "ignore", Ord = "ignore")]
     environment: T,
 }
 
@@ -128,11 +128,8 @@ where
 }
 
 impl<'a, T> Organism<'a> for Program<'a, ReinforcementLearningParameters<T>> where
-    T: ReinforcementLearningInput + Compare + Show
+    T: ReinforcementLearningInput + Show
 {
 }
 impl<'a, T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Show {}
-impl<'a, T> Compare for ReinforcementLearningParameters<T> where
-    T: ReinforcementLearningInput + Compare
-{
-}
+impl<'a, T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}

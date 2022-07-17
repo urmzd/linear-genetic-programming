@@ -5,12 +5,12 @@ use serde::Serialize;
 use smartcore::metrics::accuracy::Accuracy;
 
 use crate::core::{
-    characteristics::{Compare, Fitness, FitnessScore, Organism, Show},
+    characteristics::{Fitness, FitnessScore, Organism, Show},
     inputs::{Inputs, ValidInput},
     program::{ExtensionParameters, Program},
 };
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord, new)]
+#[derive(Clone, Debug, Serialize, new)]
 pub struct ClassificationParameters<'a, InputType>
 where
     InputType: ClassificationInput,
@@ -25,7 +25,7 @@ where
     type InputType = T;
 }
 
-pub trait ClassificationInput: ValidInput + Compare + Sized {
+pub trait ClassificationInput: ValidInput {
     fn get_class(&self) -> Self::Actions;
 }
 
@@ -83,4 +83,3 @@ impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>> where
 {
 }
 impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput {}
-impl<'a, T> Compare for ClassificationParameters<'a, T> where T: ClassificationInput {}

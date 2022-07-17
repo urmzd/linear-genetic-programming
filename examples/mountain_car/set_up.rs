@@ -9,7 +9,7 @@ use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::{
     core::{
         algorithm::GeneticAlgorithm,
-        characteristics::{Compare, FitnessScore, Show},
+        characteristics::{FitnessScore, Show},
         inputs::ValidInput,
         program::Program,
         registers::RegisterValue,
@@ -43,28 +43,7 @@ pub struct MountainCarInput<'a> {
     game: MountainCarEnv<'a>,
 }
 
-impl<'a> Ord for MountainCarInput<'a> {
-    fn cmp(&self, _other: &Self) -> std::cmp::Ordering {
-        std::cmp::Ordering::Equal
-    }
-}
-
-impl<'a> PartialEq for MountainCarInput<'a> {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-impl<'a> Eq for MountainCarInput<'a> {}
-
-impl<'a> PartialOrd for MountainCarInput<'a> {
-    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
-        Some(std::cmp::Ordering::Equal)
-    }
-}
-
 impl<'a> Show for MountainCarInput<'a> {}
-impl<'a> Compare for MountainCarInput<'a> {}
 
 impl<'a> ValidInput for MountainCarInput<'a> {
     type Actions = MountainCarActions;

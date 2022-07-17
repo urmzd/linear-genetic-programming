@@ -599,7 +599,7 @@ dependencies = [
  "nalgebra",
  "num 0.3.1",
  "num-traits",
- "ordered-float 3.0.0 (git+https://github.com/urmzd/rust-ordered-float.git)",
+ "ordered-float",
  "plotters",
  "pretty_env_logger",
  "rand",
@@ -838,7 +838,7 @@ dependencies = [
  "num 0.4.0",
  "num-derive",
  "num-traits",
- "ordered-float 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ordered-float",
  "plotters",
  "pretty_assertions",
  "pretty_env_logger",
@@ -1196,17 +1196,6 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
-]
-
-[[package]]
-name = "ordered-float"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96bcbab4bfea7a59c2c0fe47211a1ac4e3e96bea6eb446d704f310bc5c732ae2"
-dependencies = [
- "num-traits",
- "rand",
- "serde",
 ]
 
 [[package]]

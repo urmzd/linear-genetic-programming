@@ -136,7 +136,7 @@ where
 
 impl<'a, T> Show for Program<'a, T> where T: Show + ExtensionParameters<'a> {}
 
-impl<'a, T> Compare for Program<'a, T> where T: Compare + ExtensionParameters<'a> {}
+impl<'a, T> Compare for Program<'a, T> where T: ExtensionParameters<'a> {}
 
 impl<'a, T> Mutate for Program<'a, T>
 where
