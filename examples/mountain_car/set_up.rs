@@ -1,21 +1,15 @@
-use std::{
-    marker::PhantomData,
-    ops::{Add, AddAssign, Div},
-};
+use std::marker::PhantomData;
 
 use derive_new::new;
 use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::{
     core::{
-        algorithm::GeneticAlgorithm,
-        characteristics::{FitnessScore, Show},
-        inputs::ValidInput,
-        program::Program,
+        algorithm::GeneticAlgorithm, characteristics::Show, inputs::ValidInput, program::Program,
         registers::RegisterValue,
     },
     extensions::reinforcement_learning::{
-        FitReward, ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
+        ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
     utils::executables::{Executables, DEFAULT_EXECUTABLES},
 };
@@ -43,9 +37,9 @@ pub struct MountainCarInput<'a> {
     game: MountainCarEnv<'a>,
 }
 
-impl<'a> Show for MountainCarInput<'a> {}
+impl Show for MountainCarInput<'_> {}
 
-impl<'a> ValidInput for MountainCarInput<'a> {
+impl ValidInput for MountainCarInput<'_> {
     type Actions = MountainCarActions;
 
     const N_INPUTS: usize = 2;
@@ -58,62 +52,19 @@ impl<'a> ValidInput for MountainCarInput<'a> {
     }
 }
 
-impl From<MountainCarRewardValue> for FitnessScore {
-    fn from(reward: MountainCarRewardValue) -> Self {
-        OrderedFloat(reward.0.into_inner() as f32)
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
-pub struct MountainCarRewardValue(OrderedFloat<f64>);
-
-impl Default for MountainCarRewardValue {
-    fn default() -> Self {
-        Self(OrderedFloat(0.))
-    }
-}
-
-impl AddAssign for MountainCarRewardValue {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = Self(self.0 + rhs.0)
-    }
-}
-
-impl Add for MountainCarRewardValue {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
-impl Div<usize> for MountainCarRewardValue {
-    type Output = FitnessScore;
-
-    fn div(self, rhs: usize) -> Self::Output {
-        OrderedFloat((self.0 / OrderedFloat(rhs as f64)).into_inner() as f32)
-    }
-}
-
-impl FitReward for MountainCarRewardValue {}
-
-impl<'a> ReinforcementLearningInput for MountainCarInput<'a> {
-    type RewardValue = MountainCarRewardValue;
-
+impl ReinforcementLearningInput for MountainCarInput<'_> {
     fn init(&mut self) {
         self.game.reset(None, false, None);
     }
 
-    fn act(
-        &mut self,
-        action: Self::Actions,
-    ) -> lgp::extensions::reinforcement_learning::Reward<Self::RewardValue> {
+    fn act(&mut self, action: Self::Actions) -> lgp::extensions::reinforcement_learning::Reward {
         let transformed_action = NumCast::from(action).unwrap();
         let ActionReward { reward, done, .. } = self.game.step(transformed_action);
+        let reward_f32 = OrderedFloat(reward.into_inner() as f32);
         if done {
-            Reward::Terminal(MountainCarRewardValue(reward))
+            Reward::Terminal(reward_f32)
         } else {
-            Reward::Continue(MountainCarRewardValue(reward))
+            Reward::Continue(reward_f32)
         }
     }
 

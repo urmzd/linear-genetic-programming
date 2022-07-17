@@ -13,7 +13,11 @@ num-derive = "0.3.3"
 num-traits = "0.2.15"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
-ordered-float = { git = "https://github.com/urmzd/rust-ordered-float.git", features = ["serde", "rand", "std"] }
+ordered-float = { git = "https://github.com/urmzd/rust-ordered-float.git", features = [
+    "serde",
+    "rand",
+    "std"
+] }
 log = "0.4.17"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
@@ -43,4 +47,9 @@ test = true
 [[example]]
 name = "iris"
 path = "examples/iris/main.rs"
+test = true
+
+[[example]]
+name = "cart_pole"
+path = "examples/cart_pole/main.rs"
 test = true

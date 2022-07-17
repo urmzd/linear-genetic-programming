@@ -18,7 +18,7 @@ where
     inputs: &'a Inputs<InputType>,
 }
 
-impl<'a, T> ExtensionParameters<'a> for ClassificationParameters<'a, T>
+impl<'a, T> ExtensionParameters for ClassificationParameters<'a, T>
 where
     T: ClassificationInput,
 {

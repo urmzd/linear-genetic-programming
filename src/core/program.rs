@@ -15,7 +15,7 @@ use super::{
     instructions::Instructions,
     registers::{RegisterGeneratorParameters, Registers},
 };
-pub trait ExtensionParameters<'a>
+pub trait ExtensionParameters
 where
     Self::InputType: ValidInput,
 {
@@ -25,7 +25,7 @@ where
 #[derive(Clone, Debug, Serialize, new)]
 pub struct ProgramGeneratorParameters<'a, OtherParameters>
 where
-    OtherParameters: ExtensionParameters<'a>,
+    OtherParameters: ExtensionParameters,
 {
     pub max_instructions: usize,
     pub instruction_generator_parameters:
@@ -35,12 +35,12 @@ where
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a, T> Show for ProgramGeneratorParameters<'a, T> where T: Show + ExtensionParameters<'a> {}
+impl<'a, T> Show for ProgramGeneratorParameters<'a, T> where T: Show + ExtensionParameters {}
 
 #[derive(Debug, Serialize)]
 pub struct Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     pub instructions: Instructions<'a, T::InputType>,
     pub registers: Registers,
@@ -50,7 +50,7 @@ where
 
 impl<'a, T> Clone for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn clone(&self) -> Self {
         Self {
@@ -64,7 +64,7 @@ where
 
 impl<'a, T> Display for Program<'a, T>
 where
-    T: Serialize + ExtensionParameters<'a>,
+    T: Serialize + ExtensionParameters,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let serialized = toml::to_string(&self).unwrap();
@@ -74,7 +74,7 @@ where
 
 impl<'a, T> Ord for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.fitness.cmp(&other.fitness)
@@ -83,7 +83,7 @@ where
 
 impl<'a, T> PartialOrd for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.fitness.partial_cmp(&other.fitness)
@@ -92,7 +92,7 @@ where
 
 impl<'a, T> PartialEq for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn eq(&self, other: &Self) -> bool {
         self.instructions == other.instructions
@@ -101,11 +101,11 @@ where
     }
 }
 
-impl<'a, T> Eq for Program<'a, T> where T: ExtensionParameters<'a> {}
+impl<'a, T> Eq for Program<'a, T> where T: ExtensionParameters {}
 
 impl<'a, T> Generate<'a> for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     type GeneratorParameters = ProgramGeneratorParameters<'a, T>;
 
@@ -134,13 +134,13 @@ where
     }
 }
 
-impl<'a, T> Show for Program<'a, T> where T: Show + ExtensionParameters<'a> {}
+impl<'a, T> Show for Program<'a, T> where T: Show + ExtensionParameters {}
 
-impl<'a, T> Compare for Program<'a, T> where T: ExtensionParameters<'a> {}
+impl<'a, T> Compare for Program<'a, T> where T: ExtensionParameters {}
 
 impl<'a, T> Mutate for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn mutate(&self) -> Self {
         let mut mutated = self.clone();
@@ -164,7 +164,7 @@ where
 
 impl<'a, T> Breed for Program<'a, T>
 where
-    T: ExtensionParameters<'a>,
+    T: ExtensionParameters,
 {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =

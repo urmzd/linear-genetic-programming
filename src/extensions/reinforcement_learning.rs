@@ -1,11 +1,10 @@
-use std::ops::{Add, AddAssign};
-
 use derivative::Derivative;
 use derive_new::new;
+use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 use crate::core::{
-    characteristics::{Compare, Fitness, FitnessScore, Organism, Show},
+    characteristics::{Compare, Fitness, Organism, Show},
     inputs::ValidInput,
     program::{ExtensionParameters, Program},
     registers::RegisterValue,
@@ -23,16 +22,14 @@ where
     environment: T,
 }
 
-pub enum Reward<RewardValue> {
-    Continue(RewardValue),
-    Terminal(RewardValue),
+#[derive(Debug, Serialize, Clone, Copy)]
+pub enum Reward {
+    Continue(RegisterValue),
+    Terminal(RegisterValue),
 }
 
-impl<T> Reward<T>
-where
-    T: Copy,
-{
-    pub fn get_reward_value(&self) -> T {
+impl Reward {
+    pub fn get_reward_value(&self) -> RegisterValue {
         *(match self {
             Self::Continue(reward) => reward,
             Self::Terminal(reward) => reward,
@@ -47,26 +44,16 @@ where
     }
 }
 
-impl<'a, T> ExtensionParameters<'a> for ReinforcementLearningParameters<T>
+impl<'a, T> ExtensionParameters for ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
 {
     type InputType = T;
 }
 
-pub trait FitReward:
-    Default + Add<Self> + AddAssign<Self> + Copy + PartialOrd + Ord + Into<FitnessScore>
-{
-}
-
-pub trait ReinforcementLearningInput: ValidInput + Sized
-where
-    Self::RewardValue: FitReward,
-{
-    type RewardValue;
-
+pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn init(&mut self);
-    fn act(&mut self, action: Self::Actions) -> Reward<Self::RewardValue>;
+    fn act(&mut self, action: Self::Actions) -> Reward;
     fn reset(&mut self);
     fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
@@ -88,7 +75,7 @@ where
         environment.init();
 
         for _ in 0..n_runs {
-            let mut score = T::RewardValue::default();
+            let mut score = OrderedFloat(0.);
 
             for _ in 0..max_episodes {
                 let mut registers = self.registers.clone();
