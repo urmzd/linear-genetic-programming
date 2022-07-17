@@ -57,8 +57,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 ```rust
 //examples/mountain_car/main.rs#L15-L36
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let game = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(game);
 
@@ -87,6 +86,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 //examples/cart_pole/main.rs#L15-L36
 
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let game = CartPoleEnv::new(RenderMode::Human);
+    let input = CartPoleInput::new(game);
+
+    let hyper_params = HyperParameters {
+        population_size: 1,
+        gap: 0.5,
+        n_crossovers: 0.5,
+        n_mutations: 0.5,
+        max_generations: 1,
+        program_params: ProgramGeneratorParameters::new(
+            100,
+            InstructionGeneratorParameters::from(1),
+            RegisterGeneratorParameters::new(1),
+            ReinforcementLearningParameters::new(5, 200, input),
+        ),
+    };
+
+    CartPoleLgp::execute(&hyper_params, EventHooks::default())?;
+
+    Ok(())
+}
 ```
 
 ## Building
