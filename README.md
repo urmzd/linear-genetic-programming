@@ -58,8 +58,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 //examples/mountain_car/main.rs#L15-L36
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let game = MountainCarEnv::new(RenderMode::Human, None);
-    let input = MountainCarInput::new(game);
+    let environment = MountainCarEnv::new(RenderMode::Human, None);
+    let input = MountainCarInput::new(environment);
 
     let hyper_params = HyperParameters {
         population_size: 1,
@@ -87,8 +87,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 //examples/cart_pole/main.rs#L15-L36
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let game = CartPoleEnv::new(RenderMode::Human);
-    let input = CartPoleInput::new(game);
+    let environment = CartPoleEnv::new(RenderMode::Human);
+    let input = CartPoleInput::new(environment);
 
     let hyper_params = HyperParameters {
         population_size: 1,
