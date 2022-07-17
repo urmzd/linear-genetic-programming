@@ -588,8 +588,8 @@ checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
 
 [[package]]
 name = "gym-rs"
-version = "0.2.1"
-source = "git+https://github.com/urmzd/gym-rs#d8b3546416cc231416c931ae14f96713f5c93e70"
+version = "1.0.0"
+source = "git+https://github.com/urmzd/gym-rs#88a503f64ef12ab0487620156b8135350a1bb98e"
 dependencies = [
  "derivative",
  "derive-new",
@@ -599,7 +599,7 @@ dependencies = [
  "nalgebra",
  "num 0.3.1",
  "num-traits",
- "ordered-float",
+ "ordered-float 3.0.0 (git+https://github.com/urmzd/rust-ordered-float.git)",
  "plotters",
  "pretty_env_logger",
  "rand",
@@ -838,7 +838,7 @@ dependencies = [
  "num 0.4.0",
  "num-derive",
  "num-traits",
- "ordered-float",
+ "ordered-float 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plotters",
  "pretty_assertions",
  "pretty_env_logger",
@@ -1203,6 +1203,16 @@ name = "ordered-float"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96bcbab4bfea7a59c2c0fe47211a1ac4e3e96bea6eb446d704f310bc5c732ae2"
+dependencies = [
+ "num-traits",
+ "rand",
+ "serde",
+]
+
+[[package]]
+name = "ordered-float"
+version = "3.0.0"
+source = "git+https://github.com/urmzd/rust-ordered-float.git#ce695b150b22337a751b4c96424d30b2709f9e63"
 dependencies = [
  "num-traits",
  "rand",

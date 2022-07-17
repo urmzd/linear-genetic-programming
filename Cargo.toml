@@ -8,40 +8,39 @@ authors = ["Urmzd Mukhammadnaim; urmzd@dal.ca"]
 csv = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.18", features = ["full", "macros"] }
-num = { version = "0.4.0", features=["std"] }
+num = { version = "0.4.0", features = ["std"] }
 num-derive = "0.3.3"
 num-traits = "0.2.15"
 rand = "0.8.5"
+rand_chacha = "0.3.1"
+ordered-float = { version = "3.0", features = ["serde", "rand"] }
 log = "0.4.17"
-ordered-float = { version = "3.0", features=["serde", "rand"] }
-strum = {version = "0.24", features=["derive"]}
+strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 pretty_env_logger = "0.4"
 more-asserts = { version = "0.2" }
 toml = "0.5"
-rand_chacha = "0.3.1"
 lazy_static = "1.4.0"
 derive-new = "0.5"
 derivative = "2.2.0"
 plotters = "0.3.1"
 smartcore = "0.2"
 itertools = "0.10"
-derive_more = { version="0.99" }
+derive_more = { version = "0.99" }
 
 [dev-dependencies]
 reqwest = "0.11"
 tempfile = "3.3"
-pretty_assertions = { version= "1.2"}
-itertools = "0.10.3"
-gym-rs = { git = "https://github.com/urmzd/gym-rs" }
+pretty_assertions = { version = "1.2" }
 tabled = "0.7"
+gym-rs = { git = "https://github.com/urmzd/gym-rs" }
 
 [[example]]
 name = "mountain_car"
 path = "examples/mountain_car/main.rs"
-test=true
+test = true
 
 [[example]]
 name = "iris"
 path = "examples/iris/main.rs"
-test=true
+test = true
