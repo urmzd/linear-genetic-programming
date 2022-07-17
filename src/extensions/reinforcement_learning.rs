@@ -16,10 +16,10 @@ pub struct ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
 {
-    n_runs: usize,
-    max_episodes: usize,
+    pub n_runs: usize,
+    pub max_episodes: usize,
     #[derivative(PartialEq = "ignore", PartialOrd = "ignore", Ord = "ignore")]
-    environment: T,
+    pub environment: T,
 }
 
 #[derive(Debug, Serialize, Clone, Copy)]

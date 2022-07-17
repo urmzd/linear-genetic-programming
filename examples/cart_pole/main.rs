@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             100,
             InstructionGeneratorParameters::from(1),
             RegisterGeneratorParameters::new(1),
-            ReinforcementLearningParameters::new(5, 200, input),
+            ReinforcementLearningParameters::new(5, 500, input),
         ),
     };
 
@@ -69,7 +69,7 @@ mod tests {
                 100,
                 InstructionGeneratorParameters::from(1),
                 RegisterGeneratorParameters::new(1),
-                ReinforcementLearningParameters::new(5, 200, input),
+                ReinforcementLearningParameters::new(5, 500, input),
             ),
         };
 
@@ -82,7 +82,7 @@ mod tests {
         )?;
 
         const PLOT_FILE_NAME: &'static str = "assets/tests/plots/cart_pole.png";
-        let range = (0.)..(200.);
+        let range = (0.)..(hyper_params.program_params.other.max_episodes as f32);
         plot_population_benchmarks(populations, PLOT_FILE_NAME, range)?;
         Ok(())
     }
