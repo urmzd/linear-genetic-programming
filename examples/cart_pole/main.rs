@@ -56,15 +56,15 @@ mod tests {
     #[test]
     fn given_cart_pole_when_lgp_executed_then_task_is_solved() -> Result<(), Box<dyn error::Error>>
     {
-        let game = CartPoleEnv::new(RenderMode::None);
-        let input = CartPoleInput::new(game);
+        let environment = CartPoleEnv::new(RenderMode::None);
+        let input = CartPoleInput::new(environment);
 
         let hyper_params = HyperParameters {
-            population_size: 1,
+            population_size: 100,
             gap: 0.5,
             n_crossovers: 0.5,
             n_mutations: 0.5,
-            max_generations: 1,
+            max_generations: 100,
             program_params: ProgramGeneratorParameters::new(
                 100,
                 InstructionGeneratorParameters::from(1),
