@@ -82,7 +82,7 @@ mod tests {
         )?;
 
         const PLOT_FILE_NAME: &'static str = "assets/tests/plots/cart_pole.png";
-        let range = (0.)..(hyper_params.program_params.other.max_episodes as f32);
+        let range = (0.)..(hyper_params.program_params.other.max_episode_length as f32);
         plot_population_benchmarks(populations, PLOT_FILE_NAME, range)?;
         Ok(())
     }

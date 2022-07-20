@@ -22,7 +22,7 @@ where
 
     const AVAILABLE_EXECUTABLES: Executables;
 
-    fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
+    fn map_register_to_action(ties: Vec<usize>) -> Option<Self::Actions> {
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
     }
 

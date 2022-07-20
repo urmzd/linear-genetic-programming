@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use derive_new::new;
 use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
+use lgp::extensions::reinforcement_learning::StateRewardPair;
 use lgp::{
     core::{
         algorithm::GeneticAlgorithm, characteristics::Show, inputs::ValidInput, program::Program,
@@ -57,14 +58,17 @@ impl ReinforcementLearningInput for MountainCarInput<'_> {
         self.environment.reset(None, false, None);
     }
 
-    fn act(&mut self, action: Self::Actions) -> lgp::extensions::reinforcement_learning::Reward {
+    fn act(&mut self, action: Self::Actions) -> StateRewardPair {
         let transformed_action = NumCast::from(action).unwrap();
         let ActionReward { reward, done, .. } = self.environment.step(transformed_action);
         let reward_f32 = OrderedFloat(reward.into_inner() as f32);
-        if done {
-            Reward::Terminal(reward_f32)
-        } else {
-            Reward::Continue(reward_f32)
+
+        StateRewardPair {
+            state: self.get_state(),
+            reward: match done {
+                true => Reward::Terminal(reward_f32),
+                false => Reward::Terminal(reward_f32),
+            },
         }
     }
 

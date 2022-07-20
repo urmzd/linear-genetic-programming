@@ -7,7 +7,7 @@ use lgp::{
         algorithm::GeneticAlgorithm, characteristics::Show, inputs::ValidInput, program::Program,
     },
     extensions::reinforcement_learning::{
-        ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
+        ReinforcementLearningInput, ReinforcementLearningParameters, Reward, StateRewardPair,
     },
     utils::executables::DEFAULT_EXECUTABLES,
 };
@@ -49,16 +49,18 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
         self.environment.reset(None, false, None);
     }
 
-    fn act(&mut self, action: Self::Actions) -> lgp::extensions::reinforcement_learning::Reward {
+    fn act(&mut self, action: Self::Actions) -> StateRewardPair {
         let discrete_action: usize =
             ToPrimitive::to_usize(&action).expect("Value to be derived from action.");
         let action_reward = self.environment.step(discrete_action);
         let reward = OrderedFloat(action_reward.reward.into_inner() as f32);
 
-        if action_reward.done {
-            Reward::Terminal(reward)
-        } else {
-            Reward::Continue(reward)
+        StateRewardPair {
+            state: self.get_state(),
+            reward: match action_reward.done {
+                true => Reward::Terminal(reward),
+                false => Reward::Continue(reward),
+            },
         }
     }
 

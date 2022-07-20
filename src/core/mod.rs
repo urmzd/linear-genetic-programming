@@ -6,3 +6,4 @@ pub mod instructions;
 pub mod population;
 pub mod program;
 pub mod registers;
+pub mod q_learning;

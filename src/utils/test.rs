@@ -50,7 +50,7 @@ impl ValidInput for TestInput {
 
     const N_INPUTS: usize = 4;
 
-    fn argmax(ties: Vec<usize>) -> Option<Self::Actions> {
+    fn map_register_to_action(ties: Vec<usize>) -> Option<Self::Actions> {
         FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
     }
 

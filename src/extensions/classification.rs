@@ -45,7 +45,7 @@ where
             }
 
             let ties = registers.argmax();
-            let predicted_class = T::argmax(ties)
+            let predicted_class = T::map_register_to_action(ties)
                 .and_then(|action| action.to_i32())
                 .unwrap_or(-1);
             let correct_class = input.get_class().to_i32().unwrap();

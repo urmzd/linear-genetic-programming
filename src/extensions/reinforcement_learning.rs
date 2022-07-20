@@ -17,7 +17,7 @@ where
     T: ReinforcementLearningInput,
 {
     pub n_runs: usize,
-    pub max_episodes: usize,
+    pub max_episode_length: usize,
     #[derivative(PartialEq = "ignore", PartialOrd = "ignore", Ord = "ignore")]
     pub environment: T,
 }
@@ -28,22 +28,6 @@ pub enum Reward {
     Terminal(RegisterValue),
 }
 
-impl Reward {
-    pub fn get_reward_value(&self) -> RegisterValue {
-        *(match self {
-            Self::Continue(reward) => reward,
-            Self::Terminal(reward) => reward,
-        })
-    }
-
-    pub fn should_stop(&self) -> bool {
-        match self {
-            Self::Continue(_) => false,
-            Self::Terminal(_) => true,
-        }
-    }
-}
-
 impl<'a, T> ExtensionParameters for ReinforcementLearningParameters<T>
 where
     T: ReinforcementLearningInput,
@@ -51,9 +35,31 @@ where
     type InputType = T;
 }
 
+#[derive(Debug, Clone)]
+pub struct StateRewardPair {
+    pub state: Vec<RegisterValue>,
+    pub reward: Reward,
+}
+
+impl StateRewardPair {
+    pub fn get_value(&self) -> RegisterValue {
+        match self.reward {
+            Reward::Continue(reward) => reward,
+            Reward::Terminal(reward) => reward,
+        }
+    }
+
+    pub fn is_terminal(&self) -> bool {
+        match self.reward {
+            Reward::Continue(_) => false,
+            Reward::Terminal(_) => true,
+        }
+    }
+}
+
 pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn init(&mut self);
-    fn act(&mut self, action: Self::Actions) -> Reward;
+    fn act(&mut self, action: Self::Actions) -> StateRewardPair;
     fn reset(&mut self);
     fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
@@ -67,7 +73,7 @@ where
         let mut scores = vec![];
         let ReinforcementLearningParameters {
             n_runs,
-            max_episodes,
+            max_episode_length,
             mut environment,
             ..
         } = self.problem_parameters.clone();
@@ -77,18 +83,21 @@ where
         for _ in 0..n_runs {
             let mut score = OrderedFloat(0.);
 
-            for _ in 0..max_episodes {
+            for _ in 0..max_episode_length {
                 let mut registers = self.registers.clone();
+                // Run program.
                 for instruction in &self.instructions {
                     instruction.apply(&mut registers, &environment);
                 }
+                // Eval
                 let possible_actions = registers.argmax();
-                let selected_action = T::argmax(possible_actions).unwrap();
-                let reward = environment.act(selected_action);
 
-                score += reward.get_reward_value();
+                let selected_action = T::map_register_to_action(possible_actions).unwrap();
+                let state_reward = environment.act(selected_action);
 
-                if reward.should_stop() {
+                score += state_reward.get_value();
+
+                if state_reward.is_terminal() {
                     break;
                 }
             }
