@@ -26,7 +26,6 @@ cargo run --example <example_name>
 ```rust
 //examples/iris/main.rs#L16-L37
 
-#[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
@@ -37,17 +36,18 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
-        program_params: ProgramGeneratorParameters::new(
+        mutate_parameters: (),
+        fitness_parameters: ClassificationParameters::new(&inputs),
+        program_parameters: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            RegisterGeneratorParameters::new(1),
-            ClassificationParameters::new(&inputs),
         ),
     };
 
     IrisLgp::execute(&hyper_params, EventHooks::default())?;
     Ok(())
 }
+
 ```
 
 ### Reinforcement Learning
@@ -57,7 +57,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 ```rust
 //examples/mountain_car/main.rs#L15-L36
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
     let environment = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(environment);
 
@@ -67,11 +66,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         n_crossovers: 0.5,
         n_mutations: 0.5,
         max_generations: 1,
-        program_params: ProgramGeneratorParameters::new(
+        mutate_parameters: (),
+        fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
+        program_parameters: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            RegisterGeneratorParameters::new(1),
-            ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
@@ -79,6 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
 ```
 
 #### cart_pole
@@ -86,7 +86,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 //examples/cart_pole/main.rs#L15-L36
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
     let environment = CartPoleEnv::new(RenderMode::Human);
     let input = CartPoleInput::new(environment);
 
@@ -95,12 +94,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
+        mutate_parameters: (),
         max_generations: 1,
-        program_params: ProgramGeneratorParameters::new(
+        fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
+        program_parameters: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            RegisterGeneratorParameters::new(1),
-            ReinforcementLearningParameters::new(5, 500, input),
         ),
     };
 
@@ -108,6 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
 ```
 
 ## Building
