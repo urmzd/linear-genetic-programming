@@ -119,13 +119,8 @@ impl<T> Breed for Program<T> {
 
 #[cfg(test)]
 mod tests {
-    use rand::{distributions::Standard, Rng};
 
-    use crate::{
-        core::instruction::InstructionGeneratorParameters,
-        extensions::classification::ClassificationParameters, utils::random::generator,
-        utils::test::TestInput,
-    };
+    use crate::{core::instruction::InstructionGeneratorParameters, utils::test::TestInput};
 
     use super::*;
 
@@ -150,10 +145,7 @@ mod tests {
 
     #[test]
     fn given_programs_when_two_point_crossover_then_two_children_are_produced() {
-        let inputs: Vec<TestInput> = [0; 5].map(|_| generator().sample(Standard)).to_vec();
-
         let instruction_params = InstructionGeneratorParameters::new(3, 4);
-        let classification_params = ClassificationParameters::new(inputs);
         let program_params = ProgramGeneratorParameters::new(100, instruction_params);
 
         let program_a = Program::<TestInput>::generate(&program_params);

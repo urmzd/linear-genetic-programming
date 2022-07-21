@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use derive_new::new;
 use gym_rs::{core::Env, envs::classical_control::cartpole::CartPoleEnv};
 use lgp::{
@@ -7,7 +5,6 @@ use lgp::{
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward, StateRewardPair,
     },
-    utils::executables::DEFAULT_EXECUTABLES,
 };
 use num::ToPrimitive;
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -21,14 +18,14 @@ pub enum CartPoleActions {
     Right = 1,
 }
 
-pub struct CartPoleLgp<'a>(PhantomData<&'a ()>);
+pub struct CartPoleLgp;
 
 #[derive(Clone, Debug, Serialize, new)]
-pub struct CartPoleInput<'a> {
-    environment: CartPoleEnv<'a>,
+pub struct CartPoleInput {
+    environment: CartPoleEnv,
 }
 
-impl<'a> ValidInput for CartPoleInput<'a> {
+impl<'a> ValidInput for CartPoleInput {
     type Actions = CartPoleActions;
 
     const N_INPUTS: usize = 2;
@@ -38,7 +35,7 @@ impl<'a> ValidInput for CartPoleInput<'a> {
     }
 }
 
-impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
+impl ReinforcementLearningInput for CartPoleInput {
     fn init(&mut self) {
         self.environment.reset(None, false, None);
     }
@@ -78,5 +75,5 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
 }
 
 impl GeneticAlgorithm for CartPoleLgp {
-    type O = Program<ReinforcementLearningParameters<CartPoleInput<'a>>>;
+    type O = Program<ReinforcementLearningParameters<CartPoleInput>>;
 }

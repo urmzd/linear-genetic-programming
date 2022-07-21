@@ -1,18 +1,14 @@
-use std::marker::PhantomData;
-
 use derive_new::new;
 use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::extensions::reinforcement_learning::StateRewardPair;
 use lgp::{
     core::{
-        algorithm::GeneticAlgorithm, characteristics::Show, inputs::ValidInput, program::Program,
-        registers::RegisterValue,
+        algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::RegisterValue,
     },
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
-    utils::executables::{Executables, DEFAULT_EXECUTABLES},
 };
 use num::NumCast;
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -27,25 +23,21 @@ pub enum MountainCarActions {
     AccelerateRight = 2,
 }
 
-pub struct MountainCarLgp<'a>(PhantomData<&'a ()>);
+pub struct MountainCarLgp;
 
-impl<'a> GeneticAlgorithm<'a> for MountainCarLgp<'a> {
-    type O = Program<'a, ReinforcementLearningParameters<MountainCarInput<'a>>>;
+impl GeneticAlgorithm for MountainCarLgp {
+    type O = Program<ReinforcementLearningParameters<MountainCarInput>>;
 }
 
 #[derive(Debug, Serialize, new, Clone)]
-pub struct MountainCarInput<'a> {
-    environment: MountainCarEnv<'a>,
+pub struct MountainCarInput {
+    environment: MountainCarEnv,
 }
 
-impl Show for MountainCarInput<'_> {}
-
-impl ValidInput for MountainCarInput<'_> {
+impl ValidInput for MountainCarInput {
     type Actions = MountainCarActions;
 
     const N_INPUTS: usize = 2;
-
-    const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
     fn flat(&self) -> Vec<RegisterValue> {
         let state = self.get_state();
@@ -53,7 +45,7 @@ impl ValidInput for MountainCarInput<'_> {
     }
 }
 
-impl ReinforcementLearningInput for MountainCarInput<'_> {
+impl ReinforcementLearningInput for MountainCarInput {
     fn init(&mut self) {
         self.environment.reset(None, false, None);
     }

@@ -14,8 +14,6 @@ where
 
     const N_INPUTS: usize;
 
-    fn argmax(registers: &Registers) -> i32;
-
     fn flat(&self) -> Vec<RegisterValue>;
 }
 

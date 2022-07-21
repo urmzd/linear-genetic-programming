@@ -10,23 +10,23 @@ use lgp::{
     },
     extensions::classification::ClassificationParameters,
 };
-use set_up::{get_iris_content, ContentFilePair, IrisLgp};
+use set_up::{get_iris_content, ContentFilePair, IrisInput, IrisLgp};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 100,
         max_generations: 100,
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
-        fitness_parameters: ClassificationParameters::new(&inputs),
+        fitness_parameters: ClassificationParameters::new(inputs),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<IrisInput>(1),
         ),
     };
 
@@ -60,17 +60,17 @@ mod tests {
         let ContentFilePair(_, tmp_file) = get_iris_content().await?;
         let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 5,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.5,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -100,17 +100,17 @@ mod tests {
         let ContentFilePair(_, tmp_file) = get_iris_content().await?;
         let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -140,17 +140,17 @@ mod tests {
         let ContentFilePair(_, tmp_file) = get_iris_content().await?;
         let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -181,17 +181,17 @@ mod tests {
         let ContentFilePair(_, tmp_file) = get_iris_content().await?;
         let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -238,17 +238,17 @@ mod tests {
         let ContentFilePair(_, tmp_file) = get_iris_content().await?;
 
         let inputs = IrisLgp::load_inputs(tmp_file.path());
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -261,7 +261,12 @@ mod tests {
 
         assert_lt!(dropped_pop_len, hyper_params.population_size);
 
-        IrisLgp::breed(&mut population, 0f32, 0f32, &hyper_params.mutate_parameters);
+        IrisLgp::breed(
+            &mut population,
+            0f32,
+            0f32,
+            &hyper_params.program_parameters,
+        );
 
         assert_eq!(population.len(), hyper_params.population_size);
 
@@ -275,17 +280,17 @@ mod tests {
 
         let inputs = IrisLgp::load_inputs(tmp_file.path());
 
-        let hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
+        let mut hyper_params: HyperParameters<Program<ClassificationParameters<IrisInput>>> =
             HyperParameters {
                 population_size: 100,
                 max_generations: 100,
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 
@@ -317,10 +322,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                fitness_parameters: ClassificationParameters::new(&inputs),
+                fitness_parameters: ClassificationParameters::new(inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
-                    InstructionGeneratorParameters::<IrisInput>::from(1),
+                    InstructionGeneratorParameters::from::<IrisInput>(1),
                 ),
             };
 

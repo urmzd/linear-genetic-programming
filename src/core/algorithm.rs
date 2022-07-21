@@ -329,7 +329,7 @@ mod tests {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let inputs = [0; 5].map(|_| generator().sample(Standard)).to_vec();
         let received = Rc::new(RefCell::new(Vec::new()));
-        let hyper_params = HyperParameters {
+        let mut hyper_params = HyperParameters {
             population_size: 10,
             gap: 0.5,
             n_mutations: 0.5,

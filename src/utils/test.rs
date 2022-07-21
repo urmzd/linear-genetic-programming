@@ -35,10 +35,6 @@ impl ValidInput for TestInput {
     fn flat(&self) -> Vec<RegisterValue> {
         vec![self.0[0], self.0[1], self.0[2], self.0[3]]
     }
-
-    fn argmax(registers: &crate::core::registers::Registers) -> i32 {
-        todo!()
-    }
 }
 
 impl ClassificationInput for TestInput {

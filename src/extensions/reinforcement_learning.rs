@@ -4,7 +4,9 @@ use derivative::Derivative;
 use derive_new::new;
 use serde::Serialize;
 
-use crate::core::{inputs::ValidInput, registers::RegisterValue};
+use crate::core::{
+    characteristics::Fitness, inputs::ValidInput, program::Program, registers::RegisterValue,
+};
 
 #[derive(Debug, Serialize, Derivative, new)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -66,6 +68,24 @@ pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn reset(&mut self);
     fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
+}
+
+impl<T> Fitness for Program<ReinforcementLearningParameters<T>>
+where
+    T: ReinforcementLearningInput,
+{
+    type FitnessParameters = ReinforcementLearningParameters<T>;
+
+    fn eval_fitness(
+        &mut self,
+        parameters: &mut Self::FitnessParameters,
+    ) -> crate::core::characteristics::FitnessScore {
+        todo!()
+    }
+
+    fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
+        todo!()
+    }
 }
 
 // impl<'a, T> Fitness for Program<'a, T>

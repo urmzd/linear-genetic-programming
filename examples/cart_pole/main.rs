@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let environment = CartPoleEnv::new(RenderMode::Human);
     let input = CartPoleInput::new(environment);
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 1,
         gap: 0.5,
         n_crossovers: 0.5,
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<CartPoleInput>(1),
         ),
     };
 
@@ -56,7 +56,7 @@ mod tests {
         let environment = CartPoleEnv::new(RenderMode::None);
         let input = CartPoleInput::new(environment);
 
-        let hyper_params = HyperParameters {
+        let mut hyper_params = HyperParameters {
             population_size: 100,
             gap: 0.5,
             n_crossovers: 0.5,
@@ -65,7 +65,7 @@ mod tests {
             fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
             program_parameters: ProgramGeneratorParameters::new(
                 100,
-                InstructionGeneratorParameters::from(1),
+                InstructionGeneratorParameters::from::<CartPoleInput>(1),
             ),
         };
 
@@ -78,7 +78,7 @@ mod tests {
         )?;
 
         const PLOT_FILE_NAME: &'static str = "assets/tests/plots/cart_pole.png";
-        let range = (0.)..(hyper_params.program_parameters.other.max_episode_length as f32);
+        let range = (0.)..(hyper_params.fitness_parameters.max_episode_length as f32);
         plot_population_benchmarks(populations, PLOT_FILE_NAME, range)?;
         Ok(())
     }

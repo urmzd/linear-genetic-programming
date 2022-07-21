@@ -1,7 +1,6 @@
 use core::fmt;
-use std::{fmt::Display, marker::PhantomData};
+use std::fmt::Display;
 
-use num::FromPrimitive;
 use num_derive::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -9,13 +8,11 @@ use strum::EnumCount;
 use lgp::{
     core::{
         algorithm::{GeneticAlgorithm, Loader},
-        characteristics::{Compare, Show},
         inputs::ValidInput,
         program::Program,
         registers::RegisterValue,
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
-    utils::executables::{Executables, DEFAULT_EXECUTABLES},
 };
 
 use std::error;
@@ -34,8 +31,6 @@ pub async fn get_iris_content() -> Result<ContentFilePair, Box<dyn error::Error>
 
     Ok(ContentFilePair(content, tmp_file))
 }
-
-pub const IRIS_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
 pub const IRIS_DATASET_LINK: &'static str =
     "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/bezdekIris.data";
@@ -65,13 +60,13 @@ pub enum IrisClass {
     Virginica = 2,
 }
 
-pub struct IrisLgp<'a>(PhantomData<&'a ()>);
+pub struct IrisLgp;
 
-impl<'a> GeneticAlgorithm<'a> for IrisLgp<'a> {
-    type O = Program<'a, ClassificationParameters<'a, IrisInput>>;
+impl GeneticAlgorithm for IrisLgp {
+    type O = Program<ClassificationParameters<IrisInput>>;
 }
 
-impl<'a> Loader for IrisLgp<'a> {
+impl<'a> Loader for IrisLgp {
     type InputType = IrisInput;
 }
 
@@ -85,12 +80,10 @@ pub struct IrisInput {
 }
 
 impl ClassificationInput for IrisInput {
-    fn get_class(&self) -> Self::Actions {
-        self.class
+    fn get_class(&self) -> usize {
+        self.class as usize
     }
 }
-
-impl Compare for IrisClass {}
 
 impl Display for IrisInput {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -99,23 +92,10 @@ impl Display for IrisInput {
     }
 }
 
-impl Show for IrisInput {}
-impl Compare for IrisInput {}
-
 impl ValidInput for IrisInput {
     type Actions = IrisClass;
 
-    const AVAILABLE_EXECUTABLES: Executables = IRIS_EXECUTABLES;
-
     const N_INPUTS: usize = 4;
-
-    fn argmax(mut ties: Vec<usize>) -> Option<usize> {
-        if ties.len() > 1 {
-            return None;
-        } else {
-            return FromPrimitive::from_usize(ties.pop().unwrap());
-        }
-    }
 
     fn flat(&self) -> Vec<RegisterValue> {
         [

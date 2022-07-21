@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let environment = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(environment);
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 1,
         gap: 0.5,
         n_crossovers: 0.5,
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<MountainCarInput>(1),
         ),
     };
 
@@ -58,7 +58,7 @@ mod tests {
         let environment = MountainCarEnv::new(RenderMode::None, None);
         let input = MountainCarInput::new(environment);
 
-        let hyper_params = HyperParameters {
+        let mut hyper_params = HyperParameters {
             population_size: 100,
             gap: 0.5,
             n_crossovers: 0.5,
@@ -67,7 +67,7 @@ mod tests {
             fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
             program_parameters: ProgramGeneratorParameters::new(
                 100,
-                InstructionGeneratorParameters::from(1),
+                InstructionGeneratorParameters::from::<MountainCarInput>(1),
             ),
         };
 
