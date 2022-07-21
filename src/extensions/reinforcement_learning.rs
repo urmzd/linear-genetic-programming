@@ -39,16 +39,18 @@ pub enum Reward {
 
 struct QTable(HashMap<usize, Vec<usize>>);
 
+struct QProgram<T>
+where
+    T: ExtensionParameters,
+{
+    program: Program<T>,
+    q_table: QTable,
+}
+
 impl QTable {
     pub fn argmax() {}
 
     pub fn update(&mut self) {}
-}
-
-trait QLearning<S, A> {
-    fn eval(&mut self, state: S, q_table: &mut QTable) -> A;
-    fn sim(&mut self, action: A) -> StateRewardPair;
-    fn update(&mut self, q_table: &mut QTable);
 }
 
 #[derive(Debug, Clone)]

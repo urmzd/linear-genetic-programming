@@ -8,18 +8,8 @@ use lgp::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
 };
-use num::NumCast;
-use num_derive::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use serde::Serialize;
-use strum::{Display, EnumCount};
-
-#[derive(Debug, Clone, Display, Eq, PartialEq, EnumCount, FromPrimitive, ToPrimitive)]
-pub enum MountainCarActions {
-    AccelerateLeft = 0,
-    Pause = 1,
-    AccelerateRight = 2,
-}
 
 pub struct MountainCarLgp;
 
@@ -48,8 +38,7 @@ impl ReinforcementLearningInput for MountainCarInput {
     }
 
     fn act(&mut self, action: usize) -> StateRewardPair {
-        let transformed_action = NumCast::from(action).unwrap();
-        let ActionReward { reward, done, .. } = self.environment.step(transformed_action);
+        let ActionReward { reward, done, .. } = self.environment.step(action);
         let reward_f32 = OrderedFloat(reward.into_inner() as f32);
 
         StateRewardPair {

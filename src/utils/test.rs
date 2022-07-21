@@ -1,7 +1,6 @@
 // For testing purposes only (binary classification).
 
 use derive_new::new;
-use num_derive::FromPrimitive;
 use ordered_float::OrderedFloat;
 use rand::{distributions::Standard, prelude::Distribution};
 use serde::{Deserialize, Serialize};
@@ -16,7 +15,7 @@ use crate::{
 pub struct TestInput(pub [OrderedFloat<f32>; 5]);
 
 #[derive(
-    Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount, num_derive::ToPrimitive,
+    Eq, PartialEq, Ord, PartialOrd, Hash, Clone, EnumCount,
 )]
 pub enum TestRepresent {
     One = 0,

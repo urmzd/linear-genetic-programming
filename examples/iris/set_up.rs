@@ -1,7 +1,6 @@
 use core::fmt;
 use std::fmt::Display;
 
-use num_derive::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
@@ -48,8 +47,6 @@ pub const IRIS_DATASET_LINK: &'static str =
     Serialize,
     Deserialize,
     Hash,
-    FromPrimitive,
-    ToPrimitive,
 )]
 pub enum IrisClass {
     #[serde(rename = "Iris-setosa")]
