@@ -1,12 +1,23 @@
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
 use derivative::Derivative;
 use derive_new::new;
+use itertools::Itertools;
+use ordered_float::OrderedFloat;
+use rand::prelude::SliceRandom;
 use serde::Serialize;
 
-use crate::core::{
-    characteristics::Fitness, inputs::ValidInput, program::Program, registers::RegisterValue,
+use crate::{
+    core::{
+        characteristics::Fitness,
+        inputs::ValidInput,
+        program::Program,
+        registers::{RegisterValue, Registers},
+    },
+    utils::random::generator,
 };
+
+use super::core::ExtensionParameters;
 
 #[derive(Debug, Serialize, Derivative, new)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -64,10 +75,29 @@ impl StateRewardPair {
 
 pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn init(&mut self);
-    fn act(&mut self, action: Self::Actions) -> StateRewardPair;
+    fn act(&mut self, action: usize) -> StateRewardPair;
     fn reset(&mut self);
     fn get_state(&self) -> Vec<RegisterValue>;
     fn finish(&mut self);
+}
+
+impl<T> ExtensionParameters for ReinforcementLearningParameters<T>
+where
+    T: ReinforcementLearningInput,
+{
+    fn argmax(registers: &Registers) -> i32 {
+        let action_registers = &registers[0..T::N_ACTION_REGISTERS];
+        let max_value = *action_registers.into_iter().max().unwrap();
+
+        let indices = action_registers
+            .into_iter()
+            .enumerate()
+            .filter(|(_, value)| **value == max_value)
+            .map(|(index, _)| index)
+            .collect_vec();
+
+        indices.choose(&mut generator()).map(|v| *v as i32).unwrap()
+    }
 }
 
 impl<T> Fitness for Program<ReinforcementLearningParameters<T>>
@@ -80,80 +110,42 @@ where
         &mut self,
         parameters: &mut Self::FitnessParameters,
     ) -> crate::core::characteristics::FitnessScore {
-        todo!()
+        let mut scores = vec![];
+
+        parameters.environment.init();
+
+        for _ in 0..parameters.n_runs {
+            let mut score = OrderedFloat(0.);
+
+            for _ in 0..parameters.max_episode_length {
+                // Run program.
+                self.exec(&parameters.environment);
+                // Eval
+                let picked_action = ReinforcementLearningParameters::<T>::argmax(&self.registers);
+                let state_reward = parameters.environment.act(picked_action as usize);
+
+                score += state_reward.get_value();
+
+                if state_reward.is_terminal() {
+                    break;
+                }
+            }
+
+            scores.push(score);
+            parameters.environment.reset();
+        }
+
+        scores.sort();
+        parameters.environment.finish();
+
+        let median = scores.remove(parameters.n_runs / 2);
+
+        self.fitness = Some(median);
+
+        median
     }
 
     fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
-        todo!()
+        self.fitness
     }
 }
-
-// impl<'a, T> Fitness for Program<'a, T>
-// where
-//     T: ReinforcementLearningInput,
-// {
-//     // fn eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
-//     //     let mut scores = vec![];
-
-//     //     let ReinforcementLearningParameters {
-//     //         n_runs,
-//     //         max_episode_length,
-//     //         mut environment,
-//     //         ..
-//     //     } = self.problem_parameters.clone();
-
-//     //     environment.init();
-
-//     //     for _ in 0..n_runs {
-//     //         let mut score = OrderedFloat(0.);
-
-//     //         for _ in 0..max_episode_length {
-//     //             // Run program.
-//     //             self.exec(&environment);
-//     //             // Eval
-//     //             let possible_actions = T::argmax(&self.registers);
-//     //             let state_reward = environment.act(selected_action);
-
-//     //             score += state_reward.get_value();
-
-//     //             if state_reward.is_terminal() {
-//     //                 break;
-//     //             }
-//     //         }
-
-//     //         scores.push(score);
-//     //         environment.reset();
-//     //     }
-
-//     //     scores.sort();
-//     //     environment.finish();
-
-//     //     let median = scores.remove(n_runs / 2);
-
-//     //     self.fitness = Some(median);
-
-//     //     median
-//     // }
-
-//     // fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
-//     //     self.fitness
-//     // }
-
-//     type FitnessParams = usize;
-
-//     fn eval_fitness(
-//         &mut self,
-//         params: Self::FitnessParams,
-//     ) -> crate::core::characteristics::FitnessScore {
-//         todo!()
-//     }
-
-//     fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
-//         todo!()
-//     }
-// }
-
-// impl<'a, T> Organism for Program<T> where T: ReinforcementLearningInput {}
-// impl<'a, T> Organism for Program<T> where T: ClassificationInput {}
-
-struct G<T>(PhantomData<T>);

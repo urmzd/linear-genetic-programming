@@ -35,9 +35,8 @@ pub struct MountainCarInput {
 }
 
 impl ValidInput for MountainCarInput {
-    type Actions = MountainCarActions;
-
-    const N_INPUTS: usize = 2;
+    const N_INPUT_REGISTERS: usize = 2;
+    const N_ACTION_REGISTERS: usize = 3;
 
     fn flat(&self) -> Vec<RegisterValue> {
         let state = self.get_state();
@@ -50,7 +49,7 @@ impl ReinforcementLearningInput for MountainCarInput {
         self.environment.reset(None, false, None);
     }
 
-    fn act(&mut self, action: Self::Actions) -> StateRewardPair {
+    fn act(&mut self, action: usize) -> StateRewardPair {
         let transformed_action = NumCast::from(action).unwrap();
         let ActionReward { reward, done, .. } = self.environment.step(transformed_action);
         let reward_f32 = OrderedFloat(reward.into_inner() as f32);

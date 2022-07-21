@@ -93,9 +93,8 @@ impl Display for IrisInput {
 }
 
 impl ValidInput for IrisInput {
-    type Actions = IrisClass;
-
-    const N_INPUTS: usize = 4;
+    const N_INPUT_REGISTERS: usize = 4;
+    const N_ACTION_REGISTERS: usize = 3;
 
     fn flat(&self) -> Vec<RegisterValue> {
         [

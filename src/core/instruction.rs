@@ -6,7 +6,6 @@ use serde::Serialize;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
-use strum::EnumCount;
 
 use crate::utils::executables::{Op, DEFAULT_EXECUTABLES};
 use crate::utils::random::generator;
@@ -42,8 +41,8 @@ pub struct InstructionGeneratorParameters {
 impl InstructionGeneratorParameters {
     pub fn from<T: ValidInput>(n_extras: usize) -> Self {
         InstructionGeneratorParameters::new(
-            <T as ValidInput>::Actions::COUNT + n_extras,
-            <T as ValidInput>::N_INPUTS,
+            <T as ValidInput>::N_ACTION_REGISTERS + n_extras,
+            <T as ValidInput>::N_INPUT_REGISTERS,
         )
     }
 }

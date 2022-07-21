@@ -1,6 +1,6 @@
 use std::{fmt::Display, marker::PhantomData};
 
-use crate::utils::random::generator;
+use crate::{extensions::core::ExtensionParameters, utils::random::generator};
 use derivative::Derivative;
 use derive_new::new;
 use rand::{
@@ -22,7 +22,10 @@ pub struct ProgramGeneratorParameters {
     pub instruction_generator_parameters: InstructionGeneratorParameters,
 }
 
-impl<T> Clone for Program<T> {
+impl<T> Clone for Program<T>
+where
+    T: ExtensionParameters,
+{
     fn clone(&self) -> Self {
         Self {
             instructions: self.instructions.clone(),
@@ -35,7 +38,10 @@ impl<T> Clone for Program<T> {
 
 #[derive(Debug, Serialize, new, Derivative)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord)]
-pub struct Program<T> {
+pub struct Program<T>
+where
+    T: ExtensionParameters,
+{
     #[derivative(Ord = "ignore", PartialOrd = "ignore")]
     pub instructions: Instructions,
     #[derivative(Ord = "ignore", PartialOrd = "ignore")]
@@ -45,7 +51,10 @@ pub struct Program<T> {
     marker: PhantomData<T>,
 }
 
-impl<T> Program<T> {
+impl<T> Program<T>
+where
+    T: ExtensionParameters,
+{
     pub fn exec<I>(&mut self, input: &I)
     where
         I: ValidInput,
@@ -56,14 +65,20 @@ impl<T> Program<T> {
     }
 }
 
-impl<T> Display for Program<T> {
+impl<T> Display for Program<T>
+where
+    T: ExtensionParameters,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let serialized = toml::to_string(&self).unwrap();
         f.write_str(&serialized)
     }
 }
 
-impl<T> Generate for Program<T> {
+impl<T> Generate for Program<T>
+where
+    T: ExtensionParameters,
+{
     type GeneratorParameters = ProgramGeneratorParameters;
 
     fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
@@ -83,7 +98,10 @@ impl<T> Generate for Program<T> {
     }
 }
 
-impl<T> Mutate for Program<T> {
+impl<T> Mutate for Program<T>
+where
+    T: ExtensionParameters,
+{
     fn mutate(&self, params: &Self::GeneratorParameters) -> Self {
         let mut mutated = self.clone();
 
@@ -104,7 +122,10 @@ impl<T> Mutate for Program<T> {
     }
 }
 
-impl<T> Breed for Program<T> {
+impl<T> Breed for Program<T>
+where
+    T: ExtensionParameters,
+{
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =
             self.instructions.two_point_crossover(&mate.instructions);
@@ -120,7 +141,10 @@ impl<T> Breed for Program<T> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{core::instruction::InstructionGeneratorParameters, utils::test::TestInput};
+    use crate::{
+        core::instruction::InstructionGeneratorParameters,
+        extensions::classification::ClassificationParameters, utils::test::TestInput,
+    };
 
     use super::*;
 
@@ -148,8 +172,8 @@ mod tests {
         let instruction_params = InstructionGeneratorParameters::new(3, 4);
         let program_params = ProgramGeneratorParameters::new(100, instruction_params);
 
-        let program_a = Program::<TestInput>::generate(&program_params);
-        let program_b = Program::<TestInput>::generate(&program_params);
+        let program_a = Program::<ClassificationParameters<TestInput>>::generate(&program_params);
+        let program_b = Program::<ClassificationParameters<TestInput>>::generate(&program_params);
 
         let [child_a, child_b] = program_a.two_point_crossover(&program_b);
 

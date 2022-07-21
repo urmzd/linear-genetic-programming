@@ -1,3 +1,5 @@
+use std::{ops::Index, slice::SliceIndex};
+
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 
@@ -43,5 +45,16 @@ impl Registers {
     pub fn get(&self, index: usize) -> &RegisterValue {
         let Registers(data) = self;
         data.get(index).unwrap()
+    }
+}
+
+impl<Idx> Index<Idx> for Registers
+where
+    Idx: SliceIndex<[RegisterValue]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.0[index]
     }
 }

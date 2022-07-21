@@ -6,17 +6,8 @@ use lgp::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward, StateRewardPair,
     },
 };
-use num::ToPrimitive;
-use num_derive::{FromPrimitive, ToPrimitive};
 use ordered_float::OrderedFloat;
 use serde::Serialize;
-use strum::EnumCount;
-
-#[derive(Debug, Clone, ToPrimitive, FromPrimitive, Serialize, PartialEq, Eq, EnumCount)]
-pub enum CartPoleActions {
-    Left = 0,
-    Right = 1,
-}
 
 pub struct CartPoleLgp;
 
@@ -25,10 +16,9 @@ pub struct CartPoleInput {
     environment: CartPoleEnv,
 }
 
-impl<'a> ValidInput for CartPoleInput {
-    type Actions = CartPoleActions;
-
-    const N_INPUTS: usize = 2;
+impl ValidInput for CartPoleInput {
+    const N_INPUT_REGISTERS: usize = 4;
+    const N_ACTION_REGISTERS: usize = 2;
 
     fn flat(&self) -> Vec<lgp::core::registers::RegisterValue> {
         self.get_state()
@@ -40,10 +30,8 @@ impl ReinforcementLearningInput for CartPoleInput {
         self.environment.reset(None, false, None);
     }
 
-    fn act(&mut self, action: Self::Actions) -> StateRewardPair {
-        let discrete_action: usize =
-            ToPrimitive::to_usize(&action).expect("Value to be derived from action.");
-        let action_reward = self.environment.step(discrete_action);
+    fn act(&mut self, action: usize) -> StateRewardPair {
+        let action_reward = self.environment.step(action);
         let reward = OrderedFloat(action_reward.reward.into_inner() as f32);
 
         StateRewardPair {
