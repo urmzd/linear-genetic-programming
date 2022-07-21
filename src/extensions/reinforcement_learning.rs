@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
 use derivative::Derivative;
 use derive_new::new;
 use itertools::Itertools;
+use ordered_float::OrderedFloat;
 use rand::prelude::SliceRandom;
 use serde::Serialize;
 
@@ -140,7 +139,13 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct QTable(HashMap<usize, Vec<f32>>);
+pub struct QTable {
+    table: Vec<Vec<R32>>,
+    /// Step size parameter.
+    alpha: R32,
+    /// Discount.
+    gamma: R32,
+}
 
 pub struct QProgram<T>
 where
@@ -151,12 +156,21 @@ where
 }
 
 impl QTable {
+    pub fn new(n_actions: usize, n_registers: usize, alpha: R32, gamma: R32) -> Self {
+        let table = vec![vec![0.; n_actions]; n_registers];
+        QTable {
+            table,
+            alpha,
+            gamma,
+        }
+    }
+
     pub fn action_argmax(&self, register_number: usize) -> usize {
-        let QTable(q_table) = &self;
+        let QTable { table, .. } = &self;
         let mut best_action = -1 as i32;
         let mut best_q_value = 0f32;
-        let available_actions = q_table
-            .get(&register_number)
+        let available_actions = table
+            .get(register_number)
             .expect("Register number to be less than length of QTable.");
 
         for (action, q_value) in available_actions.into_iter().enumerate() {
@@ -169,7 +183,21 @@ impl QTable {
         best_action as usize
     }
 
-    // pub fn update(&mut self, current_reward: R32, current) {}
+    pub fn update(
+        &mut self,
+        current_register: usize,
+        current_action: usize,
+        current_reward: R32,
+        next_register: usize,
+    ) {
+        let current_q_value = self.table[current_register][current_action];
+        let next_q_value = self.action_argmax(next_register) as f32;
+
+        let new_q_value = current_q_value
+            + self.alpha * (current_reward + self.gamma * next_q_value - current_q_value);
+
+        self.table[current_register][current_action] = new_q_value;
+    }
 }
 
 impl<T> Fitness for QProgram<T>
@@ -182,6 +210,30 @@ where
         &mut self,
         parameters: &mut Self::FitnessParameters,
     ) -> crate::core::characteristics::FitnessScore {
+        parameters.environment.init();
+        for _run in 0..parameters.n_runs {
+            let mut score = 0f32;
+            for _step in 0..parameters.max_episode_length {
+                self.program.exec(&parameters.environment);
+
+                let selected_register = self
+                    .program
+                    .registers
+                    .iter()
+                    .map(|v| OrderedFloat(*v))
+                    .position_max()
+                    .expect("Registers length to be greater than 0.");
+
+                let state_reward_pair = parameters.environment.act(selected_register);
+
+                score += state_reward_pair.get_value();
+
+                if state_reward_pair.is_terminal() {
+                    break;
+                }
+            }
+        }
+
         todo!()
     }
 

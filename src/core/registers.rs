@@ -1,3 +1,4 @@
+use core::slice::Iter;
 use std::{ops::Index, slice::SliceIndex};
 
 use serde::Serialize;
@@ -5,11 +6,13 @@ use serde::Serialize;
 pub type R32 = f32;
 
 #[derive(Debug, Clone, Serialize)]
-pub struct Registers(Vec<R32>);
+pub struct Registers {
+    data: Vec<R32>,
+}
 
 impl From<Vec<R32>> for Registers {
     fn from(data: Vec<R32>) -> Self {
-        Registers(data)
+        Registers { data }
     }
 }
 
@@ -17,11 +20,11 @@ impl Registers {
     pub fn new(n_registers: usize) -> Self {
         let data = vec![0.; n_registers];
 
-        Registers(data)
+        Registers { data }
     }
 
     pub fn reset(&mut self) {
-        let Registers(data) = self;
+        let Registers { data } = self;
         for value in data.as_mut_slice() {
             *value = 0.
         }
@@ -32,18 +35,22 @@ impl Registers {
     }
 
     pub fn len(&self) -> usize {
-        let Registers(data) = self;
+        let Registers { data } = self;
         data.len()
     }
 
     pub fn update(&mut self, index: usize, value: R32) {
-        let Registers(data) = self;
+        let Registers { data } = self;
         data[index] = value;
     }
 
     pub fn get(&self, index: usize) -> &R32 {
-        let Registers(data) = self;
+        let Registers { data } = self;
         data.get(index).unwrap()
+    }
+
+    pub fn iter<'a>(&'a self) -> Iter<'a, R32> {
+        self.data.iter()
     }
 }
 
@@ -54,6 +61,6 @@ where
     type Output = Idx::Output;
 
     fn index(&self, index: Idx) -> &Self::Output {
-        &self.0[index]
+        &self.data[index]
     }
 }
