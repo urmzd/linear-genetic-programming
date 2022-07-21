@@ -58,7 +58,7 @@ impl ReinforcementLearningInput for MountainCarInput {
             state: self.get_state(),
             reward: match done {
                 true => Reward::Terminal(reward_f32),
-                false => Reward::Terminal(reward_f32),
+                false => Reward::Continue(reward_f32),
             },
         }
     }

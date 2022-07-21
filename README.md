@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 #### mountain_car
 
 ```rust
-//examples/mountain_car/main.rs#L15-L36
+//examples/mountain_car/main.rs#L14-L34
 
     let environment = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(environment);
@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 #### cart_pole
 
 ```rust
-//examples/cart_pole/main.rs#L15-L36
+//examples/cart_pole/main.rs#L14-L34
 
     let environment = CartPoleEnv::new(RenderMode::Human);
     let input = CartPoleInput::new(environment);
