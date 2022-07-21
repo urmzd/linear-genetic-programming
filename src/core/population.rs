@@ -1,14 +1,11 @@
 use std::slice::{Iter, IterMut};
 use std::vec::IntoIter;
 
-use super::characteristics::Compare;
-use super::characteristics::Show;
-
 pub type InnerPopulation<T> = Vec<T>;
 #[derive(Clone, Debug)]
 pub struct Population<T>
 where
-    T: Compare + Show + Clone,
+    T: PartialEq + PartialOrd + Clone,
 {
     list: InnerPopulation<T>,
     capacity: usize,
@@ -16,7 +13,7 @@ where
 
 impl<V> Extend<V> for Population<V>
 where
-    V: Show + Compare + Clone,
+    V: PartialOrd + Clone,
 {
     fn extend<T: IntoIterator<Item = V>>(&mut self, iter: T) {
         for element in iter {
@@ -27,7 +24,7 @@ where
 
 impl<T> Population<T>
 where
-    T: Compare + Show + Clone,
+    T: PartialOrd + Clone,
 {
     pub fn with_capacity(capacity: usize) -> Self {
         let list = Vec::with_capacity(capacity);
@@ -90,7 +87,7 @@ where
 
 impl<T> IntoIterator for Population<T>
 where
-    T: Compare + Show + Clone,
+    T: PartialOrd + Clone,
 {
     type Item = T;
 
@@ -103,7 +100,7 @@ where
 
 impl<E> FromIterator<E> for Population<E>
 where
-    E: Compare + Show + Clone,
+    E: Clone + PartialOrd,
 {
     fn from_iter<T: IntoIterator<Item = E>>(iter: T) -> Self {
         let mut population = Population::with_capacity(100);

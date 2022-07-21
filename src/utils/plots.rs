@@ -5,10 +5,7 @@ use plotters::{
     style::{colors, IntoFont, WHITE},
 };
 
-use crate::core::{
-    characteristics::{Compare, Fitness, Show},
-    population::Population,
-};
+use crate::core::{characteristics::Fitness, population::Population};
 
 pub fn plot_population_benchmarks<T>(
     populations: Vec<Population<T>>,
@@ -16,7 +13,7 @@ pub fn plot_population_benchmarks<T>(
     y_range: Range<f32>,
 ) -> Result<(), Box<dyn error::Error>>
 where
-    T: Fitness + Clone + Ord + fmt::Debug + Show + Compare,
+    T: Fitness + Clone + Ord + fmt::Debug,
 {
     let root = BitMapBackend::new(plot_path, (1280, 720)).into_drawing_area();
     root.fill(&WHITE)?;

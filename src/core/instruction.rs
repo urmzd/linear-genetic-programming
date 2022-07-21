@@ -11,7 +11,7 @@ use strum::EnumCount;
 use crate::utils::executables::{Op, DEFAULT_EXECUTABLES};
 use crate::utils::random::generator;
 
-use super::characteristics::{Mutate, Show};
+use super::characteristics::{Generate, Mutate};
 use super::inputs::ValidInput;
 use super::registers::Registers;
 
@@ -33,7 +33,6 @@ impl Mode {
     }
 }
 
-impl Show for InstructionGeneratorParameters {}
 #[derive(Clone, Debug, Serialize, new)]
 pub struct InstructionGeneratorParameters {
     pub n_registers: usize,
@@ -49,7 +48,7 @@ impl InstructionGeneratorParameters {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq)]
 pub struct Instruction {
     source_index: usize,
     target_index: usize,
@@ -69,11 +68,10 @@ impl Clone for Instruction {
     }
 }
 
-impl Instruction {
-    pub fn generate<'a, T>(parameters: &'a InstructionGeneratorParameters) -> Self
-    where
-        T: ValidInput,
-    {
+impl Generate for Instruction {
+    type GeneratorParameters = InstructionGeneratorParameters;
+
+    fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
         let InstructionGeneratorParameters {
             n_features: n_inputs,
             n_registers,
@@ -107,8 +105,6 @@ impl Instruction {
     }
 }
 
-impl Eq for Instruction {}
-
 impl PartialEq for Instruction {
     fn eq(&self, other: &Self) -> bool {
         self.source_index == other.source_index
@@ -129,9 +125,8 @@ impl Debug for Instruction {
 }
 
 impl Mutate for Instruction {
-    type MutateParameters = InstructionGeneratorParameters;
-    fn mutate(&self, params: Self::MutateParameters) -> Self {
-        let mut mutated = Self::generate(&self.parameters_used);
+    fn mutate<'a>(&self, params: &'a Self::GeneratorParameters) -> Self {
+        let mut mutated = Self::generate(&params);
 
         let swap_target = generator().gen_bool(0.5);
         let swap_source = generator().gen_bool(0.5);
@@ -156,8 +151,6 @@ impl Mutate for Instruction {
         mutated
     }
 }
-
-impl Show for Instruction {}
 
 impl Instruction {
     fn get_target_data<'b, T>(&self, registers: Registers, data: &'b T) -> Registers

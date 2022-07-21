@@ -5,7 +5,7 @@ use csv::ReaderBuilder;
 use more_asserts::{assert_ge, assert_le};
 use ordered_float::OrderedFloat;
 use rand::prelude::{IteratorRandom, SliceRandom};
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     core::characteristics::{Breed, Fitness, Generate},
@@ -13,7 +13,7 @@ use crate::{
 };
 
 use super::{
-    characteristics::{Mutate, Organism},
+    characteristics::Mutate,
     inputs::{Inputs, ValidInput},
     population::Population,
 };
@@ -21,7 +21,7 @@ use super::{
 #[derive(Debug)]
 pub struct HyperParameters<OrganismType>
 where
-    OrganismType: Organism,
+    OrganismType: Fitness + Mutate + Generate,
 {
     pub population_size: usize,
     pub gap: f32,
@@ -29,7 +29,6 @@ where
     pub n_crossovers: f32,
     pub max_generations: usize,
     pub fitness_parameters: OrganismType::FitnessParameters,
-    pub mutate_parameters: OrganismType::MutateParameters,
     pub program_parameters: OrganismType::GeneratorParameters,
 }
 
@@ -55,9 +54,19 @@ where
     }
 }
 
-pub trait GeneticAlgorithm<'a>
+pub trait GeneticAlgorithm
 where
-    Self::O: Organism,
+    Self::O: Fitness
+        + Generate
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Serialize
+        + Sized
+        + Clone
+        + Mutate
+        + Breed
+        + fmt::Debug,
 {
     type O;
 
@@ -66,7 +75,7 @@ where
         pretty_env_logger::try_init().unwrap_or(());
     }
 
-    fn init_population(hyper_params: &'a HyperParameters<Self::O>) -> Population<Self::O> {
+    fn init_population(hyper_params: &HyperParameters<Self::O>) -> Population<Self::O> {
         let mut population = Population::with_capacity(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
@@ -77,9 +86,12 @@ where
         population
     }
 
-    fn rank(population: &mut Population<Self::O>) {
+    fn rank(
+        population: &mut Population<Self::O>,
+        fitness_parameters: &mut <Self::O as Fitness>::FitnessParameters,
+    ) {
         for individual in population.iter_mut() {
-            individual.eval_fitness();
+            individual.eval_fitness(fitness_parameters);
         }
         population.sort();
     }
@@ -97,19 +109,28 @@ where
         }
     }
 
-    fn breed(population: &mut Population<Self::O>, n_mutations: f32, n_crossovers: f32) {
-        assert_ge!(OrderedFloat(n_mutations), OrderedFloat(0f32));
-        assert_ge!(OrderedFloat(n_crossovers), OrderedFloat(0f32));
-        assert_le!(OrderedFloat(n_crossovers + n_mutations), OrderedFloat(1f32));
-        assert_le!(OrderedFloat(n_mutations), OrderedFloat(1f32));
-        assert_le!(OrderedFloat(n_crossovers), OrderedFloat(1f32));
+    fn breed(
+        population: &mut Population<Self::O>,
+        mutation_percent: f32,
+        crossover_percent: f32,
+        mutation_parameters: &<Self::O as Generate>::GeneratorParameters,
+    ) {
+        assert_ge!(OrderedFloat(mutation_percent), OrderedFloat(0f32));
+        assert_ge!(OrderedFloat(crossover_percent), OrderedFloat(0f32));
+        assert_le!(
+            OrderedFloat(crossover_percent + mutation_percent),
+            OrderedFloat(1f32)
+        );
+        assert_le!(OrderedFloat(mutation_percent), OrderedFloat(1f32));
+        assert_le!(OrderedFloat(crossover_percent), OrderedFloat(1f32));
 
         let pop_cap = population.capacity();
         let pop_len = population.len();
         let mut remaining_size: usize = pop_cap - pop_len;
-        let mut n_mutations_todo = ((n_mutations * remaining_size as f32) as f64).floor() as usize;
+        let mut n_mutations_todo =
+            ((mutation_percent * remaining_size as f32) as f64).floor() as usize;
         let mut n_crossovers_todo =
-            ((n_crossovers * remaining_size as f32) as f64).floor() as usize;
+            ((crossover_percent * remaining_size as f32) as f64).floor() as usize;
 
         assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
 
@@ -138,7 +159,9 @@ where
                     let parents = [parent_a, parent_b];
                     let selected_parent = parents.choose(&mut generator());
 
-                    let mutation_child = selected_parent.map(|parent| parent.mutate()).unwrap();
+                    let mutation_child = selected_parent
+                        .map(|parent| parent.mutate(mutation_parameters))
+                        .unwrap();
 
                     remaining_size -= 1;
                     n_mutations_todo -= 1;
@@ -161,7 +184,7 @@ where
     }
 
     fn execute<'b>(
-        hyper_params: &'a HyperParameters<Self::O>,
+        hyper_params: &mut HyperParameters<Self::O>,
         mut hooks: EventHooks<'b, Self::O>,
     ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
@@ -182,7 +205,7 @@ where
 
         for _ in 0..hyper_params.max_generations {
             // Step 1: Evaluate Fitness
-            Self::rank(&mut population);
+            Self::rank(&mut population, &mut hyper_params.fitness_parameters);
             if let Some(hook) = after_rank {
                 (hook)(&mut population)?;
             }
@@ -198,6 +221,7 @@ where
                 &mut population,
                 hyper_params.n_mutations,
                 hyper_params.n_crossovers,
+                &hyper_params.program_parameters,
             );
             if let Some(hook) = after_breed {
                 (hook)(&mut population)?;
@@ -212,7 +236,7 @@ pub type GpHook<'a, O> =
     &'a mut dyn FnMut(&mut Population<O>) -> Result<(), Box<dyn std::error::Error>>;
 pub struct EventHooks<'a, O>
 where
-    O: Organism,
+    O: PartialOrd + Clone,
 {
     pub after_init: Option<GpHook<'a, O>>,
     pub after_evaluate: Option<GpHook<'a, O>>,
@@ -221,9 +245,9 @@ where
     pub after_breed: Option<GpHook<'a, O>>,
 }
 
-impl<'a, 'b, O> EventHooks<'a, O>
+impl<'a, O> EventHooks<'a, O>
 where
-    O: Organism,
+    O: PartialOrd + Clone,
 {
     pub fn with_after_init(self, f: GpHook<'a, O>) -> Self {
         Self {
@@ -256,7 +280,7 @@ where
 
 impl<'a, O> fmt::Debug for EventHooks<'a, O>
 where
-    O: Organism,
+    O: PartialOrd + Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EventHooks")
@@ -271,7 +295,7 @@ where
 
 impl<'a, O> Default for EventHooks<'a, O>
 where
-    O: Organism,
+    O: PartialOrd + Clone,
 {
     fn default() -> Self {
         Self {
@@ -291,7 +315,10 @@ mod tests {
     use crate::{
         core::{instruction::InstructionGeneratorParameters, program::ProgramGeneratorParameters},
         extensions::classification::ClassificationParameters,
-        utils::{random::generator, test::TestLgp},
+        utils::{
+            random::generator,
+            test::{TestInput, TestLgp},
+        },
     };
     use rand::{distributions::Standard, Rng};
 
@@ -308,16 +335,15 @@ mod tests {
             n_mutations: 0.5,
             n_crossovers: 0.5,
             max_generations: 1,
-            mutate_parameters: (),
-            fitness_parameters: ClassificationParameters::new(&inputs),
+            fitness_parameters: ClassificationParameters::new(inputs),
             program_parameters: ProgramGeneratorParameters::new(
                 10,
-                InstructionGeneratorParameters::from(1),
+                InstructionGeneratorParameters::from::<TestInput>(1),
             ),
         };
 
         TestLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default()
                 .with_after_init(&mut |_p| {
                     received.borrow_mut().push(1);

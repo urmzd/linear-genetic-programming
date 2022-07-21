@@ -1,18 +1,40 @@
 use derive_new::new;
 use serde::Serialize;
 
-use crate::core::inputs::{Inputs, ValidInput};
+use crate::core::{
+    characteristics::Fitness,
+    inputs::{Inputs, ValidInput},
+    program::Program,
+};
 
 #[derive(Clone, Debug, Serialize, new)]
-pub struct ClassificationParameters<'a, InputType>
+pub struct ClassificationParameters<InputType>
 where
     InputType: ClassificationInput,
 {
-    inputs: &'a Inputs<InputType>,
+    inputs: Inputs<InputType>,
 }
 
 pub trait ClassificationInput: ValidInput {
     fn get_class(&self) -> usize;
+}
+
+impl<T> Fitness for Program<ClassificationParameters<T>>
+where
+    T: ClassificationInput,
+{
+    type FitnessParameters = ClassificationParameters<T>;
+
+    fn eval_fitness(
+        &mut self,
+        parameters: &mut Self::FitnessParameters,
+    ) -> crate::core::characteristics::FitnessScore {
+        todo!()
+    }
+
+    fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
+        todo!()
+    }
 }
 
 // impl<'a, T> Organism<'a> for Program<'a, T> where T: ClassificationInput {}

@@ -3,9 +3,7 @@ use std::marker::PhantomData;
 use derive_new::new;
 use gym_rs::{core::Env, envs::classical_control::cartpole::CartPoleEnv};
 use lgp::{
-    core::{
-        algorithm::GeneticAlgorithm, characteristics::Show, inputs::ValidInput, program::Program,
-    },
+    core::{algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program},
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward, StateRewardPair,
     },
@@ -35,14 +33,10 @@ impl<'a> ValidInput for CartPoleInput<'a> {
 
     const N_INPUTS: usize = 2;
 
-    const AVAILABLE_EXECUTABLES: lgp::utils::executables::Executables = DEFAULT_EXECUTABLES;
-
     fn flat(&self) -> Vec<lgp::core::registers::RegisterValue> {
         self.get_state()
     }
 }
-
-impl Show for CartPoleInput<'_> {}
 
 impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
     fn init(&mut self) {
@@ -83,6 +77,6 @@ impl<'a> ReinforcementLearningInput for CartPoleInput<'a> {
     }
 }
 
-impl<'a> GeneticAlgorithm<'a> for CartPoleLgp<'a> {
-    type O = Program<'a, ReinforcementLearningParameters<CartPoleInput<'a>>>;
+impl GeneticAlgorithm for CartPoleLgp {
+    type O = Program<ReinforcementLearningParameters<CartPoleInput<'a>>>;
 }

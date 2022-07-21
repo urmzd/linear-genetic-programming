@@ -1,6 +1,7 @@
 use std::{fmt::Display, marker::PhantomData};
 
 use crate::utils::random::generator;
+use derivative::Derivative;
 use derive_new::new;
 use rand::{
     distributions::Uniform,
@@ -9,7 +10,7 @@ use rand::{
 use serde::Serialize;
 
 use super::{
-    characteristics::{Breed, Compare, FitnessScore, Generate, Mutate, Show},
+    characteristics::{Breed, FitnessScore, Generate, Mutate},
     inputs::ValidInput,
     instruction::{Instruction, InstructionGeneratorParameters},
     instructions::Instructions,
@@ -21,59 +22,54 @@ pub struct ProgramGeneratorParameters {
     pub instruction_generator_parameters: InstructionGeneratorParameters,
 }
 
-impl Show for ProgramGeneratorParameters {}
+impl<T> Clone for Program<T> {
+    fn clone(&self) -> Self {
+        Self {
+            instructions: self.instructions.clone(),
+            registers: self.registers.clone(),
+            fitness: self.fitness.clone(),
+            marker: self.marker.clone(),
+        }
+    }
+}
 
-struct I;
-
-#[derive(Debug, Serialize, PartialEq, Eq, new, Clone)]
+#[derive(Debug, Serialize, new, Derivative)]
+#[derivative(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Program<T> {
+    #[derivative(Ord = "ignore", PartialOrd = "ignore")]
     pub instructions: Instructions,
+    #[derivative(Ord = "ignore", PartialOrd = "ignore")]
     pub registers: Registers,
     pub fitness: Option<FitnessScore>,
+    #[derivative(PartialEq = "ignore", Ord = "ignore", PartialOrd = "ignore")]
     marker: PhantomData<T>,
 }
 
-impl<T> Program<T>
-where
-    T: ValidInput,
-{
-    pub fn exec(&mut self, input: &T) {
+impl<T> Program<T> {
+    pub fn exec<I>(&mut self, input: &I)
+    where
+        I: ValidInput,
+    {
         for instruction in &self.instructions {
             instruction.apply(&mut &mut self.registers, input)
         }
     }
 }
 
-impl<T> Display for Program<T>
-where
-    T: ValidInput + Serialize,
-{
+impl<T> Display for Program<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let serialized = toml::to_string(&self).unwrap();
         f.write_str(&serialized)
     }
 }
 
-impl<T> PartialOrd for Program<T>
-where
-    T: ValidInput + PartialOrd,
-{
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.fitness.partial_cmp(&other.fitness)
-    }
-}
-
-impl<T> Generate for Program<T>
-where
-    T: ValidInput,
-{
+impl<T> Generate for Program<T> {
     type GeneratorParameters = ProgramGeneratorParameters;
 
     fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
         let ProgramGeneratorParameters {
             max_instructions,
             instruction_generator_parameters,
-            ..
         } = &parameters;
 
         let registers = Registers::new(instruction_generator_parameters.n_registers);
@@ -87,15 +83,8 @@ where
     }
 }
 
-impl<T> Show for Program<T> where T: ValidInput + Show {}
-impl<T> Compare for Program<T> where T: ValidInput + Ord {}
-
-impl<T> Mutate for Program<T>
-where
-    T: ValidInput,
-{
-    type MutateParameters = ();
-    fn mutate(&self, params: Self::MutateParameters) -> Self {
+impl<T> Mutate for Program<T> {
+    fn mutate(&self, params: &Self::GeneratorParameters) -> Self {
         let mut mutated = self.clone();
 
         // Pick instruction to mutate.
@@ -105,7 +94,7 @@ where
             .choose(&mut generator())
             .unwrap();
 
-        let mutated_instruction = instruction.mutate();
+        let mutated_instruction = instruction.mutate(&params.instruction_generator_parameters);
         *instruction = mutated_instruction;
 
         // IMPORTANT: Reset fitness to force evaluation.
@@ -115,10 +104,7 @@ where
     }
 }
 
-impl<T> Breed for Program<T>
-where
-    T: ValidInput,
-{
+impl<T> Breed for Program<T> {
     fn two_point_crossover(&self, mate: &Self) -> [Self; 2] {
         let [child_a_instructions, child_b_instructions] =
             self.instructions.two_point_crossover(&mate.instructions);
@@ -167,11 +153,11 @@ mod tests {
         let inputs: Vec<TestInput> = [0; 5].map(|_| generator().sample(Standard)).to_vec();
 
         let instruction_params = InstructionGeneratorParameters::new(3, 4);
-        let classification_params = ClassificationParameters::new(&inputs);
+        let classification_params = ClassificationParameters::new(inputs);
         let program_params = ProgramGeneratorParameters::new(100, instruction_params);
 
-        let program_a = Program::generate(&program_params);
-        let program_b = Program::generate(&program_params);
+        let program_a = Program::<TestInput>::generate(&program_params);
+        let program_b = Program::<TestInput>::generate(&program_params);
 
         let [child_a, child_b] = program_a.two_point_crossover(&program_b);
 

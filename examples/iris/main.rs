@@ -23,7 +23,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
-        mutate_parameters: (),
         fitness_parameters: ClassificationParameters::new(&inputs),
         program_parameters: ProgramGeneratorParameters::new(
             100,
@@ -31,7 +30,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         ),
     };
 
-    IrisLgp::execute(&hyper_params, EventHooks::default())?;
+    IrisLgp::execute(&mut hyper_params, EventHooks::default())?;
     Ok(())
 }
 
@@ -69,7 +68,6 @@ mod tests {
                 n_mutations: 0.5,
                 n_crossovers: 0.5,
                 fitness_parameters: ClassificationParameters::new(&inputs),
-                mutate_parameters: (),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
@@ -82,7 +80,7 @@ mod tests {
         let mut populations = vec![];
 
         IrisLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 populations.push(population.clone());
                 Ok(())
@@ -109,7 +107,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
@@ -123,7 +120,7 @@ mod tests {
         let mut populations = vec![];
 
         IrisLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 populations.push(population.clone());
                 Ok(())
@@ -150,7 +147,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
@@ -164,7 +160,7 @@ mod tests {
         let mut populations = vec![];
 
         IrisLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 populations.push(population.clone());
                 Ok(())
@@ -192,7 +188,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
@@ -212,7 +207,7 @@ mod tests {
         let mut worst = None;
 
         IrisLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default().with_after_rank(&mut |population| {
                 populations.push(population.clone());
 
@@ -250,7 +245,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
@@ -260,15 +254,14 @@ mod tests {
 
         let mut population = IrisLgp::init_population(&hyper_params);
 
-        IrisLgp::rank(&mut population);
-        IrisLgp::rank(&mut population);
+        IrisLgp::rank(&mut population, &mut hyper_params.fitness_parameters);
         IrisLgp::apply_selection(&mut population, hyper_params.gap);
 
         let dropped_pop_len = population.len();
 
         assert_lt!(dropped_pop_len, hyper_params.population_size);
 
-        IrisLgp::breed(&mut population, 0f32, 0f32);
+        IrisLgp::breed(&mut population, 0f32, 0f32, &hyper_params.mutate_parameters);
 
         assert_eq!(population.len(), hyper_params.population_size);
 
@@ -289,7 +282,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,
@@ -299,8 +291,7 @@ mod tests {
 
         let mut population = IrisLgp::init_population(&hyper_params);
 
-        IrisLgp::rank(&mut population);
-        IrisLgp::rank(&mut population);
+        IrisLgp::rank(&mut population, &mut hyper_params.fitness_parameters);
         IrisLgp::apply_selection(&mut population, hyper_params.gap);
 
         self::assert_eq!(
@@ -326,7 +317,6 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
-                mutate_parameters: (),
                 fitness_parameters: ClassificationParameters::new(&inputs),
                 program_parameters: ProgramGeneratorParameters::new(
                     100,

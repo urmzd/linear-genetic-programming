@@ -21,7 +21,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         n_crossovers: 0.5,
         n_mutations: 0.5,
         max_generations: 1,
-        mutate_parameters: (),
         fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
         program_parameters: ProgramGeneratorParameters::new(
             100,
@@ -29,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     };
 
-    MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+    MountainCarLgp::execute(&mut hyper_params, EventHooks::default())?;
 
     Ok(())
 }
@@ -65,7 +64,6 @@ mod tests {
             n_crossovers: 0.5,
             n_mutations: 0.5,
             max_generations: 100,
-            mutate_parameters: (),
             fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
             program_parameters: ProgramGeneratorParameters::new(
                 100,
@@ -76,7 +74,7 @@ mod tests {
         let mut populations = vec![];
 
         MountainCarLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default()
                 .with_after_rank(&mut |population| Ok(populations.push(population.clone()))),
         )?;

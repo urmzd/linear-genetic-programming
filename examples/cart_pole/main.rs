@@ -20,7 +20,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
-        mutate_parameters: (),
         max_generations: 1,
         fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
         program_parameters: ProgramGeneratorParameters::new(
@@ -29,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     };
 
-    CartPoleLgp::execute(&hyper_params, EventHooks::default())?;
+    CartPoleLgp::execute(&mut hyper_params, EventHooks::default())?;
 
     Ok(())
 }
@@ -63,7 +62,6 @@ mod tests {
             n_crossovers: 0.5,
             n_mutations: 0.5,
             max_generations: 100,
-            mutate_parameters: (),
             fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
             program_parameters: ProgramGeneratorParameters::new(
                 100,
@@ -74,7 +72,7 @@ mod tests {
         let mut populations = vec![];
 
         CartPoleLgp::execute(
-            &hyper_params,
+            &mut hyper_params,
             EventHooks::default()
                 .with_after_rank(&mut |population| Ok(populations.push(population.clone()))),
         )?;

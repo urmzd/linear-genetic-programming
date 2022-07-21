@@ -1,14 +1,11 @@
 use num::{FromPrimitive, ToPrimitive};
 use strum::EnumCount;
 
-use super::{
-    characteristics::Show,
-    registers::{RegisterValue, Registers},
-};
+use super::registers::{RegisterValue, Registers};
 
 pub type Inputs<InputType> = Vec<InputType>;
 
-pub trait ValidInput: Show + Clone
+pub trait ValidInput: Clone
 where
     Self::Actions: Clone + FromPrimitive + EnumCount + ToPrimitive,
     for<'a> Registers: From<&'a Self>,

@@ -11,20 +11,13 @@ use strum::EnumCount;
 
 use crate::{
     core::{
-        algorithm::GeneticAlgorithm,
-        characteristics::{Compare, Show},
-        inputs::ValidInput,
-        program::Program,
-        registers::RegisterValue,
+        algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::RegisterValue,
     },
-    extensions::classification::ClassificationInput,
+    extensions::classification::{ClassificationInput, ClassificationParameters},
 };
 
 #[derive(PartialEq, PartialOrd, Ord, Eq, Clone, Debug, Serialize, Deserialize, new)]
 pub struct TestInput(pub [OrderedFloat<f32>; 5]);
-
-impl Compare for TestInput {}
-impl Show for TestInput {}
 
 #[derive(
     Eq, PartialEq, Ord, PartialOrd, FromPrimitive, Hash, Clone, EnumCount, num_derive::ToPrimitive,
@@ -33,8 +26,6 @@ pub enum TestRepresent {
     One = 0,
     Two = 1,
 }
-
-impl Compare for TestRepresent {}
 
 impl ValidInput for TestInput {
     type Actions = TestRepresent;
@@ -56,9 +47,9 @@ impl ClassificationInput for TestInput {
     }
 }
 
-pub struct TestLgp<'a>(PhantomData<&'a ()>);
-impl<'a> GeneticAlgorithm<'a> for TestLgp<'a> {
-    type O = Program<TestInput>;
+pub struct TestLgp;
+impl GeneticAlgorithm for TestLgp {
+    type O = Program<ClassificationParameters<TestInput>>;
 }
 
 impl Default for TestInput {
