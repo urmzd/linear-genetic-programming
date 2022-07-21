@@ -36,8 +36,8 @@ where
             let median = population.middle();
             let worst = population.last();
 
-            let benchmark = [best, median, worst]
-                .map(|quantile| quantile.unwrap().get_fitness().unwrap().into_inner());
+            let benchmark =
+                [best, median, worst].map(|quantile| quantile.unwrap().get_fitness().unwrap());
 
             benchmark
         })

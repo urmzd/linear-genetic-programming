@@ -44,8 +44,9 @@ where
 {
     #[derivative(Ord = "ignore", PartialOrd = "ignore")]
     pub instructions: Instructions,
-    #[derivative(Ord = "ignore", PartialOrd = "ignore")]
+    #[derivative(Ord = "ignore", PartialOrd = "ignore", PartialEq = "ignore")]
     pub registers: Registers,
+    #[derivative(Ord = "ignore")]
     pub fitness: Option<FitnessScore>,
     #[derivative(PartialEq = "ignore", Ord = "ignore", PartialOrd = "ignore")]
     marker: PhantomData<T>,

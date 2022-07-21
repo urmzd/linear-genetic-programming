@@ -1,6 +1,5 @@
 use derive_new::new;
 use itertools::Itertools;
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 use crate::core::{
@@ -26,7 +25,11 @@ where
 {
     fn argmax(registers: &Registers) -> i32 {
         let action_registers = &registers[0..T::N_ACTION_REGISTERS];
-        let max_value = *action_registers.into_iter().max().unwrap();
+        let max_value = action_registers
+            .into_iter()
+            .copied()
+            .reduce(|a, b| f32::max(a, b))
+            .unwrap();
 
         let mut indices = action_registers
             .into_iter()
@@ -74,7 +77,7 @@ where
             self.registers.reset();
         }
 
-        let fitness = OrderedFloat(n_correct as f32 / inputs.len() as f32);
+        let fitness = n_correct as f32 / inputs.len() as f32;
 
         self.fitness = Some(fitness);
 

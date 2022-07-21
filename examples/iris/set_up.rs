@@ -9,7 +9,7 @@ use lgp::{
         algorithm::{GeneticAlgorithm, Loader},
         inputs::ValidInput,
         program::Program,
-        registers::O32,
+        registers::R32,
     },
     extensions::classification::{ClassificationInput, ClassificationParameters},
 };
@@ -67,12 +67,12 @@ impl<'a> Loader for IrisLgp {
     type InputType = IrisInput;
 }
 
-#[derive(Deserialize, Debug, Clone, PartialEq, Ord, PartialOrd, Eq, Serialize, Hash)]
+#[derive(Deserialize, Debug, Clone, PartialEq, PartialOrd, Serialize)]
 pub struct IrisInput {
-    sepal_length: O32,
-    sepal_width: O32,
-    petal_length: O32,
-    petal_width: O32,
+    sepal_length: R32,
+    sepal_width: R32,
+    petal_length: R32,
+    petal_width: R32,
     class: IrisClass,
 }
 
@@ -93,7 +93,7 @@ impl ValidInput for IrisInput {
     const N_INPUT_REGISTERS: usize = 4;
     const N_ACTION_REGISTERS: usize = 3;
 
-    fn flat(&self) -> Vec<O32> {
+    fn flat(&self) -> Vec<R32> {
         [
             self.sepal_length,
             self.sepal_width,

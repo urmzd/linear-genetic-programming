@@ -1,22 +1,21 @@
 use std::{ops::Index, slice::SliceIndex};
 
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
-pub type O32 = OrderedFloat<f32>;
+pub type R32 = f32;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct Registers(Vec<O32>);
+#[derive(Debug, Clone, Serialize)]
+pub struct Registers(Vec<R32>);
 
-impl From<Vec<O32>> for Registers {
-    fn from(data: Vec<O32>) -> Self {
+impl From<Vec<R32>> for Registers {
+    fn from(data: Vec<R32>) -> Self {
         Registers(data)
     }
 }
 
 impl Registers {
     pub fn new(n_registers: usize) -> Self {
-        let data = vec![OrderedFloat(0.); n_registers];
+        let data = vec![0.; n_registers];
 
         Registers(data)
     }
@@ -24,7 +23,7 @@ impl Registers {
     pub fn reset(&mut self) {
         let Registers(data) = self;
         for value in data.as_mut_slice() {
-            *value = OrderedFloat(0.)
+            *value = 0.
         }
     }
 
@@ -37,12 +36,12 @@ impl Registers {
         data.len()
     }
 
-    pub fn update(&mut self, index: usize, value: O32) {
+    pub fn update(&mut self, index: usize, value: R32) {
         let Registers(data) = self;
         data[index] = value;
     }
 
-    pub fn get(&self, index: usize) -> &O32 {
+    pub fn get(&self, index: usize) -> &R32 {
         let Registers(data) = self;
         data.get(index).unwrap()
     }
@@ -50,7 +49,7 @@ impl Registers {
 
 impl<Idx> Index<Idx> for Registers
 where
-    Idx: SliceIndex<[O32]>,
+    Idx: SliceIndex<[R32]>,
 {
     type Output = Idx::Output;
 

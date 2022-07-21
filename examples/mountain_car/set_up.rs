@@ -3,12 +3,11 @@ use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::extensions::reinforcement_learning::StateRewardPair;
 use lgp::{
-    core::{algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::O32},
+    core::{algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::R32},
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
 };
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 pub struct MountainCarLgp;
@@ -26,7 +25,7 @@ impl ValidInput for MountainCarInput {
     const N_INPUT_REGISTERS: usize = 2;
     const N_ACTION_REGISTERS: usize = 3;
 
-    fn flat(&self) -> Vec<O32> {
+    fn flat(&self) -> Vec<R32> {
         let state = self.get_state();
         state
     }
@@ -34,12 +33,12 @@ impl ValidInput for MountainCarInput {
 
 impl ReinforcementLearningInput for MountainCarInput {
     fn init(&mut self) {
-        self.environment.reset(None, false, None);
+        self.environment.reset(Some(0), false, None);
     }
 
     fn act(&mut self, action: usize) -> StateRewardPair {
         let ActionReward { reward, done, .. } = self.environment.step(action);
-        let reward_f32 = OrderedFloat(reward.into_inner() as f32);
+        let reward_f32 = reward.into_inner() as f32;
 
         StateRewardPair {
             state: self.get_state(),
@@ -50,10 +49,10 @@ impl ReinforcementLearningInput for MountainCarInput {
         }
     }
 
-    fn get_state(&self) -> Vec<O32> {
+    fn get_state(&self) -> Vec<R32> {
         let state = &self.environment.state;
         [state.position, state.velocity]
-            .map(|v| OrderedFloat(v.into_inner() as f32))
+            .map(|v| v.into_inner() as f32)
             .to_vec()
     }
 

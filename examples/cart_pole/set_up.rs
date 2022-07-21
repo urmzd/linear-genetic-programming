@@ -6,7 +6,6 @@ use lgp::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward, StateRewardPair,
     },
 };
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 pub struct CartPoleLgp;
@@ -20,19 +19,19 @@ impl ValidInput for CartPoleInput {
     const N_INPUT_REGISTERS: usize = 4;
     const N_ACTION_REGISTERS: usize = 2;
 
-    fn flat(&self) -> Vec<lgp::core::registers::O32> {
+    fn flat(&self) -> Vec<lgp::core::registers::R32> {
         self.get_state()
     }
 }
 
 impl ReinforcementLearningInput for CartPoleInput {
     fn init(&mut self) {
-        self.environment.reset(None, false, None);
+        self.environment.reset(Some(0), false, None);
     }
 
     fn act(&mut self, action: usize) -> StateRewardPair {
         let action_reward = self.environment.step(action);
-        let reward = OrderedFloat(action_reward.reward.into_inner() as f32);
+        let reward = action_reward.reward.into_inner() as f32;
 
         StateRewardPair {
             state: self.get_state(),
@@ -47,14 +46,11 @@ impl ReinforcementLearningInput for CartPoleInput {
         self.environment.reset(None, false, None);
     }
 
-    fn get_state(&self) -> Vec<lgp::core::registers::O32> {
+    fn get_state(&self) -> Vec<lgp::core::registers::R32> {
         let state = self.environment.state;
         let state_vec: Vec<_> = state.into();
 
-        state_vec
-            .iter()
-            .map(move |s| OrderedFloat(*s as f32))
-            .collect()
+        state_vec.iter().map(move |s| *s as f32).collect()
     }
 
     fn finish(&mut self) {

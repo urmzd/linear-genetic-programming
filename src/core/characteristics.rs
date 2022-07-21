@@ -1,6 +1,6 @@
-use super::registers::O32;
+use super::registers::R32;
 
-pub type FitnessScore = O32;
+pub type FitnessScore = R32;
 
 pub trait Fitness {
     type FitnessParameters;
