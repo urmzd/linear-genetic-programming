@@ -91,7 +91,9 @@ where
         fitness_parameters: &mut <Self::O as Fitness>::FitnessParameters,
     ) {
         for individual in population.iter_mut() {
-            individual.eval_fitness(fitness_parameters);
+            if individual.get_fitness().is_none() {
+                individual.eval_fitness(fitness_parameters);
+            }
         }
         population.sort();
     }
@@ -126,36 +128,41 @@ where
 
         let pop_cap = population.capacity();
         let pop_len = population.len();
-        let mut remaining_size: usize = pop_cap - pop_len;
-        let mut n_mutations_todo =
-            ((mutation_percent * remaining_size as f32) as f64).floor() as usize;
-        let mut n_crossovers_todo =
-            ((crossover_percent * remaining_size as f32) as f64).floor() as usize;
 
-        assert_le!(n_mutations_todo + n_crossovers_todo, remaining_size);
+        let mut remaining_pool_spots: usize = pop_cap - pop_len;
+
+        let mut n_mutated_children =
+            ((mutation_percent * remaining_pool_spots as f32) as f64).floor() as usize;
+        let mut n_crossover_children =
+            ((crossover_percent * remaining_pool_spots as f32) as f64).floor() as usize;
+
+        assert_le!(
+            n_mutated_children + n_crossover_children,
+            remaining_pool_spots
+        );
 
         let mut children = vec![];
 
         // Crossover + Mutation
-        while (n_crossovers_todo + n_mutations_todo) > 0 {
+        while (n_crossover_children + n_mutated_children) > 0 {
             if let [parent_a, parent_b] = population
                 .iter()
                 .choose_multiple(&mut generator(), 2)
                 .as_slice()
             {
-                if n_crossovers_todo > 0 {
+                if n_crossover_children > 0 {
                     let crossover_child = parent_a
                         .two_point_crossover(parent_b)
                         .choose(&mut generator())
                         .unwrap()
                         .to_owned();
 
-                    remaining_size -= 1;
-                    n_crossovers_todo -= 1;
+                    remaining_pool_spots -= 1;
+                    n_crossover_children -= 1;
                     children.push(crossover_child)
                 }
 
-                if n_mutations_todo > 0 {
+                if n_mutated_children > 0 {
                     let parents = [parent_a, parent_b];
                     let selected_parent = parents.choose(&mut generator());
 
@@ -163,8 +170,8 @@ where
                         .map(|parent| parent.mutate(mutation_parameters))
                         .unwrap();
 
-                    remaining_size -= 1;
-                    n_mutations_todo -= 1;
+                    remaining_pool_spots -= 1;
+                    n_mutated_children -= 1;
 
                     children.push(mutation_child)
                 }
@@ -175,7 +182,7 @@ where
         for individual in population
             .iter()
             .cloned()
-            .choose_multiple(&mut generator(), remaining_size)
+            .choose_multiple(&mut generator(), remaining_pool_spots)
         {
             population.push(individual)
         }
@@ -204,19 +211,16 @@ where
         }
 
         for _ in 0..hyper_params.max_generations {
-            // Step 1: Evaluate Fitness
             Self::rank(&mut population, &mut hyper_params.fitness_parameters);
             if let Some(hook) = after_rank {
                 (hook)(&mut population)?;
             }
 
-            // Step 2: Drop by Gap
             Self::apply_selection(&mut population, hyper_params.gap);
             if let Some(hook) = after_selection {
                 (hook)(&mut population)?;
             }
 
-            // Step 3: Crossover + Mutation
             Self::breed(
                 &mut population,
                 hyper_params.n_mutations,

@@ -12,7 +12,7 @@ use crate::{
         characteristics::Fitness,
         inputs::ValidInput,
         program::Program,
-        registers::{RegisterValue, Registers},
+        registers::{Registers, O32},
     },
     utils::random::generator,
 };
@@ -33,8 +33,8 @@ where
 
 #[derive(Debug, Serialize, Clone, Copy)]
 pub enum Reward {
-    Continue(RegisterValue),
-    Terminal(RegisterValue),
+    Continue(O32),
+    Terminal(O32),
 }
 
 struct QTable(HashMap<usize, Vec<usize>>);
@@ -53,12 +53,12 @@ trait QLearning<S, A> {
 
 #[derive(Debug, Clone)]
 pub struct StateRewardPair {
-    pub state: Vec<RegisterValue>,
+    pub state: Vec<O32>,
     pub reward: Reward,
 }
 
 impl StateRewardPair {
-    pub fn get_value(&self) -> RegisterValue {
+    pub fn get_value(&self) -> O32 {
         match self.reward {
             Reward::Continue(reward) => reward,
             Reward::Terminal(reward) => reward,
@@ -77,7 +77,7 @@ pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn init(&mut self);
     fn act(&mut self, action: usize) -> StateRewardPair;
     fn reset(&mut self);
-    fn get_state(&self) -> Vec<RegisterValue>;
+    fn get_state(&self) -> Vec<O32>;
     fn finish(&mut self);
 }
 

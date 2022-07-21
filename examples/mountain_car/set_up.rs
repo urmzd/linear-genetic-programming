@@ -3,9 +3,7 @@ use gym_rs::core::ActionReward;
 use gym_rs::{core::Env, envs::classical_control::mountain_car::MountainCarEnv};
 use lgp::extensions::reinforcement_learning::StateRewardPair;
 use lgp::{
-    core::{
-        algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::RegisterValue,
-    },
+    core::{algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::O32},
     extensions::reinforcement_learning::{
         ReinforcementLearningInput, ReinforcementLearningParameters, Reward,
     },
@@ -38,7 +36,7 @@ impl ValidInput for MountainCarInput {
     const N_INPUT_REGISTERS: usize = 2;
     const N_ACTION_REGISTERS: usize = 3;
 
-    fn flat(&self) -> Vec<RegisterValue> {
+    fn flat(&self) -> Vec<O32> {
         let state = self.get_state();
         state
     }
@@ -63,7 +61,7 @@ impl ReinforcementLearningInput for MountainCarInput {
         }
     }
 
-    fn get_state(&self) -> Vec<RegisterValue> {
+    fn get_state(&self) -> Vec<O32> {
         let state = &self.environment.state;
         [state.position, state.velocity]
             .map(|v| OrderedFloat(v.into_inner() as f32))

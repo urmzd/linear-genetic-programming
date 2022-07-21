@@ -1,4 +1,4 @@
-use super::registers::{RegisterValue, Registers};
+use super::registers::{Registers, O32};
 
 pub type Inputs<InputType> = Vec<InputType>;
 
@@ -9,7 +9,7 @@ where
     const N_INPUT_REGISTERS: usize;
     const N_ACTION_REGISTERS: usize;
 
-    fn flat(&self) -> Vec<RegisterValue>;
+    fn flat(&self) -> Vec<O32>;
 }
 
 impl<T> From<&T> for Registers

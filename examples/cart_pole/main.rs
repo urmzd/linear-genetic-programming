@@ -57,7 +57,7 @@ mod tests {
         let input = CartPoleInput::new(environment);
 
         let mut hyper_params = HyperParameters {
-            population_size: 100,
+            population_size: 10,
             gap: 0.5,
             n_crossovers: 0.5,
             n_mutations: 0.5,

@@ -8,9 +8,7 @@ use serde::{Deserialize, Serialize};
 use strum::EnumCount;
 
 use crate::{
-    core::{
-        algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::RegisterValue,
-    },
+    core::{algorithm::GeneticAlgorithm, inputs::ValidInput, program::Program, registers::O32},
     extensions::classification::{ClassificationInput, ClassificationParameters},
 };
 
@@ -29,7 +27,7 @@ impl ValidInput for TestInput {
     const N_INPUT_REGISTERS: usize = 4;
     const N_ACTION_REGISTERS: usize = 2;
 
-    fn flat(&self) -> Vec<RegisterValue> {
+    fn flat(&self) -> Vec<O32> {
         vec![self.0[0], self.0[1], self.0[2], self.0[3]]
     }
 }
