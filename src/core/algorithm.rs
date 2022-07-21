@@ -77,7 +77,7 @@ where
 
     fn rank(population: &mut Population<Self::O>) {
         for individual in population.iter_mut() {
-            individual.get_or_eval_fitness();
+            individual.eval_fitness();
         }
         population.sort();
     }
@@ -289,10 +289,7 @@ mod tests {
     use std::{cell::RefCell, rc::Rc};
 
     use crate::{
-        core::{
-            instruction::InstructionGeneratorParameters, program::ProgramGeneratorParameters,
-            registers::RegisterGeneratorParameters,
-        },
+        core::{instruction::InstructionGeneratorParameters, program::ProgramGeneratorParameters},
         extensions::classification::ClassificationParameters,
         utils::{
             random::generator,
@@ -317,7 +314,6 @@ mod tests {
             program_params: ProgramGeneratorParameters::new(
                 10,
                 InstructionGeneratorParameters::<TestInput>::from(1),
-                RegisterGeneratorParameters::new(1),
                 ClassificationParameters::new(&inputs),
             ),
         };

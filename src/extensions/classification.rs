@@ -2,7 +2,6 @@ use derive_new::new;
 use num::ToPrimitive;
 use ordered_float::OrderedFloat;
 use serde::Serialize;
-use smartcore::metrics::accuracy::Accuracy;
 
 use crate::core::{
     characteristics::{Fitness, FitnessScore, Organism, Show},
@@ -33,44 +32,35 @@ impl<'a, T> Fitness for Program<'a, ClassificationParameters<'a, T>>
 where
     T: ClassificationInput,
 {
-    fn eval_fitness(&self) -> FitnessScore {
+    fn eval_fitness(&mut self) -> FitnessScore {
         let inputs = self.problem_parameters.inputs;
 
         let mut pred_truth_array = vec![];
 
-        let mut registers = self.registers.clone();
-        for input in inputs {
-            for instruction in &self.instructions {
-                instruction.apply(&mut registers, input);
-            }
+        let mut n_correct = 0;
 
-            let ties = registers.argmax();
-            let predicted_class = T::map_register_to_action(ties)
+        for input in inputs {
+            self.exec(input);
+
+            let predicted_class = T::argmax(&self.registers)
                 .and_then(|action| action.to_i32())
                 .unwrap_or(-1);
             let correct_class = input.get_class().to_i32().unwrap();
 
+            if predicted_class == correct_class {
+                n_correct += 1;
+            }
+
             pred_truth_array.push((predicted_class, correct_class));
 
-            registers.reset();
+            self.registers.reset();
         }
 
-        let predicted: Vec<f32> = pred_truth_array
-            .iter()
-            .map(|score| score.0 as f32)
-            .collect();
-        let correct: Vec<f32> = pred_truth_array
-            .iter()
-            .map(|score| score.1 as f32)
-            .collect();
+        let fitness = OrderedFloat(n_correct as f32 / inputs.len() as f32);
 
-        let fitness = (Accuracy {}).get_score(&predicted, &correct);
+        self.fitness = Some(fitness);
 
-        OrderedFloat(fitness)
-    }
-
-    fn get_or_eval_fitness(&mut self) -> FitnessScore {
-        *self.fitness.get_or_insert(self.eval_fitness())
+        fitness
     }
 
     fn get_fitness(&self) -> Option<FitnessScore> {

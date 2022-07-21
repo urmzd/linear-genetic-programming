@@ -37,7 +37,7 @@ impl<'a> ValidInput for CartPoleInput<'a> {
 
     const AVAILABLE_EXECUTABLES: lgp::utils::executables::Executables = DEFAULT_EXECUTABLES;
 
-    fn as_register_values(&self) -> Vec<lgp::core::registers::RegisterValue> {
+    fn flat(&self) -> Vec<lgp::core::registers::RegisterValue> {
         self.get_state()
     }
 }

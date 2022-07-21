@@ -109,7 +109,7 @@ impl ValidInput for IrisInput {
 
     const N_INPUTS: usize = 4;
 
-    fn map_register_to_action(mut ties: Vec<usize>) -> Option<Self::Actions> {
+    fn argmax(mut ties: Vec<usize>) -> Option<usize> {
         if ties.len() > 1 {
             return None;
         } else {
@@ -117,7 +117,7 @@ impl ValidInput for IrisInput {
         }
     }
 
-    fn as_register_values(&self) -> Vec<RegisterValue> {
+    fn flat(&self) -> Vec<RegisterValue> {
         [
             self.sepal_length,
             self.sepal_width,

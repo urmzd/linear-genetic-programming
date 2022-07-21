@@ -1,8 +1,7 @@
 use num::{FromPrimitive, ToPrimitive};
-use rand::prelude::SliceRandom;
 use strum::EnumCount;
 
-use crate::utils::{executables::Executables, random::generator};
+use crate::utils::executables::Executables;
 
 use super::{
     characteristics::Show,
@@ -22,16 +21,16 @@ where
 
     const AVAILABLE_EXECUTABLES: Executables;
 
-    fn map_register_to_action(ties: Vec<usize>) -> Option<Self::Actions> {
-        FromPrimitive::from_usize(*ties.choose(&mut generator()).unwrap())
-    }
+    fn argmax(registers: &Registers) -> Option<usize>;
 
-    fn as_register_values(&self) -> Vec<RegisterValue>;
+    fn flat(&self) -> Vec<RegisterValue>;
 }
 
-impl<'a, T: ValidInput> From<&'a T> for Registers {
-    fn from(input: &'a T) -> Self {
-        let ref_data: Vec<RegisterValue> = input.as_register_values().iter().map(|v| *v).collect();
-        Registers::new(ref_data, 2, 0)
+impl<T> From<&T> for Registers
+where
+    T: ValidInput,
+{
+    fn from(input: &T) -> Self {
+        input.flat().into()
     }
 }

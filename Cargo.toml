@@ -28,7 +28,6 @@ lazy_static = "1.4.0"
 derive-new = "0.5"
 derivative = "2.2.0"
 plotters = "0.3.1"
-smartcore = "0.2"
 itertools = "0.10"
 derive_more = { version = "0.99" }
 

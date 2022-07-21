@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use derivative::Derivative;
 use derive_new::new;
 use ordered_float::OrderedFloat;
@@ -35,6 +37,20 @@ where
     type InputType = T;
 }
 
+struct QTable(HashMap<usize, Vec<usize>>);
+
+impl QTable {
+    pub fn argmax() {}
+
+    pub fn update(&mut self) {}
+}
+
+trait QLearning<S, A> {
+    fn eval(&mut self, state: S, q_table: &mut QTable) -> A;
+    fn sim(&mut self, action: A) -> StateRewardPair;
+    fn update(&mut self, q_table: &mut QTable);
+}
+
 #[derive(Debug, Clone)]
 pub struct StateRewardPair {
     pub state: Vec<RegisterValue>,
@@ -69,8 +85,9 @@ impl<'a, T> Fitness for Program<'a, ReinforcementLearningParameters<T>>
 where
     T: ReinforcementLearningInput,
 {
-    fn eval_fitness(&self) -> crate::core::characteristics::FitnessScore {
+    fn eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
         let mut scores = vec![];
+
         let ReinforcementLearningParameters {
             n_runs,
             max_episode_length,
@@ -84,15 +101,10 @@ where
             let mut score = OrderedFloat(0.);
 
             for _ in 0..max_episode_length {
-                let mut registers = self.registers.clone();
                 // Run program.
-                for instruction in &self.instructions {
-                    instruction.apply(&mut registers, &environment);
-                }
+                self.exec(&environment);
                 // Eval
-                let possible_actions = registers.argmax();
-
-                let selected_action = T::map_register_to_action(possible_actions).unwrap();
+                let possible_actions = T::argmax(&self.registers);
                 let state_reward = environment.act(selected_action);
 
                 score += state_reward.get_value();
@@ -111,11 +123,9 @@ where
 
         let median = scores.remove(n_runs / 2);
 
-        median.into()
-    }
+        self.fitness = Some(median);
 
-    fn get_or_eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
-        *self.fitness.get_or_insert(self.eval_fitness())
+        median
     }
 
     fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {

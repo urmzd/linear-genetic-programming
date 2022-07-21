@@ -7,7 +7,6 @@ use lgp::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
         instruction::InstructionGeneratorParameters,
         program::ProgramGeneratorParameters,
-        registers::RegisterGeneratorParameters,
     },
     extensions::classification::ClassificationParameters,
 };
@@ -27,7 +26,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            RegisterGeneratorParameters::new(1),
             ClassificationParameters::new(&inputs),
         ),
     };
@@ -43,7 +41,6 @@ mod tests {
             algorithm::{EventHooks, GeneticAlgorithm, HyperParameters, Loader},
             instruction::InstructionGeneratorParameters,
             program::{Program, ProgramGeneratorParameters},
-            registers::RegisterGeneratorParameters,
         },
         extensions::classification::ClassificationParameters,
         utils::plots::plot_population_benchmarks,
@@ -73,7 +70,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -114,7 +110,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -155,7 +150,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -197,7 +191,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -255,7 +248,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -294,7 +286,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };
@@ -331,7 +322,6 @@ mod tests {
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    RegisterGeneratorParameters::new(1),
                     ClassificationParameters::new(&inputs),
                 ),
             };

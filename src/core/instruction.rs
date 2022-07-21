@@ -196,8 +196,8 @@ where
     pub fn apply(&self, registers: &'b mut Registers, input: &'b T) {
         let cloned_registers = registers.clone();
         let data = self.get_target_data(cloned_registers, input);
-        let target_value = data.get_owned(self.target_index);
-        let source_value = registers.get_owned(self.source_index);
+        let target_value = *data.get(self.target_index);
+        let source_value = *registers.get(self.source_index);
         let new_source_value = (self.executable)(source_value, target_value);
         registers.update(self.source_index, new_source_value);
     }

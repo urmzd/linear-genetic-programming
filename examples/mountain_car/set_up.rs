@@ -47,7 +47,7 @@ impl ValidInput for MountainCarInput<'_> {
 
     const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
-    fn as_register_values(&self) -> Vec<RegisterValue> {
+    fn flat(&self) -> Vec<RegisterValue> {
         let state = self.get_state();
         state
     }

@@ -7,8 +7,7 @@ use super::registers::RegisterValue;
 pub type FitnessScore = RegisterValue;
 
 pub trait Fitness {
-    fn eval_fitness(&self) -> FitnessScore;
-    fn get_or_eval_fitness(&mut self) -> FitnessScore;
+    fn eval_fitness(&mut self) -> FitnessScore;
     fn get_fitness(&self) -> Option<FitnessScore>;
 }
 

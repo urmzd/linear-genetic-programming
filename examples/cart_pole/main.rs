@@ -4,7 +4,6 @@ use lgp::{
         algorithm::{EventHooks, GeneticAlgorithm, HyperParameters},
         instruction::InstructionGeneratorParameters,
         program::ProgramGeneratorParameters,
-        registers::RegisterGeneratorParameters,
     },
     extensions::reinforcement_learning::ReinforcementLearningParameters,
 };
@@ -25,7 +24,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            RegisterGeneratorParameters::new(1),
             ReinforcementLearningParameters::new(5, 500, input),
         ),
     };
@@ -45,7 +43,6 @@ mod tests {
             algorithm::{EventHooks, GeneticAlgorithm, HyperParameters},
             instruction::InstructionGeneratorParameters,
             program::ProgramGeneratorParameters,
-            registers::RegisterGeneratorParameters,
         },
         extensions::reinforcement_learning::ReinforcementLearningParameters,
         utils::plots::plot_population_benchmarks,
@@ -68,7 +65,6 @@ mod tests {
             program_params: ProgramGeneratorParameters::new(
                 100,
                 InstructionGeneratorParameters::from(1),
-                RegisterGeneratorParameters::new(1),
                 ReinforcementLearningParameters::new(5, 500, input),
             ),
         };

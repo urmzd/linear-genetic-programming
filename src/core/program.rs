@@ -13,7 +13,7 @@ use super::{
     inputs::ValidInput,
     instruction::{Instruction, InstructionGeneratorParameters},
     instructions::Instructions,
-    registers::{RegisterGeneratorParameters, Registers},
+    registers::Registers,
 };
 pub trait ExtensionParameters
 where
@@ -30,7 +30,6 @@ where
     pub max_instructions: usize,
     pub instruction_generator_parameters:
         InstructionGeneratorParameters<'a, OtherParameters::InputType>,
-    pub register_generator_parameters: RegisterGeneratorParameters,
     pub other: OtherParameters,
     marker: PhantomData<&'a ()>,
 }
@@ -46,6 +45,17 @@ where
     pub registers: Registers,
     pub fitness: Option<FitnessScore>,
     pub problem_parameters: &'a T,
+}
+
+impl<'a, T> Program<'a, T>
+where
+    T: ExtensionParameters,
+{
+    pub fn exec(&mut self, input: &T::InputType) {
+        for instruction in &self.instructions {
+            instruction.apply(&mut &mut self.registers, input)
+        }
+    }
 }
 
 impl<'a, T> Clone for Program<'a, T>
@@ -113,12 +123,11 @@ where
         let ProgramGeneratorParameters {
             max_instructions,
             instruction_generator_parameters,
-            register_generator_parameters,
             other,
             ..
         } = &parameters;
 
-        let registers = Registers::generate::<T::InputType>(register_generator_parameters);
+        let registers = Registers::new(instruction_generator_parameters.n_registers);
         let n_instructions = Uniform::new_inclusive(1, max_instructions).sample(&mut generator());
         let instructions = (0..n_instructions)
             .into_iter()
@@ -225,13 +234,8 @@ mod tests {
 
         let instruction_params = InstructionGeneratorParameters::new(3, 4);
         let classification_params = ClassificationParameters::new(&inputs);
-        let register_params = RegisterGeneratorParameters::new(2);
-        let program_params = ProgramGeneratorParameters::new(
-            100,
-            instruction_params,
-            register_params,
-            classification_params,
-        );
+        let program_params =
+            ProgramGeneratorParameters::new(100, instruction_params, classification_params);
 
         let program_a = Program::generate(&program_params);
         let program_b = Program::generate(&program_params);
