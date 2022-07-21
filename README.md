@@ -30,24 +30,24 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let ContentFilePair(_, file) = get_iris_content().await?;
     let inputs = IrisLgp::load_inputs(file.path());
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 100,
         max_generations: 100,
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
-        mutate_parameters: (),
-        fitness_parameters: ClassificationParameters::new(&inputs),
+        fitness_parameters: ClassificationParameters::new(inputs),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<IrisInput>(1),
         ),
     };
 
-    IrisLgp::execute(&hyper_params, EventHooks::default())?;
+    IrisLgp::execute(&mut hyper_params, EventHooks::default())?;
     Ok(())
 }
 
+#[cfg(test)]
 ```
 
 ### Reinforcement Learning
@@ -60,25 +60,25 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let environment = MountainCarEnv::new(RenderMode::Human, None);
     let input = MountainCarInput::new(environment);
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 1,
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
         max_generations: 1,
-        mutate_parameters: (),
         fitness_parameters: ReinforcementLearningParameters::new(5, 200, input),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<MountainCarInput>(1),
         ),
     };
 
-    MountainCarLgp::execute(&hyper_params, EventHooks::default())?;
+    MountainCarLgp::execute(&mut hyper_params, EventHooks::default())?;
 
     Ok(())
 }
 
+#[cfg(test)]
 ```
 
 #### cart_pole
@@ -89,25 +89,25 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let environment = CartPoleEnv::new(RenderMode::Human);
     let input = CartPoleInput::new(environment);
 
-    let hyper_params = HyperParameters {
+    let mut hyper_params = HyperParameters {
         population_size: 1,
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
-        mutate_parameters: (),
         max_generations: 1,
         fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
         program_parameters: ProgramGeneratorParameters::new(
             100,
-            InstructionGeneratorParameters::from(1),
+            InstructionGeneratorParameters::from::<CartPoleInput>(1),
         ),
     };
 
-    CartPoleLgp::execute(&hyper_params, EventHooks::default())?;
+    CartPoleLgp::execute(&mut hyper_params, EventHooks::default())?;
 
     Ok(())
 }
 
+#[cfg(test)]
 ```
 
 ## Building
