@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{marker::PhantomData, path::PathBuf};
+use std::path::PathBuf;
 
 use csv::ReaderBuilder;
 use more_asserts::{assert_ge, assert_le};
@@ -19,15 +19,16 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct HyperParameters<'a, OrganismType>
+pub struct HyperParameters<OrganismType>
 where
-    OrganismType: Organism<'a>,
+    OrganismType: Organism,
 {
     pub population_size: usize,
     pub gap: f32,
     pub n_mutations: f32,
     pub n_crossovers: f32,
     pub max_generations: usize,
+    pub fitness_params: OrganismType::FitnessParams,
     pub program_params: OrganismType::GeneratorParameters,
 }
 
@@ -55,7 +56,7 @@ where
 
 pub trait GeneticAlgorithm<'a>
 where
-    Self::O: Organism<'a>,
+    Self::O: Organism,
 {
     type O;
 
@@ -64,7 +65,7 @@ where
         pretty_env_logger::try_init().unwrap_or(());
     }
 
-    fn init_population(hyper_params: &'a HyperParameters<'a, Self::O>) -> Population<Self::O> {
+    fn init_population(hyper_params: &'a HyperParameters<Self::O>) -> Population<Self::O> {
         let mut population = Population::with_capacity(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
@@ -159,8 +160,8 @@ where
     }
 
     fn execute<'b>(
-        hyper_params: &'a HyperParameters<'a, Self::O>,
-        mut hooks: EventHooks<'b, 'a, Self::O>,
+        hyper_params: &'a HyperParameters<Self::O>,
+        mut hooks: EventHooks<'b, Self::O>,
     ) -> Result<Population<Self::O>, Box<dyn std::error::Error>> {
         Self::init_env();
 
@@ -208,21 +209,20 @@ where
 
 pub type GpHook<'a, O> =
     &'a mut dyn FnMut(&mut Population<O>) -> Result<(), Box<dyn std::error::Error>>;
-pub struct EventHooks<'a, 'b, O>
+pub struct EventHooks<'a, O>
 where
-    O: Organism<'b>,
+    O: Organism,
 {
     pub after_init: Option<GpHook<'a, O>>,
     pub after_evaluate: Option<GpHook<'a, O>>,
     pub after_rank: Option<GpHook<'a, O>>,
     pub after_selection: Option<GpHook<'a, O>>,
     pub after_breed: Option<GpHook<'a, O>>,
-    o: PhantomData<&'b ()>,
 }
 
-impl<'a, 'b, O> EventHooks<'a, 'b, O>
+impl<'a, 'b, O> EventHooks<'a, O>
 where
-    O: Organism<'b>,
+    O: Organism,
 {
     pub fn with_after_init(self, f: GpHook<'a, O>) -> Self {
         Self {
@@ -253,9 +253,9 @@ where
     }
 }
 
-impl<'a, 'b, O> fmt::Debug for EventHooks<'a, 'b, O>
+impl<'a, O> fmt::Debug for EventHooks<'a, O>
 where
-    O: Organism<'b>,
+    O: Organism,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EventHooks")
@@ -268,9 +268,9 @@ where
     }
 }
 
-impl<'a, 'b, O> Default for EventHooks<'a, 'b, O>
+impl<'a, O> Default for EventHooks<'a, O>
 where
-    O: Organism<'b>,
+    O: Organism,
 {
     fn default() -> Self {
         Self {
@@ -279,7 +279,6 @@ where
             after_rank: None,
             after_selection: None,
             after_breed: None,
-            o: PhantomData,
         }
     }
 }
@@ -311,10 +310,10 @@ mod tests {
             n_mutations: 0.5,
             n_crossovers: 0.5,
             max_generations: 1,
+            fitness_params: ClassificationParameters::new(&inputs),
             program_params: ProgramGeneratorParameters::new(
                 10,
                 InstructionGeneratorParameters::<TestInput>::from(1),
-                ClassificationParameters::new(&inputs),
             ),
         };
 

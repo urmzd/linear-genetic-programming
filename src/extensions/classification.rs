@@ -1,13 +1,13 @@
 use derive_new::new;
-use num::ToPrimitive;
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 use crate::core::{
-    characteristics::{Fitness, FitnessScore, Organism, Show},
+    characteristics::{Fitness, FitnessScore},
     inputs::{Inputs, ValidInput},
-    program::{ExtensionParameters, Program},
+    program::Program,
 };
+
+use super::reinforcement_learning::ReinforcementLearningInput;
 
 #[derive(Clone, Debug, Serialize, new)]
 pub struct ClassificationParameters<'a, InputType>
@@ -17,50 +17,18 @@ where
     inputs: &'a Inputs<InputType>,
 }
 
-impl<'a, T> ExtensionParameters for ClassificationParameters<'a, T>
-where
-    T: ClassificationInput,
-{
-    type InputType = T;
-}
-
 pub trait ClassificationInput: ValidInput {
-    fn get_class(&self) -> Self::Actions;
+    fn get_class(&self) -> usize;
 }
 
-impl<'a, T> Fitness for Program<'a, ClassificationParameters<'a, T>>
+impl<T> Fitness for Program<T>
 where
     T: ClassificationInput,
 {
-    fn eval_fitness(&mut self) -> FitnessScore {
-        let inputs = self.problem_parameters.inputs;
+    type FitnessParams = Inputs<T>;
 
-        let mut pred_truth_array = vec![];
-
-        let mut n_correct = 0;
-
-        for input in inputs {
-            self.exec(input);
-
-            let predicted_class = T::argmax(&self.registers)
-                .and_then(|action| action.to_i32())
-                .unwrap_or(-1);
-            let correct_class = input.get_class().to_i32().unwrap();
-
-            if predicted_class == correct_class {
-                n_correct += 1;
-            }
-
-            pred_truth_array.push((predicted_class, correct_class));
-
-            self.registers.reset();
-        }
-
-        let fitness = OrderedFloat(n_correct as f32 / inputs.len() as f32);
-
-        self.fitness = Some(fitness);
-
-        fitness
+    fn eval_fitness(&mut self, params: Self::FitnessParams) -> FitnessScore {
+        todo!()
     }
 
     fn get_fitness(&self) -> Option<FitnessScore> {
@@ -68,8 +36,38 @@ where
     }
 }
 
-impl<'a, T> Organism<'a> for Program<'a, ClassificationParameters<'a, T>> where
-    T: ClassificationInput
-{
-}
-impl<'a, T> Show for ClassificationParameters<'a, T> where T: ClassificationInput {}
+// impl<'a, T> Organism<'a> for Program<'a, T> where T: ClassificationInput {}
+
+// impl<'a, T> Fitness for Program<'a, T>
+// where
+//     T: ClassificationInput,
+// {
+//     fn eval_fitness(&mut self) -> FitnessScore {
+//         let inputs = self.problem_parameters.inputs;
+
+//         let mut n_correct = 0;
+
+//         for input in inputs {
+//             self.exec(input);
+
+//             let predicted_class = T::argmax(&self.registers);
+//             let correct_class = input.get_class().to_i32().unwrap();
+
+//             if predicted_class == correct_class {
+//                 n_correct += 1;
+//             }
+
+//             self.registers.reset();
+//         }
+
+//         let fitness = OrderedFloat(n_correct as f32 / inputs.len() as f32);
+
+//         self.fitness = Some(fitness);
+
+//         fitness
+//     }
+
+//     fn get_fitness(&self) -> Option<FitnessScore> {
+//         self.fitness
+//     }
+// }

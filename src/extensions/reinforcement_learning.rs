@@ -1,16 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 
 use derivative::Derivative;
 use derive_new::new;
-use ordered_float::OrderedFloat;
 use serde::Serialize;
 
 use crate::core::{
-    characteristics::{Compare, Fitness, Organism, Show},
-    inputs::ValidInput,
-    program::{ExtensionParameters, Program},
-    registers::RegisterValue,
+    characteristics::Organism, inputs::ValidInput, program::Program, registers::RegisterValue,
 };
+
+use super::classification::ClassificationInput;
 
 #[derive(Debug, Serialize, Derivative, new)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -28,13 +26,6 @@ where
 pub enum Reward {
     Continue(RegisterValue),
     Terminal(RegisterValue),
-}
-
-impl<'a, T> ExtensionParameters for ReinforcementLearningParameters<T>
-where
-    T: ReinforcementLearningInput,
-{
-    type InputType = T;
 }
 
 struct QTable(HashMap<usize, Vec<usize>>);
@@ -81,61 +72,72 @@ pub trait ReinforcementLearningInput: ValidInput + Sized {
     fn finish(&mut self);
 }
 
-impl<'a, T> Fitness for Program<'a, ReinforcementLearningParameters<T>>
-where
-    T: ReinforcementLearningInput,
-{
-    fn eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
-        let mut scores = vec![];
+// impl<'a, T> Fitness for Program<'a, T>
+// where
+//     T: ReinforcementLearningInput,
+// {
+//     // fn eval_fitness(&mut self) -> crate::core::characteristics::FitnessScore {
+//     //     let mut scores = vec![];
 
-        let ReinforcementLearningParameters {
-            n_runs,
-            max_episode_length,
-            mut environment,
-            ..
-        } = self.problem_parameters.clone();
+//     //     let ReinforcementLearningParameters {
+//     //         n_runs,
+//     //         max_episode_length,
+//     //         mut environment,
+//     //         ..
+//     //     } = self.problem_parameters.clone();
 
-        environment.init();
+//     //     environment.init();
 
-        for _ in 0..n_runs {
-            let mut score = OrderedFloat(0.);
+//     //     for _ in 0..n_runs {
+//     //         let mut score = OrderedFloat(0.);
 
-            for _ in 0..max_episode_length {
-                // Run program.
-                self.exec(&environment);
-                // Eval
-                let possible_actions = T::argmax(&self.registers);
-                let state_reward = environment.act(selected_action);
+//     //         for _ in 0..max_episode_length {
+//     //             // Run program.
+//     //             self.exec(&environment);
+//     //             // Eval
+//     //             let possible_actions = T::argmax(&self.registers);
+//     //             let state_reward = environment.act(selected_action);
 
-                score += state_reward.get_value();
+//     //             score += state_reward.get_value();
 
-                if state_reward.is_terminal() {
-                    break;
-                }
-            }
+//     //             if state_reward.is_terminal() {
+//     //                 break;
+//     //             }
+//     //         }
 
-            scores.push(score);
-            environment.reset();
-        }
+//     //         scores.push(score);
+//     //         environment.reset();
+//     //     }
 
-        scores.sort();
-        environment.finish();
+//     //     scores.sort();
+//     //     environment.finish();
 
-        let median = scores.remove(n_runs / 2);
+//     //     let median = scores.remove(n_runs / 2);
 
-        self.fitness = Some(median);
+//     //     self.fitness = Some(median);
 
-        median
-    }
+//     //     median
+//     // }
 
-    fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
-        self.fitness
-    }
-}
+//     // fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
+//     //     self.fitness
+//     // }
 
-impl<'a, T> Organism<'a> for Program<'a, ReinforcementLearningParameters<T>> where
-    T: ReinforcementLearningInput + Show
-{
-}
-impl<'a, T> Show for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput + Show {}
-impl<'a, T> Compare for ReinforcementLearningParameters<T> where T: ReinforcementLearningInput {}
+//     type FitnessParams = usize;
+
+//     fn eval_fitness(
+//         &mut self,
+//         params: Self::FitnessParams,
+//     ) -> crate::core::characteristics::FitnessScore {
+//         todo!()
+//     }
+
+//     fn get_fitness(&self) -> Option<crate::core::characteristics::FitnessScore> {
+//         todo!()
+//     }
+// }
+
+impl<'a, T> Organism for Program<T> where T: ReinforcementLearningInput {}
+impl<'a, T> Organism for Program<T> where T: ClassificationInput {}
+
+struct G<T>(PhantomData<T>);

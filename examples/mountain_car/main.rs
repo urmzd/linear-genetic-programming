@@ -21,10 +21,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         n_crossovers: 0.5,
         n_mutations: 0.5,
         max_generations: 1,
+        fitness_params: ReinforcementLearningParameters::new(5, 200, input),
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            ReinforcementLearningParameters::new(5, 200, input),
         ),
     };
 
@@ -64,10 +64,10 @@ mod tests {
             n_crossovers: 0.5,
             n_mutations: 0.5,
             max_generations: 100,
+            fitness_params: ReinforcementLearningParameters::new(5, 200, input),
             program_params: ProgramGeneratorParameters::new(
                 100,
                 InstructionGeneratorParameters::from(1),
-                ReinforcementLearningParameters::new(5, 200, input),
             ),
         };
 

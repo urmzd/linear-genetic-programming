@@ -21,7 +21,7 @@ where
 
     const AVAILABLE_EXECUTABLES: Executables;
 
-    fn argmax(registers: &Registers) -> Option<usize>;
+    fn argmax(registers: &Registers) -> i32;
 
     fn flat(&self) -> Vec<RegisterValue>;
 }

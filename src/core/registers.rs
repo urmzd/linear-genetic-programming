@@ -26,10 +26,8 @@ impl Registers {
         }
     }
 
-    pub fn reset_clone(&self) -> Self {
-        let mut registers = self.clone();
-        registers.reset();
-        registers
+    pub fn duplicate(&self) -> Self {
+        Self::new(self.len())
     }
 
     pub fn len(&self) -> usize {

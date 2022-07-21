@@ -3,7 +3,6 @@
 use std::marker::PhantomData;
 
 use derive_new::new;
-use num::FromPrimitive;
 use num_derive::FromPrimitive;
 use ordered_float::OrderedFloat;
 use rand::{distributions::Standard, prelude::Distribution};
@@ -18,7 +17,7 @@ use crate::{
         program::Program,
         registers::RegisterValue,
     },
-    extensions::classification::{ClassificationInput, ClassificationParameters},
+    extensions::classification::ClassificationInput,
 };
 
 use super::executables::{Executables, DEFAULT_EXECUTABLES};
@@ -50,20 +49,20 @@ impl ValidInput for TestInput {
         vec![self.0[0], self.0[1], self.0[2], self.0[3]]
     }
 
-    fn argmax(registers: &crate::core::registers::Registers) -> Option<usize> {
+    fn argmax(registers: &crate::core::registers::Registers) -> i32 {
         todo!()
     }
 }
 
 impl ClassificationInput for TestInput {
-    fn get_class(&self) -> TestRepresent {
-        FromPrimitive::from_usize(self.0[Self::N_INPUTS].into_inner() as usize).unwrap()
+    fn get_class(&self) -> usize {
+        self.0[Self::N_INPUTS].into_inner() as usize
     }
 }
 
 pub struct TestLgp<'a>(PhantomData<&'a ()>);
 impl<'a> GeneticAlgorithm<'a> for TestLgp<'a> {
-    type O = Program<'a, ClassificationParameters<'a, TestInput>>;
+    type O = Program<TestInput>;
 }
 
 impl Default for TestInput {

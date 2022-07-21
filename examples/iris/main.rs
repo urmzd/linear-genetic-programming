@@ -23,10 +23,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         gap: 0.5,
         n_mutations: 0.5,
         n_crossovers: 0.5,
+        fitness_params: ClassificationParameters::new(&inputs),
         program_params: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
-            ClassificationParameters::new(&inputs),
         ),
     };
 
@@ -67,10 +67,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.5,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -107,10 +107,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.5,
                 n_crossovers: 0.,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -147,10 +147,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -188,10 +188,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -245,10 +245,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -283,10 +283,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 
@@ -319,10 +319,10 @@ mod tests {
                 gap: 0.5,
                 n_mutations: 0.,
                 n_crossovers: 0.5,
+                fitness_params: ClassificationParameters::new(&inputs),
                 program_params: ProgramGeneratorParameters::new(
                     100,
                     InstructionGeneratorParameters::<IrisInput>::from(1),
-                    ClassificationParameters::new(&inputs),
                 ),
             };
 

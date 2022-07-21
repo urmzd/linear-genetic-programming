@@ -8,7 +8,6 @@ use serde::Serialize;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
-use std::marker::PhantomData;
 use strum::EnumCount;
 
 use crate::utils::executables::Op;
@@ -24,22 +23,15 @@ pub enum Mode {
     Internal = 1,
 }
 
-impl<'a, T> Show for InstructionGeneratorParameters<'a, T> where T: Show + ValidInput {}
+impl Show for InstructionGeneratorParameters {}
 #[derive(Clone, Debug, Serialize, new)]
-pub struct InstructionGeneratorParameters<'a, T>
-where
-    T: ValidInput,
-{
+pub struct InstructionGeneratorParameters {
     pub n_registers: usize,
     pub n_features: usize,
-    marker: PhantomData<&'a T>,
 }
 
-impl<'a, T> InstructionGeneratorParameters<'a, T>
-where
-    T: ValidInput,
-{
-    pub fn from(n_extras: usize) -> Self {
+impl InstructionGeneratorParameters {
+    pub fn from<T: ValidInput>(n_extras: usize) -> Self {
         InstructionGeneratorParameters::new(
             <T as ValidInput>::Actions::COUNT + n_extras,
             <T as ValidInput>::N_INPUTS,
@@ -48,40 +40,29 @@ where
 }
 
 #[derive(Serialize)]
-pub struct Instruction<'a, T>
-where
-    T: ValidInput,
-{
+pub struct Instruction {
     source_index: usize,
     target_index: usize,
     mode: Mode,
     #[serde(skip_serializing)]
     executable: Op,
-    parameters_used: &'a InstructionGeneratorParameters<'a, T>,
 }
 
-impl<'a, T> Clone for Instruction<'a, T>
-where
-    T: ValidInput,
-{
+impl Clone for Instruction {
     fn clone(&self) -> Self {
         Self {
             source_index: self.source_index.clone(),
             target_index: self.target_index.clone(),
             mode: self.mode.clone(),
             executable: self.executable.clone(),
-            parameters_used: &self.parameters_used,
         }
     }
 }
 
-impl<'a, T> Generate<'a> for Instruction<'a, T>
-where
-    T: ValidInput,
-{
-    type GeneratorParameters = InstructionGeneratorParameters<'a, T>;
+impl Generate for Instruction {
+    type GeneratorParameters = InstructionGeneratorParameters;
 
-    fn generate(parameters: &'a Self::GeneratorParameters) -> Self {
+    fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
         let InstructionGeneratorParameters {
             n_features: n_inputs,
             n_registers,
@@ -115,17 +96,13 @@ where
             target_index,
             executable: exec,
             mode,
-            parameters_used: &parameters,
         }
     }
 }
 
-impl<'b, T> Eq for Instruction<'b, T> where T: ValidInput {}
+impl Eq for Instruction {}
 
-impl<'b, T> PartialEq for Instruction<'b, T>
-where
-    T: ValidInput,
-{
+impl PartialEq for Instruction {
     fn eq(&self, other: &Self) -> bool {
         self.source_index == other.source_index
             && self.target_index == other.target_index
@@ -134,10 +111,7 @@ where
     }
 }
 
-impl<'b, T> Debug for Instruction<'b, T>
-where
-    T: ValidInput,
-{
+impl Debug for Instruction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Instruction")
             .field("mode", &self.mode)
@@ -147,10 +121,7 @@ where
     }
 }
 
-impl<'b, T> Mutate for Instruction<'b, T>
-where
-    T: ValidInput,
-{
+impl Mutate for Instruction {
     fn mutate(&self) -> Self {
         let mut mutated = Self::generate(&self.parameters_used);
 
@@ -178,13 +149,13 @@ where
     }
 }
 
-impl<'b, T> Show for Instruction<'b, T> where T: ValidInput {}
+impl Show for Instruction {}
 
-impl<'b, T> Instruction<'b, T>
-where
-    T: ValidInput,
-{
-    fn get_target_data(&self, registers: Registers, data: &'b T) -> Registers {
+impl Instruction {
+    fn get_target_data<'b, T>(&self, registers: Registers, data: &'b T) -> Registers
+    where
+        T: ValidInput,
+    {
         let target_data: Registers = match self.mode {
             Mode::Internal => registers,
             Mode::External => data.into(),
@@ -193,7 +164,10 @@ where
         target_data
     }
 
-    pub fn apply(&self, registers: &'b mut Registers, input: &'b T) {
+    pub fn apply<'b, T>(&self, registers: &'b mut Registers, input: &'b T)
+    where
+        T: ValidInput,
+    {
         let cloned_registers = registers.clone();
         let data = self.get_target_data(cloned_registers, input);
         let target_value = *data.get(self.target_index);
