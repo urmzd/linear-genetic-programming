@@ -28,8 +28,9 @@ where
     pub n_mutations: f32,
     pub n_crossovers: f32,
     pub max_generations: usize,
-    pub fitness_params: OrganismType::FitnessParams,
-    pub program_params: OrganismType::GeneratorParameters,
+    pub fitness_parameters: OrganismType::FitnessParameters,
+    pub mutate_parameters: OrganismType::MutateParameters,
+    pub program_parameters: OrganismType::GeneratorParameters,
 }
 
 pub trait Loader
@@ -69,7 +70,7 @@ where
         let mut population = Population::with_capacity(hyper_params.population_size);
 
         for _ in 0..hyper_params.population_size {
-            let program = Self::O::generate(&hyper_params.program_params);
+            let program = Self::O::generate(&hyper_params.program_parameters);
             population.push(program)
         }
 
@@ -290,10 +291,7 @@ mod tests {
     use crate::{
         core::{instruction::InstructionGeneratorParameters, program::ProgramGeneratorParameters},
         extensions::classification::ClassificationParameters,
-        utils::{
-            random::generator,
-            test::{TestInput, TestLgp},
-        },
+        utils::{random::generator, test::TestLgp},
     };
     use rand::{distributions::Standard, Rng};
 
@@ -310,10 +308,11 @@ mod tests {
             n_mutations: 0.5,
             n_crossovers: 0.5,
             max_generations: 1,
-            fitness_params: ClassificationParameters::new(&inputs),
-            program_params: ProgramGeneratorParameters::new(
+            mutate_parameters: (),
+            fitness_parameters: ClassificationParameters::new(&inputs),
+            program_parameters: ProgramGeneratorParameters::new(
                 10,
-                InstructionGeneratorParameters::<TestInput>::from(1),
+                InstructionGeneratorParameters::from(1),
             ),
         };
 

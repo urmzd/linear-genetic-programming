@@ -7,7 +7,7 @@ use super::registers::RegisterValue;
 pub type FitnessScore = RegisterValue;
 
 pub trait Fitness {
-    type FitnessParams;
+    type FitnessParameters;
     fn eval_fitness(&mut self) -> FitnessScore;
     fn get_fitness(&self) -> Option<FitnessScore>;
 }
@@ -18,7 +18,9 @@ pub trait Breed: Clone {
 }
 
 pub trait Mutate: Clone {
-    fn mutate(&self) -> Self;
+    type MutateParameters;
+
+    fn mutate(&self, parameters: Self::MutateParameters) -> Self;
 }
 
 pub trait Generate {
@@ -29,5 +31,5 @@ pub trait Generate {
 
 pub trait Organism: Fitness + Generate + Compare + Show + Sized + Clone + Mutate + Breed {}
 
-pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd<V> + Ord {}
+pub trait Compare<V = Self>: PartialEq<V> + Eq + PartialOrd<V> {}
 pub trait Show: fmt::Debug + Serialize {}

@@ -1,13 +1,7 @@
 use derive_new::new;
 use serde::Serialize;
 
-use crate::core::{
-    characteristics::{Fitness, FitnessScore},
-    inputs::{Inputs, ValidInput},
-    program::Program,
-};
-
-use super::reinforcement_learning::ReinforcementLearningInput;
+use crate::core::inputs::{Inputs, ValidInput};
 
 #[derive(Clone, Debug, Serialize, new)]
 pub struct ClassificationParameters<'a, InputType>
@@ -19,21 +13,6 @@ where
 
 pub trait ClassificationInput: ValidInput {
     fn get_class(&self) -> usize;
-}
-
-impl<T> Fitness for Program<T>
-where
-    T: ClassificationInput,
-{
-    type FitnessParams = Inputs<T>;
-
-    fn eval_fitness(&mut self, params: Self::FitnessParams) -> FitnessScore {
-        todo!()
-    }
-
-    fn get_fitness(&self) -> Option<FitnessScore> {
-        self.fitness
-    }
 }
 
 // impl<'a, T> Organism<'a> for Program<'a, T> where T: ClassificationInput {}

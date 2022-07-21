@@ -1,8 +1,6 @@
 use num::{FromPrimitive, ToPrimitive};
 use strum::EnumCount;
 
-use crate::utils::executables::Executables;
-
 use super::{
     characteristics::Show,
     registers::{RegisterValue, Registers},
@@ -18,8 +16,6 @@ where
     type Actions;
 
     const N_INPUTS: usize;
-
-    const AVAILABLE_EXECUTABLES: Executables;
 
     fn argmax(registers: &Registers) -> i32;
 

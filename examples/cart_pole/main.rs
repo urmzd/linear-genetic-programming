@@ -20,9 +20,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gap: 0.5,
         n_crossovers: 0.5,
         n_mutations: 0.5,
+        mutate_parameters: (),
         max_generations: 1,
-        fitness_params: ReinforcementLearningParameters::new(5, 500, input),
-        program_params: ProgramGeneratorParameters::new(
+        fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
+        program_parameters: ProgramGeneratorParameters::new(
             100,
             InstructionGeneratorParameters::from(1),
         ),
@@ -62,8 +63,9 @@ mod tests {
             n_crossovers: 0.5,
             n_mutations: 0.5,
             max_generations: 100,
-            fitness_params: ReinforcementLearningParameters::new(5, 500, input),
-            program_params: ProgramGeneratorParameters::new(
+            mutate_parameters: (),
+            fitness_parameters: ReinforcementLearningParameters::new(5, 500, input),
+            program_parameters: ProgramGeneratorParameters::new(
                 100,
                 InstructionGeneratorParameters::from(1),
             ),
@@ -78,7 +80,7 @@ mod tests {
         )?;
 
         const PLOT_FILE_NAME: &'static str = "assets/tests/plots/cart_pole.png";
-        let range = (0.)..(hyper_params.program_params.other.max_episode_length as f32);
+        let range = (0.)..(hyper_params.program_parameters.other.max_episode_length as f32);
         plot_population_benchmarks(populations, PLOT_FILE_NAME, range)?;
         Ok(())
     }

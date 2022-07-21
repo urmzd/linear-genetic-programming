@@ -4,11 +4,7 @@ use derivative::Derivative;
 use derive_new::new;
 use serde::Serialize;
 
-use crate::core::{
-    characteristics::Organism, inputs::ValidInput, program::Program, registers::RegisterValue,
-};
-
-use super::classification::ClassificationInput;
+use crate::core::{inputs::ValidInput, registers::RegisterValue};
 
 #[derive(Debug, Serialize, Derivative, new)]
 #[derivative(PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -137,7 +133,7 @@ pub trait ReinforcementLearningInput: ValidInput + Sized {
 //     }
 // }
 
-impl<'a, T> Organism for Program<T> where T: ReinforcementLearningInput {}
-impl<'a, T> Organism for Program<T> where T: ClassificationInput {}
+// impl<'a, T> Organism for Program<T> where T: ReinforcementLearningInput {}
+// impl<'a, T> Organism for Program<T> where T: ClassificationInput {}
 
 struct G<T>(PhantomData<T>);

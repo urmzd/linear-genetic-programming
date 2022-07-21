@@ -20,8 +20,6 @@ use crate::{
     extensions::classification::ClassificationInput,
 };
 
-use super::executables::{Executables, DEFAULT_EXECUTABLES};
-
 #[derive(PartialEq, PartialOrd, Ord, Eq, Clone, Debug, Serialize, Deserialize, new)]
 pub struct TestInput(pub [OrderedFloat<f32>; 5]);
 
@@ -42,8 +40,6 @@ impl ValidInput for TestInput {
     type Actions = TestRepresent;
 
     const N_INPUTS: usize = 4;
-
-    const AVAILABLE_EXECUTABLES: Executables = DEFAULT_EXECUTABLES;
 
     fn flat(&self) -> Vec<RegisterValue> {
         vec![self.0[0], self.0[1], self.0[2], self.0[3]]

@@ -16,19 +16,16 @@ use super::{
     registers::Registers,
 };
 #[derive(Clone, Debug, Serialize, new)]
-pub struct ProgramGeneratorParameters<InputType>
-where
-    InputType: ValidInput,
-{
+pub struct ProgramGeneratorParameters {
     pub max_instructions: usize,
     pub instruction_generator_parameters: InstructionGeneratorParameters,
 }
 
-impl<T> Show for ProgramGeneratorParameters<T> where T: Show + ValidInput {}
+impl Show for ProgramGeneratorParameters {}
 
 struct I;
 
-#[derive(Debug, Serialize, PartialEq, Eq, Ord, new, Clone)]
+#[derive(Debug, Serialize, PartialEq, Eq, new, Clone)]
 pub struct Program<T> {
     pub instructions: Instructions,
     pub registers: Registers,
@@ -36,7 +33,10 @@ pub struct Program<T> {
     marker: PhantomData<T>,
 }
 
-impl<T> Program<T> {
+impl<T> Program<T>
+where
+    T: ValidInput,
+{
     pub fn exec(&mut self, input: &T) {
         for instruction in &self.instructions {
             instruction.apply(&mut &mut self.registers, input)
@@ -67,13 +67,12 @@ impl<T> Generate for Program<T>
 where
     T: ValidInput,
 {
-    type GeneratorParameters = ProgramGeneratorParameters<T>;
+    type GeneratorParameters = ProgramGeneratorParameters;
 
     fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
         let ProgramGeneratorParameters {
             max_instructions,
             instruction_generator_parameters,
-            other,
             ..
         } = &parameters;
 
@@ -95,7 +94,8 @@ impl<T> Mutate for Program<T>
 where
     T: ValidInput,
 {
-    fn mutate(&self) -> Self {
+    type MutateParameters = ();
+    fn mutate(&self, params: Self::MutateParameters) -> Self {
         let mut mutated = self.clone();
 
         // Pick instruction to mutate.
@@ -146,9 +146,9 @@ mod tests {
     #[test]
     fn given_instructions_when_breed_then_two_children_are_produced_using_genes_of_parents() {
         let params = InstructionGeneratorParameters::new(5, 5);
-        let instructions_a: Instructions<TestInput> =
+        let instructions_a: Instructions =
             (0..10).map(|_| Instruction::generate(&params)).collect();
-        let instructions_b: Instructions<TestInput> =
+        let instructions_b: Instructions =
             (0..10).map(|_| Instruction::generate(&params)).collect();
 
         let [child_a, child_b] = instructions_a.two_point_crossover(&instructions_b);

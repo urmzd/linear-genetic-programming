@@ -1,6 +1,4 @@
 use derive_new::new;
-use num::FromPrimitive;
-use num_derive::FromPrimitive;
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::prelude::SliceRandom;
 use rand::Rng;
@@ -10,17 +8,29 @@ use std::fmt::Debug;
 use std::fmt::Formatter;
 use strum::EnumCount;
 
-use crate::utils::executables::Op;
+use crate::utils::executables::{Op, DEFAULT_EXECUTABLES};
 use crate::utils::random::generator;
 
-use super::characteristics::{Generate, Mutate, Show};
+use super::characteristics::{Mutate, Show};
 use super::inputs::ValidInput;
 use super::registers::Registers;
 
-#[derive(FromPrimitive, Clone, Debug, EnumCount, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum Mode {
-    External = 0,
-    Internal = 1,
+    External,
+    Internal,
+}
+
+impl Mode {
+    fn sample<R: Rng + ?Sized>(rng: &mut R) -> Mode {
+        let mode_repr = UniformInt::<usize>::new_inclusive(0, 1).sample(rng);
+
+        if mode_repr == 0 {
+            Mode::External
+        } else {
+            Mode::Internal
+        }
+    }
 }
 
 impl Show for InstructionGeneratorParameters {}
@@ -59,24 +69,21 @@ impl Clone for Instruction {
     }
 }
 
-impl Generate for Instruction {
-    type GeneratorParameters = InstructionGeneratorParameters;
-
-    fn generate<'a>(parameters: &'a Self::GeneratorParameters) -> Self {
+impl Instruction {
+    pub fn generate<'a, T>(parameters: &'a InstructionGeneratorParameters) -> Self
+    where
+        T: ValidInput,
+    {
         let InstructionGeneratorParameters {
             n_features: n_inputs,
             n_registers,
-            ..
         } = parameters;
 
         let current_generator = &mut generator();
 
         let source_index = UniformInt::<usize>::new(0, n_registers).sample(current_generator);
 
-        let mode = FromPrimitive::from_usize(
-            UniformInt::<usize>::new_inclusive(0, 1).sample(current_generator),
-        )
-        .unwrap();
+        let mode = Mode::sample(current_generator);
 
         let upper_bound_target_index = *(if mode == Mode::External {
             n_inputs
@@ -86,7 +93,7 @@ impl Generate for Instruction {
         let target_index =
             UniformInt::<usize>::new(0, upper_bound_target_index).sample(current_generator);
 
-        let exec = T::AVAILABLE_EXECUTABLES
+        let exec = DEFAULT_EXECUTABLES
             .choose(current_generator)
             .unwrap()
             .to_owned();
@@ -122,7 +129,8 @@ impl Debug for Instruction {
 }
 
 impl Mutate for Instruction {
-    fn mutate(&self) -> Self {
+    type MutateParameters = InstructionGeneratorParameters;
+    fn mutate(&self, params: Self::MutateParameters) -> Self {
         let mut mutated = Self::generate(&self.parameters_used);
 
         let swap_target = generator().gen_bool(0.5);
